@@ -1,8 +1,15 @@
 package AST;
 
+import AST.Def.*;
 import Util.Position;
 
+import java.util.ArrayList;
+
 public class RootNode extends ASTNode {
+    public ArrayList<FuncDefNode> funcDefs = new ArrayList<>();
+    public ArrayList<VarDefNode> varDefs = new ArrayList<>();
+    public ArrayList<ClassDefNode> classDefs = new ArrayList<>();
+
     public RootNode(Position pos) {
         super(pos);
     }
