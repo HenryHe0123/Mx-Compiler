@@ -7,9 +7,9 @@ literal: IntLiteral | StringLiteral | True | False | Null;
 
 variable: Identifier | This;
 
-basicType: Int | Bool | String | Identifier;
+simpleType: Int | Bool | String | Identifier;
 
-typename: basicType (LBrack RBrack)*; //include array type
+typename: simpleType (LBrack RBrack)*; //include array type
 
 suite: LBrace statement* RBrace;
 
@@ -18,11 +18,11 @@ primary: literal | callFunction | variable;
 expression
     : primary                                                                  #atomExpr
     | LParen expression RParen                                                 #bracketExpr
-    | expression Dot callFunction                                              #dotFuncExpr
-    | expression Dot variable                                                  #dotVarExpr
+    | expression Dot callFunction                                              #memberExpr
+    | expression Dot variable                                                  #memberExpr
     | expression (LBrack expression RBrack)+                                   #arrayExpr
     | expression (AddAdd | SubSub)                                             #postfixUpdateExpr
-    | <assoc=right> (AddAdd | SubSub | Not | Invert | Sub | Add) expression    #unaryExpr
+    | <assoc=right> (AddAdd | SubSub | Not | Invert | Sub) expression          #unaryExpr
     | newExpression                                                            #newExpr
     | expression op=(Mul | Div | Mod) expression                               #binaryExpr
     | expression op=(Add | Sub) expression                                     #binaryExpr
@@ -71,7 +71,7 @@ varDeclareUnit: Identifier (Assign expression)?;
 varDef: typename varDeclareUnit (Comma varDeclareUnit)* Semi;
 
 //details (of expression/statement)
-newArrayExpr : New basicType (LBrack (expression)? RBrack)+;
+newArrayExpr : New simpleType (LBrack (expression)? RBrack)+;
 
 newClassExpr: New Identifier (LParen RParen)?;
 

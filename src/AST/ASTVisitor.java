@@ -1,6 +1,8 @@
 package AST;
 
 import AST.Def.*;
+import AST.Expr.*;
+import AST.Expr.primary.*;
 import AST.Stmt.*;
 import AST.Util.*;
 
@@ -28,4 +30,20 @@ public interface ASTVisitor {
     void visit(ReturnStmtNode node);
 
     void visit(CtrlStmtNode node);
+
+    void visit(BinaryExprNode node);
+
+    void visit(VarExprNode node);
+
+    void visit(LiteralExprNode node);
+
+    void visit(FuncExprNode node);
+
+    void visit(MemberExprNode node);
+
+    void visit(ArrayExprNode node);
+
+    void visit(PostfixUpdateExprNode node);
+
+    void visit(UnaryExprNode node);
 }
