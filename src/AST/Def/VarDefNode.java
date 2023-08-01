@@ -1,13 +1,12 @@
 package AST.Def;
 
-import AST.ASTNode;
-import AST.ASTVisitor;
+import AST.*;
 import AST.Util.VarDeclareUnitNode;
 import Util.Position;
 
 import java.util.ArrayList;
 
-public class VarDefNode extends ASTNode {
+public class VarDefNode extends StmtNode { //also used as varDefStmtNode
     public ArrayList<VarDeclareUnitNode> varDeclareUnits = new ArrayList<>();
 
     public VarDefNode(Position pos) {

@@ -16,4 +16,16 @@ public interface ASTVisitor {
     void visit(BlockStmtNode node);
 
     void visit(ClassDefNode node);
+
+    void visit(BranchStmtNode node);
+
+    void visit(ExprStmtNode node);
+
+    void visit(WhileStmtNode node);
+
+    void visit(ForStmtNode node);
+
+    void visit(ReturnStmtNode node);
+
+    void visit(CtrlStmtNode node);
 }

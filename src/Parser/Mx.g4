@@ -43,8 +43,10 @@ statement
     | varDef            #varDefStmt
     | exprStatement     #exprStmt
     | branchStatement   #branchStmt
-    | loopStatement     #loopStmt
-    | jumpStatement     #jumpStmt
+    | forStatement      #forStmt
+    | whileStatement    #whileStmt
+    | ctrlStatement     #ctrlStmt
+    | returnStatement   #returnStmt
     ;
 
 //function
@@ -77,7 +79,7 @@ newExpression: newArrayExpr | newClassExpr;
 
 exprStatement: expression? Semi; //maybe empty
 
-jumpStatement: (Break | Continue | Return expression?) Semi;
+ctrlStatement: (Break | Continue) Semi;
 
 condition: expression;
 
@@ -90,4 +92,4 @@ forInit: exprStatement | varDef; //already include ? and ;
 forInitCondition: forInit condition? Semi step=expression?;
 forStatement: For LParen forInitCondition RParen body=statement;
 
-loopStatement: whileStatement | forStatement;
+returnStatement: Return expression? Semi;
