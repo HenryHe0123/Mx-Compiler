@@ -1,12 +1,9 @@
 package AST.Util;
 
-import AST.ASTNode;
-import AST.ASTVisitor;
-import AST.ExprNode;
-import Util.*;
+import AST.*;
+import Util.Position;
 
 public class VarDeclareUnitNode extends ASTNode {
-    public Type type;
     public String identifier;
     public ExprNode expression = null;
 
@@ -14,16 +11,14 @@ public class VarDeclareUnitNode extends ASTNode {
         super(pos);
     }
 
-    public VarDeclareUnitNode(Position pos, String id, Type type) {
+    public VarDeclareUnitNode(Position pos, String id) {
         super(pos);
         identifier = id;
-        this.type = type;
     }
 
-    public VarDeclareUnitNode(Position pos, String id, Type type, ExprNode expr) {
+    public VarDeclareUnitNode(Position pos, String id, ExprNode expr) {
         super(pos);
         identifier = id;
-        this.type = type;
         expression = expr;
     }
 
