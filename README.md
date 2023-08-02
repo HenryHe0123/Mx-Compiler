@@ -5,7 +5,7 @@
 ### progress
 
 - [x] Mx.g4
-- [ ] AST Node design
+- [x] AST Node design
 - [ ] AST Builder
 - [ ] Symbol Collector
 - [ ] Semantic Checker

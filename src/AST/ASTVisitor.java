@@ -46,4 +46,10 @@ public interface ASTVisitor {
     void visit(PostfixUpdateExprNode node);
 
     void visit(UnaryExprNode node);
+
+    void visit(NewExprNode node);
+
+    void visit(AssignExprNode node);
+
+    void visit(TernaryExprNode node);
 }
