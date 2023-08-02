@@ -5,17 +5,16 @@ import Util.Position;
 
 public class BranchStmtNode extends StmtNode {
     public ExprNode condition;
-    public StmtNode ifStmt, elseStmt;
+    public StmtNode ifStmt, elseStmt = null;
 
     public BranchStmtNode(Position pos) {
         super(pos);
     }
 
-    public BranchStmtNode(Position pos, ExprNode condition, StmtNode ifStmt, StmtNode elseStmt) {
+    public BranchStmtNode(Position pos, ExprNode condition, StmtNode ifStmt) {
         super(pos);
         this.condition = condition;
         this.ifStmt = ifStmt;
-        this.elseStmt = elseStmt;
     }
 
     @Override

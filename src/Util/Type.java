@@ -35,6 +35,24 @@ public class Type {
         dim = ctx.LBrack().size();
     }
 
+    public Type(MxParser.ReturnTypeContext ctx) {
+        if (ctx != null) {
+            if (ctx.Void() != null) typename = "void";
+            else { //typename
+                var ctx0 = ctx.typename();
+                if (ctx0 == null) return;
+                else if (ctx0.simpleType().Int() != null) typename = "int";
+                else if (ctx0.simpleType().Bool() != null) typename = "bool";
+                else if (ctx0.simpleType().String() != null) typename = "string";
+                else {
+                    typename = ctx0.simpleType().Identifier().getText();
+                    isClass = true;
+                }
+                dim = ctx0.LBrack().size();
+            }
+        }
+    }
+
     public boolean isBasic() {
         return dim == 0 && !isClass;
     }

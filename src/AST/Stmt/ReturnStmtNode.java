@@ -4,7 +4,7 @@ import AST.*;
 import Util.Position;
 
 public class ReturnStmtNode extends StmtNode {
-    public ExprNode returnVal = null;
+    public ExprNode returnExpr = null;
 
     public ReturnStmtNode(Position pos) {
         super(pos);
@@ -12,7 +12,7 @@ public class ReturnStmtNode extends StmtNode {
 
     public ReturnStmtNode(Position pos, ExprNode expression) {
         super(pos);
-        returnVal = expression;
+        returnExpr = expression;
     }
 
     @Override

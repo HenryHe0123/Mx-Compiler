@@ -15,9 +15,15 @@ public interface ASTVisitor {
 
     void visit(FuncDefNode node);
 
+    void visit(FuncParameterNode node);
+
+    void visit(ParameterUnitNode node);
+
     void visit(BlockStmtNode node);
 
     void visit(ClassDefNode node);
+
+    void visit(ClassConstructorNode node);
 
     void visit(BranchStmtNode node);
 
