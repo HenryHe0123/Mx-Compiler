@@ -8,7 +8,11 @@ public class UnaryExprNode extends ExprNode {
     public ExprNode expression;
     public String operator;
 
-    public UnaryExprNode(ExprNode expr, String op, Position pos) {
+    public UnaryExprNode(Position pos) {
+        super(pos);
+    }
+
+    public UnaryExprNode(Position pos, String op, ExprNode expr) {
         super(pos);
         expression = expr;
         operator = op;

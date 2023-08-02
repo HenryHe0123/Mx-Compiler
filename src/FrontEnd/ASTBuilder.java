@@ -149,127 +149,102 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     @Override
     public ASTNode visitLiteral(MxParser.LiteralContext ctx) {
-        return visitChildren(ctx);
+        Basic value = new Basic(ctx);
+        return new LiteralExprNode(new Position(ctx), value);
     }
 
     @Override
     public ASTNode visitVariable(MxParser.VariableContext ctx) {
-        return visitChildren(ctx);
+        String identifier;
+        if (ctx.Identifier() != null) {
+            identifier = ctx.Identifier().getText();
+        } else {
+            identifier = "this";
+        }
+        return new VarExprNode(new Position(ctx), identifier);
     }
 
     @Override
     public ASTNode visitCallFunction(MxParser.CallFunctionContext ctx) {
-        return visitChildren(ctx);
+        var node = new FuncExprNode(new Position(ctx), ctx.Identifier().getText());
+        if (ctx.funcParameterCall() != null) {
+            ctx.funcParameterCall().expression().forEach(expr -> node.args.add((ExprNode) visit(expr)));
+        }
+        return node;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
-    public ASTNode visitNewExpr(MxParser.NewExprContext ctx) {
-        return visitChildren(ctx);
+    public ASTNode visitNewArrayExpr(MxParser.NewArrayExprContext ctx) {
+        var node = new NewExprNode(new Position(ctx), new Type(ctx.simpleType()));
+        node.type.dim = ctx.LBrack().size();
+        if (ctx.expression() != null) {
+            ctx.expression().forEach(expr -> node.dimExpr.add((ExprNode) visit(expr)));
+        }
+        return node;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
+    @Override
+    public ASTNode visitNewClassExpr(MxParser.NewClassExprContext ctx) {
+        return new NewExprNode(new Position(ctx), new Type(ctx.Identifier().getText()));
+    }
+
     @Override
     public ASTNode visitUnaryExpr(MxParser.UnaryExprContext ctx) {
-        return visitChildren(ctx);
+        String op;
+        if (ctx.AddAdd() != null) op = "++";
+        else if (ctx.SubSub() != null) op = "--";
+        else if (ctx.Not() != null) op = "!";
+        else if (ctx.Invert() != null) op = "~";
+        else op = "-"; //ctx.Sub() != null
+        return new UnaryExprNode(new Position(ctx), op, (ExprNode) visit(ctx.expression()));
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitTernaryExpr(MxParser.TernaryExprContext ctx) {
-        return visitChildren(ctx);
+        return new TernaryExprNode(new Position(ctx), (ExprNode) visit(ctx.expression(0)), (ExprNode) visit(ctx.expression(1)), (ExprNode) visit(ctx.expression(2)));
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitArrayExpr(MxParser.ArrayExprContext ctx) {
-        return visitChildren(ctx);
+        var node = new ArrayExprNode(new Position(ctx), (ExprNode) visit(ctx.expression(0)));
+        for (int i = 1; i < ctx.expression().size(); ++i) {
+            node.indexes.add((ExprNode) visit(ctx.expression(i)));
+        }
+        return node;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitBracketExpr(MxParser.BracketExprContext ctx) {
-        return visitChildren(ctx);
+        return visit(ctx.expression());
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitMemberExpr(MxParser.MemberExprContext ctx) {
-        return visitChildren(ctx);
+        ExprNode member;
+        if (ctx.variable() != null) member = (ExprNode) visit(ctx.variable());
+        else member = (ExprNode) visit(ctx.callFunction());
+        return new MemberExprNode(new Position(ctx), (ExprNode) visit(ctx.expression()), member);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
-    @Override
-    public ASTNode visitAtomExpr(MxParser.AtomExprContext ctx) {
-        return visitChildren(ctx);
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitBinaryExpr(MxParser.BinaryExprContext ctx) {
-        return visitChildren(ctx);
+        String op = ctx.op.getText();
+        ExprNode lhs = (ExprNode) visit(ctx.expression(0));
+        ExprNode rhs = (ExprNode) visit(ctx.expression(1));
+        return new BinaryExprNode(new Position(ctx), lhs, op, rhs);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitAssignExpr(MxParser.AssignExprContext ctx) {
-        return visitChildren(ctx);
+        ExprNode lhs = (ExprNode) visit(ctx.expression(0));
+        ExprNode rhs = (ExprNode) visit(ctx.expression(1));
+        return new AssignExprNode(new Position(ctx), lhs, rhs);
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>The default implementation returns the result of calling
-     * {@link #visitChildren} on {@code ctx}.</p>
-     */
     @Override
     public ASTNode visitPostfixUpdateExpr(MxParser.PostfixUpdateExprContext ctx) {
-        return visitChildren(ctx);
+        boolean isAdd = (ctx.AddAdd() != null);
+        return new PostfixUpdateExprNode(new Position(ctx), (ExprNode) visit(ctx.expression()), isAdd);
     }
 
 }

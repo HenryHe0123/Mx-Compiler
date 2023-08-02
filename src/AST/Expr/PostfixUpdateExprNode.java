@@ -8,10 +8,10 @@ public class PostfixUpdateExprNode extends ExprNode {
     public ExprNode expression;
     public boolean add; //++ or --
 
-    public PostfixUpdateExprNode(Position pos, String op, ExprNode expr) {
+    public PostfixUpdateExprNode(Position pos, ExprNode expr, boolean isAdd) {
         super(pos);
         expression = expr;
-        add = op.equals("++");
+        add = isAdd;
     }
 
     @Override

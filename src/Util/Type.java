@@ -53,6 +53,18 @@ public class Type {
         }
     }
 
+    public Type(MxParser.SimpleTypeContext ctx) {
+        if (ctx != null) {
+            if (ctx.Int() != null) typename = "int";
+            else if (ctx.Bool() != null) typename = "bool";
+            else if (ctx.String() != null) typename = "string";
+            else {
+                typename = ctx.Identifier().getText();
+                isClass = true;
+            }
+        }
+    }
+
     public boolean isBasic() {
         return dim == 0 && !isClass;
     }

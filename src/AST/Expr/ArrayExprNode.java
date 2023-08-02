@@ -4,14 +4,15 @@ import AST.ASTVisitor;
 import AST.ExprNode;
 import Util.Position;
 
+import java.util.ArrayList;
+
 public class ArrayExprNode extends ExprNode {
     public ExprNode array;
-    public ExprNode index;
+    public ArrayList<ExprNode> indexes = new ArrayList<>();
 
-    public ArrayExprNode(Position pos, ExprNode array, ExprNode index) {
+    public ArrayExprNode(Position pos, ExprNode array) {
         super(pos);
         this.array = array;
-        this.index = index;
     }
 
     @Override
