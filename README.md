@@ -7,5 +7,5 @@
 - [x] Mx.g4
 - [x] AST Node design
 - [x] AST Builder
-- [ ] Symbol Collector
+- [x] Symbol Collector
 - [ ] Semantic Checker

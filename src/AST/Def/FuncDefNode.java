@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class FuncDefNode extends ASTNode {
     public Type type;
     public String identifier;
-    public FuncParameterNode parameter;
+    public FuncParameterNode parameter; //use emptyParaNode parameter instead of null
     public ArrayList<StmtNode> stmts = new ArrayList<>();
 
     public FuncDefNode(Position pos) {
@@ -27,4 +27,28 @@ public class FuncDefNode extends ASTNode {
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);
     }
+
+    // built-in functions -----------------------------------------------------------------
+
+    static public FuncDefNode Print =
+            new FuncDefNode(null, Type.Void, "print", FuncParameterNode.singleStrParaNode);
+
+    static public FuncDefNode Println =
+            new FuncDefNode(null, Type.Void, "println", FuncParameterNode.singleStrParaNode);
+
+    static public FuncDefNode PrintInt =
+            new FuncDefNode(null, Type.Void, "printInt", FuncParameterNode.singleIntParaNode);
+
+    static public FuncDefNode PrintlnInt =
+            new FuncDefNode(null, Type.Void, "printlnInt", FuncParameterNode.singleIntParaNode);
+
+    static public FuncDefNode GetString =
+            new FuncDefNode(null, Type.String, "getString", FuncParameterNode.emptyParaNode);
+
+    static public FuncDefNode GetInt =
+            new FuncDefNode(null, Type.Int, "getInt", FuncParameterNode.emptyParaNode);
+
+    static public FuncDefNode ToString =
+            new FuncDefNode(null, Type.String, "toString", FuncParameterNode.singleIntParaNode);
+
 }

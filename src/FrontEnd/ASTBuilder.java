@@ -13,8 +13,14 @@ import Util.*;
 import Util.Error.SyntaxError;
 import Parser.MxBaseVisitor;
 import Parser.MxParser;
+import Util.Scope.GlobalScope;
 
 public class ASTBuilder extends MxBaseVisitor<ASTNode> {
+    private final GlobalScope gScope;
+
+    public ASTBuilder(GlobalScope globalScope) {
+        gScope = globalScope;
+    }
 
     @Override
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {

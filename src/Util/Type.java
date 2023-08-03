@@ -12,14 +12,14 @@ public class Type {
 
     public Type(String name) {
         typename = name;
-        if (!typename.equals("void") && !typename.equals("int") && !typename.equals("bool")
-                && !typename.equals("string") && !typename.equals("null")) isClass = true;
+        if (!typename.equals("void") && !typename.equals("int") && !typename.equals("bool") && !typename.equals("string") && !typename.equals("null"))
+            isClass = true;
     }
 
     public Type(String name, int d) {
         typename = name;
-        if (!typename.equals("void") && !typename.equals("int") && !typename.equals("bool")
-                && !typename.equals("string") && !typename.equals("null")) isClass = true;
+        if (!typename.equals("void") && !typename.equals("int") && !typename.equals("bool") && !typename.equals("string") && !typename.equals("null"))
+            isClass = true;
         dim = d;
     }
 
@@ -69,6 +69,26 @@ public class Type {
         return dim == 0 && !isClass;
     }
 
+    public boolean isInt() {
+        return typename.equals("int") && dim == 0;
+    }
+
+    public boolean isBool() {
+        return typename.equals("bool") && dim == 0;
+    }
+
+    public boolean isString() {
+        return typename.equals("string") && dim == 0;
+    }
+
+    public boolean isVoid() {
+        return typename.equals("void") && dim == 0;
+    }
+
+    public boolean isNull() {
+        return typename.equals("null") && dim == 0;
+    }
+
     public boolean isArray() {
         return dim > 0;
     }
@@ -80,4 +100,12 @@ public class Type {
         if (!(obj instanceof Type type)) return false;
         return dim == type.dim && typename.equals(type.typename);
     }
+
+    // built-in types -----------------------------------------------------------------
+
+    static public Type Int = new Type("int");
+    static public Type Bool = new Type("bool");
+    static public Type String = new Type("string");
+    static public Type Void = new Type("void");
+    static public Type Null = new Type("null");
 }

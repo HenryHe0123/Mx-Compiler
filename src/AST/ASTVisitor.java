@@ -7,55 +7,81 @@ import AST.Stmt.*;
 import AST.Util.*;
 
 public interface ASTVisitor {
-    void visit(RootNode node);
+    default void visit(RootNode node) {
+    }
 
-    void visit(VarDefNode node);
+    default void visit(VarDefNode node) {
+    }
 
-    void visit(VarDeclareUnitNode node);
+    default void visit(VarDeclareUnitNode node) {
+    }
 
-    void visit(FuncDefNode node);
+    default void visit(FuncDefNode node) {
+    }
 
-    void visit(FuncParameterNode node);
+    default void visit(FuncParameterNode node) {
+    }
 
-    void visit(ParameterUnitNode node);
+    default void visit(ParameterUnitNode node) {
+    }
 
-    void visit(BlockStmtNode node);
+    default void visit(BlockStmtNode node) {
+    }
 
-    void visit(ClassDefNode node);
+    default void visit(ClassDefNode node) {
+    }
 
-    void visit(ClassConstructorNode node);
+    default void visit(ClassConstructorNode node) {
+    }
 
-    void visit(BranchStmtNode node);
+    default void visit(BranchStmtNode node) {
+    }
 
-    void visit(ExprStmtNode node);
+    default void visit(ExprStmtNode node) {
+    }
 
-    void visit(WhileStmtNode node);
+    default void visit(WhileStmtNode node) {
+    }
 
-    void visit(ForStmtNode node);
+    default void visit(ForStmtNode node) {
+    }
 
-    void visit(ReturnStmtNode node);
+    default void visit(ReturnStmtNode node) {
+    }
 
-    void visit(CtrlStmtNode node);
+    default void visit(CtrlStmtNode node) {
+    }
 
-    void visit(BinaryExprNode node);
+    default void visit(BinaryExprNode node) {
+    }
 
-    void visit(VarExprNode node);
+    default void visit(VarExprNode node) {
+    }
 
-    void visit(LiteralExprNode node);
+    default void visit(LiteralExprNode node) {
+    }
 
-    void visit(FuncExprNode node);
+    default void visit(FuncExprNode node) {
+    }
 
-    void visit(MemberExprNode node);
+    default void visit(MemberExprNode node) {
+    }
 
-    void visit(ArrayExprNode node);
+    default void visit(ArrayExprNode node) {
+    }
 
-    void visit(PostfixUpdateExprNode node);
+    default void visit(PostfixUpdateExprNode node) {
+    }
 
-    void visit(UnaryExprNode node);
+    default void visit(UnaryExprNode node) {
+    }
 
-    void visit(NewExprNode node);
+    default void visit(NewExprNode node) {
+    }
 
-    void visit(AssignExprNode node);
+    default void visit(AssignExprNode node) {
+    }
 
-    void visit(TernaryExprNode node);
+    default void visit(TernaryExprNode node) {
+    }
 }
