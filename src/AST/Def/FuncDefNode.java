@@ -34,7 +34,7 @@ public class FuncDefNode extends ASTNode {
         }
         if (parameter.args.size() != call.args.size()) return false;
         for (int i = 0; i < parameter.args.size(); i++) {
-            if (!parameter.args.get(i).type.equals(call.args.get(i).type)) return false;
+            if (parameter.args.get(i).type.notEquals(call.args.get(i).type)) return false;
         }
         return true;
     }
@@ -46,27 +46,27 @@ public class FuncDefNode extends ASTNode {
 
     // built-in functions -----------------------------------------------------------------
 
-    static public FuncDefNode Print =
-            new FuncDefNode(null, Type.Void, "print", FuncParameterNode.singleStrParaNode);
+    static public final FuncDefNode Print =
+            new FuncDefNode(null, Type.Void(), "print", FuncParameterNode.singleStrParaNode);
 
-    static public FuncDefNode Println =
-            new FuncDefNode(null, Type.Void, "println", FuncParameterNode.singleStrParaNode);
+    static public final FuncDefNode Println =
+            new FuncDefNode(null, Type.Void(), "println", FuncParameterNode.singleStrParaNode);
 
-    static public FuncDefNode PrintInt =
-            new FuncDefNode(null, Type.Void, "printInt", FuncParameterNode.singleIntParaNode);
+    static public final FuncDefNode PrintInt =
+            new FuncDefNode(null, Type.Void(), "printInt", FuncParameterNode.singleIntParaNode);
 
-    static public FuncDefNode PrintlnInt =
-            new FuncDefNode(null, Type.Void, "printlnInt", FuncParameterNode.singleIntParaNode);
+    static public final FuncDefNode PrintlnInt =
+            new FuncDefNode(null, Type.Void(), "printlnInt", FuncParameterNode.singleIntParaNode);
 
-    static public FuncDefNode GetString =
-            new FuncDefNode(null, Type.String, "getString", FuncParameterNode.emptyParaNode);
+    static public final FuncDefNode GetString =
+            new FuncDefNode(null, Type.String(), "getString", FuncParameterNode.emptyParaNode);
 
-    static public FuncDefNode GetInt =
-            new FuncDefNode(null, Type.Int, "getInt", FuncParameterNode.emptyParaNode);
+    static public final FuncDefNode GetInt =
+            new FuncDefNode(null, Type.Int(), "getInt", FuncParameterNode.emptyParaNode);
 
-    static public FuncDefNode ToString =
-            new FuncDefNode(null, Type.String, "toString", FuncParameterNode.singleIntParaNode);
+    static public final FuncDefNode ToString =
+            new FuncDefNode(null, Type.String(), "toString", FuncParameterNode.singleIntParaNode);
 
-    static public FuncDefNode Size =    //for array
-            new FuncDefNode(null, Type.Int, "size", FuncParameterNode.emptyParaNode);
+    static public final FuncDefNode Size =    //for array
+            new FuncDefNode(null, Type.Int(), "size", FuncParameterNode.emptyParaNode);
 }

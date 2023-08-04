@@ -100,7 +100,7 @@ public class GlobalScope extends Scope {
 
     public Type getCallMethodType(Type type, FuncExprNode call) { //return null if failed
         if (type.isArray()) {
-            if (FuncDefNode.Size.callFunctionCorrect(call)) return Type.Int;
+            if (FuncDefNode.Size.callFunctionCorrect(call)) return Type.Int();
             else return null;
         }
         String className = type.typename;

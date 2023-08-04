@@ -63,6 +63,6 @@ public class Basic { //unified basic type of Mx (including null)
         if (isNull) return new Type("null");
         if (isBool) return new Type("bool");
         if (isInt) return new Type("int");
-        return new Type("String");
+        return new Type("string");
     }
 }

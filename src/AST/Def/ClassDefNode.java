@@ -61,10 +61,10 @@ public class ClassDefNode extends ASTNode {
 
     static private ClassDefNode StringBuild() {
         ClassDefNode stringDef = new ClassDefNode(null, "string");
-        FuncDefNode LengthFunc = new FuncDefNode(null, Type.Int, "length", FuncParameterNode.emptyParaNode);
-        FuncDefNode SubStringFunc = new FuncDefNode(null, Type.String, "substring", FuncParameterNode.doubleIntParaNode);
-        FuncDefNode ParseIntFunc = new FuncDefNode(null, Type.Int, "parseInt", FuncParameterNode.emptyParaNode);
-        FuncDefNode OrdFunc = new FuncDefNode(null, Type.Int, "ord", FuncParameterNode.singleIntParaNode);
+        FuncDefNode LengthFunc = new FuncDefNode(null, Type.Int(), "length", FuncParameterNode.emptyParaNode);
+        FuncDefNode SubStringFunc = new FuncDefNode(null, Type.String(), "substring", FuncParameterNode.doubleIntParaNode);
+        FuncDefNode ParseIntFunc = new FuncDefNode(null, Type.Int(), "parseInt", FuncParameterNode.emptyParaNode);
+        FuncDefNode OrdFunc = new FuncDefNode(null, Type.Int(), "ord", FuncParameterNode.singleIntParaNode);
         stringDef.funcDefs.add(LengthFunc);
         stringDef.funcDefs.add(SubStringFunc);
         stringDef.funcDefs.add(ParseIntFunc);
@@ -72,7 +72,7 @@ public class ClassDefNode extends ASTNode {
         return stringDef;
     }
 
-    static public ClassDefNode String = StringBuild();
-    static public ClassDefNode Int = new ClassDefNode(null, "int");
-    static public ClassDefNode Bool = new ClassDefNode(null, "bool");
+    static public final ClassDefNode String = StringBuild();
+    static public final ClassDefNode Int = new ClassDefNode(null, "int");
+    static public final ClassDefNode Bool = new ClassDefNode(null, "bool");
 }

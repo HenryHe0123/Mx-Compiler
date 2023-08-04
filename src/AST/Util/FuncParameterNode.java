@@ -21,20 +21,20 @@ public class FuncParameterNode extends ASTNode {
 
     static private FuncParameterNode singleStrParaNodeBuild() {
         FuncParameterNode node = new FuncParameterNode(null);
-        node.args.add(new ParameterUnitNode(null, Type.String, "str"));
+        node.args.add(new ParameterUnitNode(null, Type.String(), "str"));
         return node;
     }
 
     static private FuncParameterNode singleIntParaNodeBuild() {
         FuncParameterNode node = new FuncParameterNode(null);
-        node.args.add(new ParameterUnitNode(null, Type.Int, "n"));
+        node.args.add(new ParameterUnitNode(null, Type.Int(), "n"));
         return node;
     }
 
     static private FuncParameterNode doubleIntParaNodeBuild() {
         FuncParameterNode node = new FuncParameterNode(null);
-        node.args.add(new ParameterUnitNode(null, Type.Int, "left"));
-        node.args.add(new ParameterUnitNode(null, Type.Int, "right"));
+        node.args.add(new ParameterUnitNode(null, Type.Int(), "left"));
+        node.args.add(new ParameterUnitNode(null, Type.Int(), "right"));
         return node;
     }
 

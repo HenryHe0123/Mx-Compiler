@@ -15,6 +15,22 @@ public class BinaryExprNode extends ExprNode {
         this.rhs = rhs;
     }
 
+    public boolean isLogic() { //bool operation
+        return operator.equals("&&") || operator.equals("||");
+    }
+
+    public boolean isCmp() {
+        return operator.equals("<") || operator.equals(">") || operator.equals("<=") || operator.equals(">=") || operator.equals("==") || operator.equals("!=");
+    }
+
+    public boolean isBitOperation() {
+        return operator.equals("<<") || operator.equals(">>") || operator.equals("&") || operator.equals("^") || operator.equals("|");
+    }
+
+    public boolean isArithmetic() {
+        return operator.equals("+") || operator.equals("-") || operator.equals("*") || operator.equals("/") || operator.equals("%");
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);

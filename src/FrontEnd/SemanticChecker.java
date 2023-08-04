@@ -32,6 +32,8 @@ public class SemanticChecker implements ASTVisitor {
                 throw new SemanticError("undefined class type " + type.typename, pos);
     }
 
+    // ------------------------------ definition ------------------------------
+
     @Override
     public void visit(ClassDefNode node) {
         if (node.isBuiltIn()) throw new SemanticError("unexpected redefine of built-in class", node.pos);
@@ -79,11 +81,13 @@ public class SemanticChecker implements ASTVisitor {
 
     @Override
     public void visit(ClassConstructorNode node) {
-        currentScope = new Scope(currentScope, Type.Void);
+        currentScope = new Scope(currentScope, Type.Void());
         node.stmts.forEach(stmt -> stmt.accept(this));
         //return check in returnStmt visit (just like void function)
         currentScope = currentScope.getParent();
     }
+
+    // ------------------------------ statement ------------------------------
 
     @Override
     public void visit(ReturnStmtNode node) {
@@ -164,6 +168,8 @@ public class SemanticChecker implements ASTVisitor {
         if (node.expression != null) node.expression.accept(this);
     }
 
+    // ------------------------------ expression ------------------------------
+
     @Override
     public void visit(VarExprNode node) {
         if (node.isThis()) { //this must be used in class method
@@ -224,7 +230,7 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(ArrayExprNode node) {
         node.array.accept(this);
-        node.type = node.array.type;
+        node.type = new Type(node.array.type); //deep copy
         for (var index : node.indexes) {
             index.accept(this);
             if (Type.notInt(index.type))
@@ -255,6 +261,76 @@ public class SemanticChecker implements ASTVisitor {
                     throw new SemanticError("new array index type not int", node.pos);
             }
         }
+    }
+
+    @Override
+    public void visit(UnaryExprNode node) {
+        node.expression.accept(this);
+        if (node.isInt()) {
+            if (Type.notInt(node.expression.type))
+                throw new SemanticError("unary expression type mismatch: should be int", node.pos);
+            node.type = Type.Int();
+        } else if (node.isBool()) {
+            if (Type.notBool(node.expression.type))
+                throw new SemanticError("unary expression type mismatch: should be bool", node.pos);
+            node.type = Type.Bool();
+        } else {
+            throw new SemanticError("unexpected unary expression error", node.pos);
+        }
+    }
+
+    @Override
+    public void visit(BinaryExprNode node) {
+        node.rhs.accept(this);
+        node.lhs.accept(this);
+        if (node.rhs.type.notEquals(node.lhs.type))
+            throw new SemanticError("binary expression type mismatch", node.pos);
+        Type type = node.rhs.type; //type of rhs and lhs already same
+        if (node.isCmp()) {
+            node.type = Type.Bool();
+        } else if (node.isLogic()) { //bool operation
+            if (Type.notBool(type))
+                throw new SemanticError("logic binary expression type mismatch: should be bool", node.pos);
+            node.type = Type.Bool();
+        } else if (node.isArithmetic() || node.isBitOperation()) { //int operation
+            if (Type.notInt(type))
+                throw new SemanticError("binary expression type mismatch: should be int", node.pos);
+            node.type = Type.Int();
+        } else {
+            throw new SemanticError("unexpected binary expression error", node.pos);
+        }
+    }
+
+    @Override
+    public void visit(PostfixUpdateExprNode node) {
+        node.expression.accept(this);
+        if (Type.notInt(node.expression.type))
+            throw new SemanticError("postfix update expression type should be int", node.pos);
+        node.type = Type.Int();
+    }
+
+    @Override
+    public void visit(AssignExprNode node) {
+        node.rhs.accept(this);
+        node.lhs.accept(this);
+        if (node.lhs.type.notEquals(node.rhs.type))
+            throw new SemanticError("assign expression type mismatch", node.pos);
+        if (!node.lhs.isAssignable())
+            throw new SemanticError("assign to an unAssignable expression", node.pos);
+        node.type = new Type(node.lhs.type);
+        //rhs may be null, but lhs shouldn't;
+    }
+
+    @Override
+    public void visit(TernaryExprNode node) {
+        node.condition.accept(this);
+        if (Type.notBool(node.condition.type))
+            throw new SemanticError("ternary expression condition type should be bool", node.pos);
+        node.ifExpr.accept(this);
+        node.elseExpr.accept(this);
+        if (node.ifExpr.type.notEquals(node.elseExpr.type))
+            throw new SemanticError("ternary expression type mismatch", node.pos);
+        node.type = new Type(node.ifExpr.type);
     }
 
 }

@@ -8,4 +8,5 @@
 - [x] AST Node design
 - [x] AST Builder
 - [x] Symbol Collector
-- [ ] Semantic Checker
+- [x] Semantic Checker
+- [ ] Pass Semantic Test

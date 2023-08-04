@@ -13,6 +13,13 @@ import Util.MxErrorListener;
 
 public class Compiler {
     public static void main(String[] args) throws Exception {
+
+        boolean local = false;
+        if (local) {
+            LocalJudge.testSemantic();
+            return;
+        }
+
         //InputStream input = System.in;
         String name = "test.mx";
         InputStream input = new FileInputStream(name);

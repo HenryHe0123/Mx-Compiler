@@ -20,6 +20,12 @@ public class Type {
         dim = d;
     }
 
+    public Type(Type type) {
+        typename = type.typename;
+        isClass = type.isClass;
+        dim = type.dim;
+    }
+
     public Type(MxParser.TypenameContext ctx) {
         if (ctx == null) return;
         else if (ctx.simpleType().Int() != null) typename = "int";
@@ -120,9 +126,30 @@ public class Type {
 
     // built-in types -----------------------------------------------------------------
 
-    static public Type Int = new Type("int");
-    static public Type Bool = new Type("bool");
-    static public Type String = new Type("string");
-    static public Type Void = new Type("void");
-    static public Type Null = new Type("null");
+    static private final Type Int = new Type("int");
+    static private final Type Bool = new Type("bool");
+    static private final Type String = new Type("string");
+    static private final Type Void = new Type("void");
+    static private final Type Null = new Type("null");
+
+    // new built-in types ------------------------------------------------------------
+    static public Type Int() {
+        return new Type(Int);
+    }
+
+    static public Type Bool() {
+        return new Type(Bool);
+    }
+
+    static public Type String() {
+        return new Type(String);
+    }
+
+    static public Type Void() {
+        return new Type(Void);
+    }
+
+    static public Type Null() {
+        return new Type(Null);
+    }
 }
