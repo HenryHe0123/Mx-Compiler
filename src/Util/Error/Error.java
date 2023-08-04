@@ -11,7 +11,7 @@ abstract public class Error extends RuntimeException {
         this.message = msg;
     }
 
-    public String toString() {
+    public String getText() {
         return message + ": " + (pos == null ? "" : pos.toString());
     }
 }

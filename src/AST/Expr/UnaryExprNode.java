@@ -26,6 +26,16 @@ public class UnaryExprNode extends ExprNode {
         return (operator.equals("++") || operator.equals("--") || operator.equals("-") || operator.equals("~"));
     }
 
+    public boolean isPrefixUpdate() {
+        return operator.equals("++") || operator.equals("--");
+    }
+
+    @Override
+    public boolean isAssignable() {
+        //for ++e or --e, expression itself must be assignable
+        return isPrefixUpdate();
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);

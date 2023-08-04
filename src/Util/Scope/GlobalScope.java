@@ -105,7 +105,9 @@ public class GlobalScope extends Scope {
         }
         String className = type.typename;
         if (classMembers.containsKey(className)) {
-            return classMembers.get(className).getCallMethodType(call);
+            var classDef = classMembers.get(className);
+            //System.err.println("visit getCallMethodType, find class: " + className + ", call method: " + call.funcName);
+            return classDef.getCallMethodType(call);
         }
         return null;
     }

@@ -1,46 +1,44 @@
 import java.io.*;
 
-import AST.RootNode;
-import FrontEnd.*;
-import Parser.MxLexer;
-import Parser.MxParser;
-import Util.Error.Error;
-import Util.Scope.GlobalScope;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
-import Util.MxErrorListener;
-
 public class LocalJudge {
     public static final String RESET = "\u001B[0m";
     public static final String RED = "\u001B[31m";
     public static final String GREEN = "\u001B[32m";
     public static final String YELLOW = "\u001B[33m";
 
-    public static void testSemantic() throws Exception {
+    public static void judge() throws Exception {
         String folderPath = "testcases/sema";
-        traverseFolder(new File(folderPath));
+        if (traverseFolder(new File(folderPath))) {
+            System.out.println(GREEN + "All tests passed!");
+        } else {
+            System.out.println(RED + "Some tests failed!");
+        }
+        System.out.print(RESET);
     }
 
-    public static void traverseFolder(File folder) throws Exception {
+    public static boolean traverseFolder(File folder) throws Exception {
         if (folder.isDirectory()) {
+            boolean success = true;
             File[] files = folder.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    traverseFolder(file);
+                    if (!traverseFolder(file)) success = false;
                 }
             }
+            return success;
         } else {
             System.out.println(YELLOW + folder.getAbsolutePath().substring(folder.getAbsolutePath().indexOf("sema\\") + 5) + ": ");
-            if (check(folder.getAbsolutePath())) {
+            if (semanticCheck(folder.getAbsolutePath())) {
                 System.out.println(GREEN + "Pass!");
+                return true;
             } else {
                 System.out.println(RED + "Fail!");
+                return false;
             }
         }
     }
 
-    public static boolean check(String fileName) throws Exception {
+    public static boolean semanticCheck(String fileName) throws Exception {
         boolean success = false;
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             int lineNumber = 1;
@@ -49,7 +47,7 @@ public class LocalJudge {
                 if (lineNumber == 6) {
                     String result = line.substring(line.indexOf(":") + 2);
                     success = result.equals("Success");
-                    break; // 找到第六行后退出循环
+                    break; // find the answer in line 6 and exit the loop
                 }
                 lineNumber++;
             }
@@ -58,25 +56,8 @@ public class LocalJudge {
         }
         try {
             InputStream input = new FileInputStream(fileName);
-            GlobalScope globalScope = new GlobalScope();
-            globalScope.initialize();
-
-            MxLexer lexer = new MxLexer(CharStreams.fromStream(input));
-            lexer.removeErrorListeners();
-            lexer.addErrorListener(new MxErrorListener());
-
-            MxParser parser = new MxParser(new CommonTokenStream(lexer));
-            parser.removeErrorListeners();
-            parser.addErrorListener(new MxErrorListener());
-
-            ParseTree parseTreeRoot = parser.program();
-            ASTBuilder astBuilder = new ASTBuilder();
-            RootNode ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
-
-            new SymbolCollector(globalScope).visit(ASTRoot);
-            new FrontEnd.SemanticChecker(globalScope).visit(ASTRoot);
-        } catch (Error er) {
-            //System.err.println(er.toString());
+            Compiler.compile(input);
+        } catch (Exception er) {
             return !success;
         }
         return success;

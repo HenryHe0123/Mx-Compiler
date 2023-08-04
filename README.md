@@ -9,4 +9,5 @@
 - [x] AST Builder
 - [x] Symbol Collector
 - [x] Semantic Checker
-- [ ] Pass Semantic Test
+- [x] Pass Semantic Test
+- [ ] IR Builder

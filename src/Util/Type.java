@@ -124,6 +124,10 @@ public class Type {
         return Int.notEquals(type);
     }
 
+    static public boolean notString(Type type) {
+        return String.notEquals(type);
+    }
+
     // built-in types -----------------------------------------------------------------
 
     static private final Type Int = new Type("int");

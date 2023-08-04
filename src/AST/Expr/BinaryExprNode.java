@@ -31,6 +31,10 @@ public class BinaryExprNode extends ExprNode {
         return operator.equals("+") || operator.equals("-") || operator.equals("*") || operator.equals("/") || operator.equals("%");
     }
 
+    public boolean isAdd() {
+        return operator.equals("+");
+    }
+
     @Override
     public void accept(ASTVisitor visitor) {
         visitor.visit(this);

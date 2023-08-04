@@ -132,8 +132,10 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
 
     public ASTNode visitForStatement(MxParser.ForStatementContext ctx) {
         var init = (StmtNode) visit(ctx.forInitCondition().forInit());
-        var condition = (ExprNode) visit(ctx.forInitCondition().condition());
-        var step = (ExprNode) visit(ctx.forInitCondition().step);
+        var condition = (ctx.forInitCondition().condition() == null) ? null :
+                (ExprNode) visit(ctx.forInitCondition().condition());
+        var step = (ctx.forInitCondition().step == null) ? null :
+                (ExprNode) visit(ctx.forInitCondition().step);
         var body = (StmtNode) visit(ctx.body);
         return new ForStmtNode(new Position(ctx), init, condition, step, body);
     }

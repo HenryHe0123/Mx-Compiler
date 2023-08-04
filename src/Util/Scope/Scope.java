@@ -55,5 +55,12 @@ public class Scope {
         return null;
     }
 
+    public ClassDefNode insideClass() { //look up the class that this scope is in
+        for (Scope scope = this; scope != null; scope = scope.parentScope) {
+            if (scope.inClass != null) return scope.inClass;
+        }
+        return null;
+    }
+
 }
 

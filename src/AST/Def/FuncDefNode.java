@@ -34,6 +34,10 @@ public class FuncDefNode extends ASTNode {
         }
         if (parameter.args.size() != call.args.size()) return false;
         for (int i = 0; i < parameter.args.size(); i++) {
+//            //for debug
+//            System.err.println("parameter.args.get" + i);
+//            System.err.println("type we need: " + parameter.args.get(i).type.typename);
+//            System.err.println("type we have: " + call.args.get(i).type.typename);
             if (parameter.args.get(i).type.notEquals(call.args.get(i).type)) return false;
         }
         return true;

@@ -4,7 +4,7 @@ import Parser.MxParser;
 
 public class Basic { //unified basic type of Mx (including null)
     public boolean boolVal = false;
-    public int intVal = 0;
+    public long intVal = 0; //use larger int scope to handle the problem of -2147483648
     public String stringVal = null;
     public boolean isNull = false;
     public boolean isBool = false;
@@ -28,13 +28,18 @@ public class Basic { //unified basic type of Mx (including null)
         isInt = true;
     }
 
+    public Basic(long intVal) {
+        this.intVal = intVal;
+        isInt = true;
+    }
+
     public Basic(String stringVal) {
         this.stringVal = stringVal;
     }
 
     public Basic(MxParser.LiteralContext ctx) {
         if (ctx.IntLiteral() != null) {
-            intVal = Integer.parseInt(ctx.IntLiteral().getText());
+            intVal = Long.parseLong(ctx.IntLiteral().getText());
             isInt = true;
         } else if (ctx.StringLiteral() != null) {
             stringVal = ctx.StringLiteral().getText();

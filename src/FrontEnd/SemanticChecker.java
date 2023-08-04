@@ -121,7 +121,7 @@ public class SemanticChecker implements ASTVisitor {
         if (Type.notBool(node.condition.type))
             throw new SemanticError("branch statement condition not bool", node.pos);
         currentScope = new Scope(currentScope);
-        node.ifStmt.accept(this);
+        if (node.ifStmt != null) node.ifStmt.accept(this);
         currentScope = currentScope.getParent();
         if (node.elseStmt != null) {
             currentScope = new Scope(currentScope);
@@ -137,7 +137,7 @@ public class SemanticChecker implements ASTVisitor {
             throw new SemanticError("while statement condition not bool", node.pos);
         currentScope = new Scope(currentScope);
         inLoop++;
-        node.body.accept(this);
+        if (node.body != null) node.body.accept(this);
         currentScope = currentScope.getParent();
         inLoop--;
     }
@@ -153,7 +153,7 @@ public class SemanticChecker implements ASTVisitor {
                 throw new SemanticError("for statement condition not bool", node.pos);
         }
         if (node.step != null) node.step.accept(this);
-        node.body.accept(this);
+        if (node.body != null) node.body.accept(this);
         currentScope = currentScope.getParent();
         inLoop--;
     }
@@ -192,8 +192,15 @@ public class SemanticChecker implements ASTVisitor {
         //only check global function, class method is checked in memberExpr
         node.args.forEach(arg -> arg.accept(this));
         Type type = gScope.getCallGlobalFuncType(node);
-        if (type == null)
-            throw new SemanticError("call global function " + node.funcName + " failed", node.pos);
+        if (type == null) {
+            //debug: maybe in class environment and call class method
+            var inClass = currentScope.insideClass();
+            if (inClass == null)
+                throw new SemanticError("call global function " + node.funcName + " failed", node.pos);
+            type = gScope.getCallMethodType(new Type(inClass.identifier), node);
+            if (type == null)
+                throw new SemanticError("call function " + node.funcName + " in class environment failed", node.pos);
+        }
         node.type = type;
     }
 
@@ -204,9 +211,12 @@ public class SemanticChecker implements ASTVisitor {
         String className = classType.typename;
         if (node.dotFunc()) {
             var method = (FuncExprNode) node.member;
+            method.args.forEach(arg -> arg.accept(this)); //debug: don't forget to visit args first
             Type type = gScope.getCallMethodType(classType, method);
-            if (type == null)
+            if (type == null) {
+                //System.err.println("method name: " + method.funcName + ", arg size: " + method.args.size());
                 throw new SemanticError("call class method " + className + "." + method.funcName + " failed", node.pos);
+            }
             node.type = type;
             return;
         }
@@ -266,6 +276,10 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(UnaryExprNode node) {
         node.expression.accept(this);
+        if (node.isPrefixUpdate()) { //debug: check if update expression assignable
+            if (!node.expression.isAssignable())
+                throw new SemanticError("prefix update expression should be assignable", node.pos);
+        }
         if (node.isInt()) {
             if (Type.notInt(node.expression.type))
                 throw new SemanticError("unary expression type mismatch: should be int", node.pos);
@@ -292,6 +306,10 @@ public class SemanticChecker implements ASTVisitor {
             if (Type.notBool(type))
                 throw new SemanticError("logic binary expression type mismatch: should be bool", node.pos);
             node.type = Type.Bool();
+        } else if (node.isAdd()) { //debug: string also support add operation
+            if (Type.notInt(type) && Type.notString(type))
+                throw new SemanticError("add binary expression type mismatch: should be int or string", node.pos);
+            node.type = new Type(type);
         } else if (node.isArithmetic() || node.isBitOperation()) { //int operation
             if (Type.notInt(type))
                 throw new SemanticError("binary expression type mismatch: should be int", node.pos);
@@ -304,6 +322,8 @@ public class SemanticChecker implements ASTVisitor {
     @Override
     public void visit(PostfixUpdateExprNode node) {
         node.expression.accept(this);
+        if (!node.expression.isAssignable()) //debug: check if update expression assignable
+            throw new SemanticError("postfix update expression should be assignable", node.pos);
         if (Type.notInt(node.expression.type))
             throw new SemanticError("postfix update expression type should be int", node.pos);
         node.type = Type.Int();
