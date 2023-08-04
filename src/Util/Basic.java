@@ -2,7 +2,7 @@ package Util;
 
 import Parser.MxParser;
 
-public class Basic { //unified basic type of Mx
+public class Basic { //unified basic type of Mx (including null)
     public boolean boolVal = false;
     public int intVal = 0;
     public String stringVal = null;
@@ -47,6 +47,16 @@ public class Basic { //unified basic type of Mx
         } else {
             isNull = true;
         }
+    }
+
+    public boolean equals(Basic basic) {
+        if (basic == null) return false;
+        if (basic == this) return true;
+        if (isNull && basic.isNull) return true;
+        if (isBool && basic.isBool) return boolVal == basic.boolVal;
+        if (isInt && basic.isInt) return intVal == basic.intVal;
+        if (isString() && basic.isString()) return stringVal.equals(basic.stringVal);
+        return false;
     }
 
     public Type type() {

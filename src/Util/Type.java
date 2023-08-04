@@ -4,11 +4,8 @@ import Parser.MxParser;
 
 public class Type {
     public String typename;
-    public boolean isClass = false;
+    public boolean isClass = false; //class array is also class
     public int dim = 0; //array's dimension
-
-    public Type() {
-    }
 
     public Type(String name) {
         typename = name;
@@ -65,10 +62,6 @@ public class Type {
         }
     }
 
-    public boolean isBasic() {
-        return dim == 0 && !isClass;
-    }
-
     public boolean isInt() {
         return typename.equals("int") && dim == 0;
     }
@@ -93,12 +86,36 @@ public class Type {
         return dim > 0;
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) return false;
-        if (obj == this) return true;
-        if (!(obj instanceof Type type)) return false;
+    public boolean isBasic() { //build-in classes, not include null
+        return isInt() || isBool() || isString();
+    }
+
+    public boolean isReference() { //support null
+        return !isBasic() && !isVoid();
+    }
+
+    public boolean equals(Type type) {
+        if (type == null) return false;
+        if (type == this) return true;
+        if (isNull() && type.isReference()) return true;
+        if (type.isNull() && isReference()) return true;
         return dim == type.dim && typename.equals(type.typename);
+    }
+
+    public boolean notEquals(Type type) {
+        if (type == null) return true;
+        if (type == this) return false;
+        if (isNull() && type.isReference()) return false;
+        if (type.isNull() && isReference()) return false;
+        return dim != type.dim || !typename.equals(type.typename);
+    }
+
+    static public boolean notBool(Type type) {
+        return Bool.notEquals(type);
+    }
+
+    static public boolean notInt(Type type) {
+        return Int.notEquals(type);
     }
 
     // built-in types -----------------------------------------------------------------

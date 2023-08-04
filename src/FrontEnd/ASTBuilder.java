@@ -13,21 +13,26 @@ import Util.*;
 import Util.Error.SyntaxError;
 import Parser.MxBaseVisitor;
 import Parser.MxParser;
-import Util.Scope.GlobalScope;
 
 public class ASTBuilder extends MxBaseVisitor<ASTNode> {
-    private final GlobalScope gScope;
-
-    public ASTBuilder(GlobalScope globalScope) {
-        gScope = globalScope;
-    }
-
     @Override
     public ASTNode visitProgram(MxParser.ProgramContext ctx) {
         RootNode root = new RootNode(new Position(ctx));
-        ctx.varDef().forEach(vd -> root.varDefs.add((VarDefNode) visit(vd)));
-        ctx.funcDef().forEach(fd -> root.funcDefs.add((FuncDefNode) visit(fd)));
-        ctx.classDef().forEach(cd -> root.classDefs.add((ClassDefNode) visit(cd)));
+        for (var Stmt : ctx.children) {
+            boolean isClass = Stmt instanceof MxParser.ClassDefContext;
+            boolean isFunc = Stmt instanceof MxParser.FuncDefContext;
+            boolean isVar = Stmt instanceof MxParser.VarDefContext;
+            if (!isClass && !isFunc && !isVar) break; //debug: EOF
+            var node = visit(Stmt);
+            root.defs.add(node);
+            if (isClass) {
+                root.classDefs.add((ClassDefNode) node);
+            } else if (isFunc) {
+                root.funcDefs.add((FuncDefNode) node);
+            } else { //isVar
+                root.varDefs.add((VarDefNode) node);
+            }
+        }
         return root;
     }
 
@@ -101,7 +106,10 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     public ASTNode visitSuite(MxParser.SuiteContext ctx) {
         if (ctx.statement() == null) return null; //no need to build an empty node anymore
         var node = new BlockStmtNode(new Position(ctx));
-        ctx.statement().forEach(stmt -> node.stmts.add((StmtNode) visit(stmt)));
+        ctx.statement().forEach(stmt -> {
+            var stmtNode = (StmtNode) visit(stmt);
+            if (stmtNode != null) node.stmts.add(stmtNode);
+        });
         return node;
     }
 
@@ -182,10 +190,12 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
     @Override
     public ASTNode visitNewArrayExpr(MxParser.NewArrayExprContext ctx) {
         var node = new NewExprNode(new Position(ctx), new Type(ctx.simpleType()));
-        node.type.dim = ctx.LBrack().size();
-        if (ctx.expression() != null) {
-            ctx.expression().forEach(expr -> node.dimExpr.add((ExprNode) visit(expr)));
-        }
+        node.type.dim = ctx.newArrayIndex().size();
+        ctx.newArrayIndex().forEach(index -> {
+            var expr = index.expression();
+            ExprNode exprNode = (expr == null) ? null : (ExprNode) visit(expr);
+            node.dimExpr.add(exprNode);
+        });
         return node;
     }
 

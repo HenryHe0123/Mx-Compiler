@@ -4,6 +4,7 @@ import AST.*;
 import AST.Def.*;
 import Util.Error.SyntaxError;
 import Util.Scope.GlobalScope;
+import Util.Type;
 
 public class SymbolCollector implements ASTVisitor {
     private final GlobalScope gScope;
@@ -18,7 +19,7 @@ public class SymbolCollector implements ASTVisitor {
         node.funcDefs.forEach(this::visit);
         //do nothing for varDefs, as global variables don't support forward reference
         var mainFn = gScope.getFuncDefNode("main");
-        if (mainFn == null || !mainFn.type.isInt() || mainFn.parameter.args.size() > 0) {
+        if (mainFn == null || Type.notInt(mainFn.type) || mainFn.parameter.args.size() > 0) {
             throw new SyntaxError("invalid main function", node.pos);
         }
     }

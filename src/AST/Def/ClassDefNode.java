@@ -1,6 +1,8 @@
 package AST.Def;
 
 import AST.*;
+import AST.Expr.primary.FuncExprNode;
+import AST.Expr.primary.VarExprNode;
 import AST.Util.ClassConstructorNode;
 import AST.Util.FuncParameterNode;
 import Util.Position;
@@ -23,6 +25,31 @@ public class ClassDefNode extends ASTNode {
 
     public boolean isBuiltIn() {
         return constructor == null;
+    }
+
+    public boolean callMethodCorrect(FuncExprNode call) {
+        for (var func : funcDefs) {
+            if (func.callFunctionCorrect(call)) return true;
+        }
+        return false;
+    }
+
+    public Type getCallMethodType(FuncExprNode call) {
+        if (call == null) return null;
+        for (var func : funcDefs) {
+            if (func.callFunctionCorrect(call)) return func.type;
+        }
+        return null;
+    }
+
+    public Type getVarMemberType(VarExprNode member) {
+        if (member == null) return null;
+        for (var varDef : varDefs) {
+            for (var unit : varDef.varDeclareUnits) {
+                if (unit.identifier.equals(member.identifier)) return varDef.type;
+            }
+        }
+        return null;
     }
 
     @Override

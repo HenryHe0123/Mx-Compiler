@@ -71,7 +71,9 @@ varDeclareUnit: Identifier (Assign expression)?;
 varDef: typename varDeclareUnit (Comma varDeclareUnit)* Semi;
 
 //details (of expression/statement)
-newArrayExpr : New simpleType (LBrack (expression)? RBrack)+;
+newArrayIndex: LBrack expression? RBrack; //cannot be inline
+
+newArrayExpr : New simpleType newArrayIndex+;
 
 newClassExpr: New Identifier (LParen RParen)?;
 

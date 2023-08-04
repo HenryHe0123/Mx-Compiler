@@ -10,12 +10,28 @@ public class Scope {
     private final HashMap<String, Type> varMembers = new HashMap<>();
     private final Scope parentScope;
     public ClassDefNode inClass = null;
+    public Type returnType = null; //for constructor, returnType = Type.Void
+    public boolean isReturned = false;
 
-    public Scope(Scope parentScope) {
+    public Scope(Scope parentScope) { //for normal suite
         this.parentScope = parentScope;
     }
 
-    public Scope getParentScope() {
+    public Scope(Scope parentScope, ClassDefNode inClass) { //for class
+        this.parentScope = parentScope;
+        this.inClass = inClass;
+    }
+
+    public Scope(Scope parentScope, Type returnType) { //for function
+        this.parentScope = parentScope;
+        this.returnType = returnType;
+    }
+
+    public boolean inFunction() {
+        return returnType != null;
+    }
+
+    public Scope getParent() {
         return parentScope;
     }
 

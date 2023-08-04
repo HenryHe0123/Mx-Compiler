@@ -1,6 +1,7 @@
 package Util.Scope;
 
 import AST.Def.*;
+import AST.Expr.primary.FuncExprNode;
 import Util.*;
 import Util.Error.SemanticError;
 
@@ -66,5 +67,46 @@ public class GlobalScope extends Scope {
 
     public boolean hasSymbol(String name) {
         return hasFunc(name) || hasClass(name);
+    }
+
+    public boolean callGlobalFuncCorrect(FuncExprNode call) {
+        String funcName = call.funcName;
+        if (funcMembers.containsKey(funcName)) {
+            return funcMembers.get(funcName).callFunctionCorrect(call);
+        }
+        return false;
+    }
+
+    public boolean callMethodCorrect(Type type, FuncExprNode call) {
+        if (type.isArray()) {
+            return FuncDefNode.Size.callFunctionCorrect(call);
+        }
+        String className = type.typename;
+        if (classMembers.containsKey(className)) {
+            return classMembers.get(className).callMethodCorrect(call);
+        }
+        return false;
+    }
+
+    public Type getCallGlobalFuncType(FuncExprNode call) { //return null if failed
+        String funcName = call.funcName;
+        if (funcMembers.containsKey(funcName)) {
+            var funcDef = funcMembers.get(funcName);
+            if (funcDef.callFunctionCorrect(call)) return funcDef.type;
+            else return null;
+        }
+        return null;
+    }
+
+    public Type getCallMethodType(Type type, FuncExprNode call) { //return null if failed
+        if (type.isArray()) {
+            if (FuncDefNode.Size.callFunctionCorrect(call)) return Type.Int;
+            else return null;
+        }
+        String className = type.typename;
+        if (classMembers.containsKey(className)) {
+            return classMembers.get(className).getCallMethodType(call);
+        }
+        return null;
     }
 }

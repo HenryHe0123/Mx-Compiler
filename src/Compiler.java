@@ -13,7 +13,9 @@ import Util.MxErrorListener;
 
 public class Compiler {
     public static void main(String[] args) throws Exception {
-        InputStream input = System.in;
+        //InputStream input = System.in;
+        String name = "test.mx";
+        InputStream input = new FileInputStream(name);
 
         try {
             GlobalScope globalScope = new GlobalScope();
@@ -28,10 +30,12 @@ public class Compiler {
             parser.addErrorListener(new MxErrorListener());
 
             ParseTree parseTreeRoot = parser.program();
-            ASTBuilder astBuilder = new ASTBuilder(globalScope);
+            ASTBuilder astBuilder = new ASTBuilder();
             RootNode ASTRoot = (RootNode) astBuilder.visit(parseTreeRoot);
+
             new SymbolCollector(globalScope).visit(ASTRoot);
             new FrontEnd.SemanticChecker(globalScope).visit(ASTRoot);
+            System.err.println("Semantic check passed.");
 
         } catch (Error er) {
             System.err.println(er.toString());

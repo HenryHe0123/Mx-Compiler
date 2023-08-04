@@ -1,6 +1,7 @@
 package AST.Expr;
 
 import AST.ASTVisitor;
+import AST.Expr.primary.*;
 import AST.ExprNode;
 import Util.Position;
 
@@ -12,6 +13,19 @@ public class MemberExprNode extends ExprNode {
         super(pos);
         this.caller = caller;
         this.member = member;
+    }
+
+    public boolean dotFunc() {
+        return member instanceof FuncExprNode;
+    }
+
+    public boolean dotVar() {
+        return member instanceof VarExprNode;
+    }
+
+    @Override
+    public boolean isAssignable() {
+        return member.isAssignable();
     }
 
     @Override
