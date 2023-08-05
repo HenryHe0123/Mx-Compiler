@@ -6,7 +6,11 @@ public class LocalJudge {
     public static final String GREEN = "\u001B[32m";
     public static final String YELLOW = "\u001B[33m";
 
-    public static void judge() throws Exception {
+    public static void main(String[] args) throws Exception {
+        judge();
+    }
+
+    public static void judge() {
         String folderPath = "testcases/sema";
         if (traverseFolder(new File(folderPath))) {
             System.out.println(GREEN + "All tests passed!");
@@ -16,7 +20,7 @@ public class LocalJudge {
         System.out.print(RESET);
     }
 
-    public static boolean traverseFolder(File folder) throws Exception {
+    public static boolean traverseFolder(File folder) {
         if (folder.isDirectory()) {
             boolean success = true;
             File[] files = folder.listFiles();
@@ -38,7 +42,7 @@ public class LocalJudge {
         }
     }
 
-    public static boolean semanticCheck(String fileName) throws Exception {
+    public static boolean semanticCheck(String fileName) {
         boolean success = false;
         try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
             int lineNumber = 1;

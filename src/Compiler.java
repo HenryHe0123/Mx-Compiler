@@ -13,21 +13,19 @@ import Util.MxErrorListener;
 
 public class Compiler {
     public static void main(String[] args) throws Exception {
-        boolean judge = false;
-        if (judge) {
-            LocalJudge.judge();
-            return;
+        InputStream input = System.in;
+        boolean online = true;
+
+        if (!online) { //local
+            input = new FileInputStream("test.mx");
         }
 
         try {
-            //InputStream input = System.in;
-            InputStream input = new FileInputStream("test.mx");
             compile(input);
         } catch (Error er) {
             System.err.println(er.getText());
             throw new RuntimeException();
         }
-        System.err.println("Compile successfully.");
     }
 
     public static void compile(InputStream input) throws Exception {

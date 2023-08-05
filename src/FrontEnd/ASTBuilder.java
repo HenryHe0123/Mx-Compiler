@@ -22,7 +22,7 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
             boolean isClass = Stmt instanceof MxParser.ClassDefContext;
             boolean isFunc = Stmt instanceof MxParser.FuncDefContext;
             boolean isVar = Stmt instanceof MxParser.VarDefContext;
-            if (!isClass && !isFunc && !isVar) break; //debug: EOF
+            if (!isClass && !isFunc && !isVar) continue; //debug: maybe EOF
             var node = visit(Stmt);
             root.defs.add(node);
             if (isClass) {
