@@ -2,6 +2,7 @@ import java.io.*;
 
 import AST.RootNode;
 import FrontEnd.*;
+import IR.IRRoot;
 import Parser.MxLexer;
 import Parser.MxParser;
 import Util.Error.Error;
@@ -47,5 +48,7 @@ public class Compiler {
         new SymbolCollector(globalScope).visit(ASTRoot);
         new FrontEnd.SemanticChecker(globalScope).visit(ASTRoot);
 
+        IRRoot rootIR = new IRRoot();
+        //new IRBuilder(globalScope, rootIR).visit(ASTRoot);
     }
 }
