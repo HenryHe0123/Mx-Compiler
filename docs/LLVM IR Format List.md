@@ -2,9 +2,8 @@
 
 ```
 int: i32
-long: i64
 bool: i1
-string: i8*
+string: ptr (i8*) 
 void*: ptr
 ```
 
@@ -64,15 +63,16 @@ br i1 <cond>, label <label1>, label <label2>
 + global
 
 ```
-%class.<name> = type { <type1>, <type2>, ... }
 @<name> = global <type> <value>
 @<name> = constant <type> c"<str>"
+; ex: @str = constant [14 x i8] c"Hello, World!\0A"
 ```
 
 + class
 
 ```
 %class.<name> = type { <type1>, <type2>, ... }
+; ex: %class.A = type { i32 }
 ```
 
 + define
@@ -94,7 +94,7 @@ call void @<name>(<type1> <operand>, <type2> <operand>, ...)
 
 ```
 %<name> = getelementptr <type>, ptr %<name> [, <type> <idx>]+
-; %my_y_ptr = getelementptr %MyStruct, ptr %my_structs_ptr, i64 2, i32 1
+; %my_y_ptr = getelementptr %MyStruct, ptr %my_structs_ptr, i32 2, i32 1
 ```
 
 + phi

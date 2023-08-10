@@ -5,13 +5,8 @@ import AST.ExprNode;
 import Util.Basic;
 import Util.Position;
 
-//todo
 public class LiteralExprNode extends ExprNode {
     public Basic value;
-
-    public LiteralExprNode(Position pos) {
-        super(pos);
-    }
 
     public LiteralExprNode(Position pos, Basic value) {
         super(pos);

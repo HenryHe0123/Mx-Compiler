@@ -11,7 +11,7 @@ public class Jump extends Terminator {
 
     @Override
     public String getText() {
-        return "br label %" + target.label;
+        return "br label %" + target.label + "\n";
     }
 
     @Override

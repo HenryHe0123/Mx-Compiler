@@ -2,19 +2,18 @@ package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
 import IR.IRVisitor;
-import IR.Type.IRType;
 
-public class Alloca extends Expression {
-    public IRType type;
+public class Store extends Expression {
+    public Entity src;
 
-    public Alloca(Entity dest, IRType type) {
+    public Store(Entity src, Entity dest) {
         super(dest);
-        this.type = type;
+        this.src = src;
     }
 
     @Override
     public String getText() {
-        return dest.getText() + " = alloca " + type.getText() + "\n";
+        return "store " + src.getFullText() + ", ptr " + dest.getText() + "\n";
     }
 
     @Override

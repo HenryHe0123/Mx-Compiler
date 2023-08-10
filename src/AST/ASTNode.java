@@ -10,4 +10,8 @@ abstract public class ASTNode {
     }
 
     abstract public void accept(ASTVisitor visitor);
+
+    public String asPostfix() {
+        return pos.asPostfix();
+    }
 }

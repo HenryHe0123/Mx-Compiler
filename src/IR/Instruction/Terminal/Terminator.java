@@ -1,7 +1,7 @@
 package IR.Instruction.Terminal;
 
-import IR.IRInstruction;
+import IR.Instruction.Instruction;
 
-public abstract class Terminator extends IRInstruction {
+public abstract class Terminator extends Instruction {
 
 }

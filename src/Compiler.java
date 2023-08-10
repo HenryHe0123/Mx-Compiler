@@ -2,6 +2,7 @@ import java.io.*;
 
 import AST.RootNode;
 import FrontEnd.*;
+import IR.IRPrinter;
 import IR.IRRoot;
 import Parser.MxLexer;
 import Parser.MxParser;
@@ -15,7 +16,7 @@ import Util.MxErrorListener;
 public class Compiler {
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
-        boolean online = true;
+        boolean online = false;
 
         if (!online) { //local
             input = new FileInputStream("test.mx");
@@ -49,6 +50,7 @@ public class Compiler {
         new FrontEnd.SemanticChecker(globalScope).visit(ASTRoot);
 
         IRRoot rootIR = new IRRoot();
-        //new IRBuilder(globalScope, rootIR).visit(ASTRoot);
+        new IRBuilder(globalScope, rootIR).visit(ASTRoot);
+        new IRPrinter(System.err).print(rootIR);
     }
 }

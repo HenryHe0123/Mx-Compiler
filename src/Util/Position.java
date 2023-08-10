@@ -36,4 +36,8 @@ public class Position {
     public String toString() {
         return row + "," + column;
     }
+
+    public String asPostfix() {
+        return "." + row + "-" + column;
+    }
 }
