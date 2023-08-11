@@ -12,11 +12,6 @@ public class Register extends Entity {
         this.name = name;
     }
 
-    public Register(String name) {
-        super(null);
-        this.name = name;
-    }
-
     @Override
     public String getText() {
         return "%" + name;
@@ -27,11 +22,12 @@ public class Register extends Entity {
         return false;
     }
 
-    public static Register anonymous() {
-        return new Register("_" + anonymous_cnt++);
+    public static Register anonymous(IRType type) {
+        return new Register(String.valueOf(anonymous_cnt++), type);
     }
 
-    public static Register anonymous(IRType type) {
-        return new Register("_" + anonymous_cnt++, type);
+    public static Register retReg(IRType type) {
+        if (type.isVoid()) return null;
+        return new Register("_ret_val", type);
     }
 }

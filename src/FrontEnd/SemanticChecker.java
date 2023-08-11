@@ -32,6 +32,17 @@ public class SemanticChecker implements ASTVisitor {
                 throw new SemanticError("undefined class type " + type.typename, pos);
     }
 
+    public void implFuncReturn(FuncDefNode node) { //implement the omitted return statement for IR
+        if (currentScope.isReturned) return;
+        if (node.type.isVoid()) {
+            node.stmts.add(new ReturnStmtNode(Position.none));
+            currentScope.isReturned = true;
+        } else if (node.identifier.equals("main")) {
+            node.stmts.add(new ReturnStmtNode(Position.none, new LiteralExprNode(Position.none, new Basic(0))));
+            currentScope.isReturned = true;
+        }
+    }
+
     // ------------------------------ definition ------------------------------
 
     @Override
@@ -52,6 +63,7 @@ public class SemanticChecker implements ASTVisitor {
         node.stmts.forEach(stmt -> stmt.accept(this));
         if (!node.type.isVoid() && !currentScope.isReturned && !node.identifier.equals("main"))
             throw new SemanticError("miss return statement in function " + node.identifier, node.pos);
+        implFuncReturn(node); //for IR
         currentScope = currentScope.getParent();
     }
 

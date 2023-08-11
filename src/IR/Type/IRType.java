@@ -29,4 +29,8 @@ public abstract class IRType {
     public IRType deconstruct() {
         return null;
     }
+
+    public boolean isVoid() {
+        return false;
+    }
 }

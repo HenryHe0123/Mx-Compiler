@@ -2,12 +2,14 @@ package AST.Util;
 
 import AST.ASTNode;
 import AST.ASTVisitor;
+import IR.Entity.Entity;
 import Util.Position;
 import Util.Type;
 
 public class ParameterUnitNode extends ASTNode {
     public Type type;
     public String identifier;
+    public Entity entity;
 
     public ParameterUnitNode(Position pos) {
         super(pos);

@@ -27,13 +27,14 @@ public class Scope {
         ++cnt;
     }
 
-    public String asPostfix() {
-        return "_scope_" + id;
-    }
-
     public Scope(Scope parentScope, Type returnType) { //for function
         this.parentScope = parentScope;
         this.returnType = returnType;
+        ++cnt;
+    }
+
+    public String asPostfix() {
+        return "." + id;
     }
 
     public boolean inFunction() {

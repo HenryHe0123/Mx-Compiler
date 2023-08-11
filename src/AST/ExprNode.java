@@ -5,7 +5,6 @@ import Util.*;
 
 public abstract class ExprNode extends ASTNode {
     public Type type;
-    public Entity entity;
 
     public boolean isAssignable() {
         return false;
@@ -13,5 +12,18 @@ public abstract class ExprNode extends ASTNode {
 
     public ExprNode(Position pos) {
         super(pos);
+    }
+
+    //-------------------------------- IR ---------------------------------
+
+    public Entity entity;
+    private Entity destPtr = null; // for assignable expression
+
+    public void setAssignDest(Entity ptr) {
+        if (isAssignable()) this.destPtr = ptr;
+    }
+
+    public Entity getAssignDest() {
+        return destPtr;
     }
 }

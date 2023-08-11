@@ -31,10 +31,28 @@ public abstract class Entity {
         };
     }
 
+    public static Entity init(IRType type) {
+        if (type.isVoid()) return Void.instance;
+        if (type instanceof PtrType) return Null.instance;
+        if (type instanceof INType) {
+            if (type.getBytes() == 1) return new Bool(false);
+            else return new Int(0);
+        }
+        return null; //todo
+    }
+
     public static Entity from(Basic value) {
         if (value.isNull) return Null.instance;
         if (value.isBool) return new Bool(value.boolVal);
         if (value.isInt) return new Int((int) value.intVal);
         return null; //todo: string
+    }
+
+    public static Entity from(boolean value) {
+        return new Bool(value);
+    }
+
+    public static Entity from(int value) {
+        return new Int(value);
     }
 }

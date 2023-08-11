@@ -1,6 +1,7 @@
 package IR.Instruction;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRBlock;
 import IR.IRVisitor;
 import IR.Type.IRType;
@@ -9,26 +10,32 @@ import IR.Type.VoidType;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionDef extends Instruction {
+public class IRFunction extends Instruction {
     public String name; //add _func_ as prefix to avoid conflict automatically
     public IRType returnType;
-    //public Entity returnVal;
+    public Register returnReg;
 
-    public IRBlock returnBlock; //maybe same with entry
+    public IRBlock returnBlock;
     public IRBlock entry;
     public ArrayList<Entity> parameters = new ArrayList<>();
-    public ArrayList<IRBlock> blocks = new ArrayList<>(); //including all blocks after entry
+    public ArrayList<IRBlock> blocks = new ArrayList<>(); //blocks between entry and returnBlock
 
-    public FunctionDef(String name, IRType returnType, Entity... para) {
-        this.name = name;
+    public IRFunction(String name, IRType returnType, Entity... para) {
+        this.name = "_func_" + name;
         this.returnType = returnType;
+        this.returnReg = Register.retReg(returnType); //if returnType is void, returnReg is null
         parameters.addAll(List.of(para));
-        entry = new IRBlock("entry", this);
+        entry = IRBlock.newEntry(this);
+        returnBlock = IRBlock.newReturn(this);
+    }
+
+    public void addParameter(Entity para) {
+        parameters.add(para);
     }
 
     @Override
     public String getText() {
-        StringBuilder text = new StringBuilder("define " + returnType.getText() + " @_func_" + name + "(");
+        StringBuilder text = new StringBuilder("define " + returnType.getText() + " @" + name + "(");
         for (int i = 0; i < parameters.size(); i++) {
             if (i != 0) text.append(", ");
             text.append(parameters.get(i).getFullText());
@@ -38,6 +45,7 @@ public class FunctionDef extends Instruction {
         for (IRBlock block : blocks) {
             text.append("\n").append(block.getText());
         }
+        if (returnBlock != null) text.append("\n").append(returnBlock.getText());
         text.append("}\n");
         return text.toString();
     }
@@ -56,7 +64,17 @@ public class FunctionDef extends Instruction {
         return false;
     }
 
-    public static FunctionDef globalVarInit() {
-        return new FunctionDef("_mx_global_var_Init", VoidType.IRVoid);
+    public static IRFunction globalVarInit() {
+        return new IRFunction("_mx_global_var_init", VoidType.IRVoid);
+    }
+
+    public boolean isVoid() {
+        return returnType.isVoid();
+    }
+
+    private int labelPostfix = 0;
+
+    public String getLabelPostfix() {
+        return "." + labelPostfix++;
     }
 }

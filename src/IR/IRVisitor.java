@@ -1,6 +1,6 @@
 package IR;
 
-import IR.Instruction.FunctionDef;
+import IR.Instruction.IRFunction;
 import IR.Instruction.GlobalDef;
 import IR.Instruction.Terminal.*;
 import IR.Instruction.Expression.*;
@@ -36,7 +36,7 @@ public interface IRVisitor {
     default void visit(Icmp it) {
     }
 
-    default void visit(FunctionDef it) {
+    default void visit(IRFunction it) {
     }
 
     default void visit(GlobalDef it) {

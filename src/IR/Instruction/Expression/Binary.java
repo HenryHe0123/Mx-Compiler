@@ -5,15 +5,15 @@ import IR.IRVisitor;
 import IR.Type.IRType;
 
 public class Binary extends Expression {
-    public enum binaryOpType {
+    public enum BinaryOp {
         add, sub, mul, sdiv, srem, shl, ashr, and, or, xor
     }
 
-    public binaryOpType op;
+    public BinaryOp op;
     public Entity src1, src2;
     public IRType type;
 
-    public Binary(Entity dest, binaryOpType op, IRType type, Entity src1, Entity src2) {
+    public Binary(Entity dest, BinaryOp op, IRType type, Entity src1, Entity src2) {
         super(dest);
         this.op = op;
         this.type = type;

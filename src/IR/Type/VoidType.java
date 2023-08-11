@@ -11,5 +11,10 @@ public class VoidType extends IRType {
         return 0;
     }
 
+    @Override
+    public boolean isVoid() {
+        return true;
+    }
+
     public static final VoidType IRVoid = new VoidType();
 }

@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class IRRoot {
     public ArrayList<Instruction> globals = new ArrayList<>();
-    public ArrayList<FunctionDef> functions = new ArrayList<>();
+    public ArrayList<IRFunction> functions = new ArrayList<>();
 
     public void accept(IRVisitor visitor) {
         visitor.visit(this);

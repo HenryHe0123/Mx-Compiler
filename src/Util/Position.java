@@ -40,4 +40,6 @@ public class Position {
     public String asPostfix() {
         return "." + row + "-" + column;
     }
+
+    public static final Position none = new Position(0, 0);
 }
