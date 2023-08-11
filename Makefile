@@ -12,4 +12,4 @@ Compiler: $(JAVA_SRC)
 
 .PHONY: clean
 clean:
-	rm -f bin/*.class bin/*.jar
+	find bin -name '*.class' -or -name '*.jar' | xargs rm -f
