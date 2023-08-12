@@ -34,8 +34,8 @@ expression
     | expression op=Or expression                                              #binaryExpr
     | expression op=AndAnd expression                                          #binaryExpr
     | expression op=OrOr expression                                            #binaryExpr
-    | <assoc=right> expression Assign expression                               #assignExpr
     | <assoc=right> expression Question expression Colon expression            #ternaryExpr
+    | <assoc=right> expression Assign expression                               #assignExpr
     ;
 
 statement

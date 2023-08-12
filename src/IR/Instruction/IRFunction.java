@@ -4,6 +4,7 @@ import IR.Entity.Entity;
 import IR.Entity.Register;
 import IR.IRBlock;
 import IR.IRVisitor;
+import IR.Instruction.Terminal.Jump;
 import IR.Type.IRType;
 import IR.Type.VoidType;
 
@@ -31,6 +32,10 @@ public class IRFunction extends Instruction {
 
     public void addParameter(Entity para) {
         parameters.add(para);
+    }
+
+    public void addBlock(IRBlock block) {
+        if (!haveBlock(block)) blocks.add(block);
     }
 
     @Override
@@ -65,7 +70,9 @@ public class IRFunction extends Instruction {
     }
 
     public static IRFunction globalVarInit() {
-        return new IRFunction("_mx_global_var_init", VoidType.IRVoid);
+        IRFunction func = new IRFunction("_mx_global_var_init", VoidType.IRVoid);
+        func.entry.setTerminator(new Jump(func.returnBlock));
+        return func;
     }
 
     public boolean isVoid() {
@@ -75,6 +82,6 @@ public class IRFunction extends Instruction {
     private int labelPostfix = 0;
 
     public String getLabelPostfix() {
-        return "." + labelPostfix++;
+        return String.valueOf(++labelPostfix);
     }
 }

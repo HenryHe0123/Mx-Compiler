@@ -6,7 +6,6 @@ import IR.Instruction.*;
 import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 import IR.Type.IRType;
-import Util.Error.CodegenError;
 
 import java.util.LinkedList;
 
@@ -29,15 +28,18 @@ public class IRBlock { //Basic Block
         visitor.visit(this);
     }
 
-    public void addInstruct(Instruction instruction) { //safer
+    public void addInstruct(Instruction instruction) {
         if (instruction instanceof Terminator) {
-            if (terminator != null) throw new CodegenError("terminator already exists in block");
-            terminator = (Terminator) instruction;
+            trySetTerminator((Terminator) instruction); //conservative
         } else instructions.add(instruction);
     }
 
-    public void setTerminator(Terminator terminator) {
+    public void setTerminator(Terminator terminator) { //use for explicit setting
         this.terminator = terminator;
+    }
+
+    public void trySetTerminator(Terminator terminator) { //use for uncertain setting
+        if (this.terminator == null) this.terminator = terminator;
     }
 
     public String getText() {

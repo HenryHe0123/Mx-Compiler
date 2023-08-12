@@ -73,26 +73,28 @@ public class MxParser extends Parser {
                 "RShift", "LShift", "And", "Or", "Xor", "Invert", "AddAdd", "SubSub",
                 "Dot", "LParen", "RParen", "LBrack", "RBrack", "LBrace", "RBrace", "Question",
                 "Colon", "Semi", "Comma", "Void", "Bool", "Int", "String", "New", "Class",
-			"Null", "True", "False", "This", "If", "Else", "For", "While", "Break", 
-			"Continue", "Return", "Identifier", "WhiteSpace", "LineComment", "BlockComment", 
-			"IntLiteral", "StringLiteral"
-		};
-	}
-	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-	public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+                "Null", "True", "False", "This", "If", "Else", "For", "While", "Break",
+                "Continue", "Return", "Identifier", "WhiteSpace", "LineComment", "BlockComment",
+                "IntLiteral", "StringLiteral"
+        };
+    }
 
-	/**
-	 * @deprecated Use {@link #VOCABULARY} instead.
-	 */
-	@Deprecated
-	public static final String[] tokenNames;
-	static {
-		tokenNames = new String[_SYMBOLIC_NAMES.length];
-		for (int i = 0; i < tokenNames.length; i++) {
-			tokenNames[i] = VOCABULARY.getLiteralName(i);
-			if (tokenNames[i] == null) {
-				tokenNames[i] = VOCABULARY.getSymbolicName(i);
-			}
+    private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
+    public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+
+    /**
+     * @deprecated Use {@link #VOCABULARY} instead.
+     */
+    @Deprecated
+    public static final String[] tokenNames;
+
+    static {
+        tokenNames = new String[_SYMBOLIC_NAMES.length];
+        for (int i = 0; i < tokenNames.length; i++) {
+            tokenNames[i] = VOCABULARY.getLiteralName(i);
+            if (tokenNames[i] == null) {
+                tokenNames[i] = VOCABULARY.getSymbolicName(i);
+            }
 
 			if (tokenNames[i] == null) {
 				tokenNames[i] = "<INVALID>";
@@ -175,42 +177,39 @@ public class MxParser extends Parser {
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(71);
                 _errHandler.sync(this);
-			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4505214535073792L) != 0)) {
-				{
-                    setState(69);
+                _la = _input.LA(1);
+                while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 4505214535073792L) != 0)) {
+                    {
+                        setState(69);
+                        _errHandler.sync(this);
+                        switch (getInterpreter().adaptivePredict(_input, 0, _ctx)) {
+                            case 1: {
+                                setState(66);
+                                varDef();
+                            }
+                            break;
+                            case 2: {
+                                setState(67);
+                                classDef();
+                            }
+                            break;
+                            case 3: {
+                                setState(68);
+                                funcDef();
+                            }
+                            break;
+                        }
+                    }
+                    setState(73);
                     _errHandler.sync(this);
-				switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
-				case 1:
-					{
-                        setState(66);
-                        varDef();
-					}
-					break;
-				case 2:
-					{
-                        setState(67);
-                        classDef();
-					}
-					break;
-				case 3:
-					{
-                        setState(68);
-                        funcDef();
-					}
-					break;
-				}
-				}
-                setState(73);
-                _errHandler.sync(this);
-				_la = _input.LA(1);
-			}
+                    _la = _input.LA(1);
+                }
                 setState(74);
                 match(EOF);
-			}
+            }
 		}
 		catch (RecognitionException re) {
 			_localctx.exception = re;
@@ -255,18 +254,17 @@ public class MxParser extends Parser {
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(76);
                 _la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 216188175276572672L) != 0)) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
-			}
+                if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 216188175276572672L) != 0))) {
+                    _errHandler.recoverInline(this);
+                } else {
+                    if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                    _errHandler.reportMatch(this);
+                    consume();
+                }
+            }
 		}
 		catch (RecognitionException re) {
 			_localctx.exception = re;
@@ -306,22 +304,20 @@ public class MxParser extends Parser {
 		VariableContext _localctx = new VariableContext(_ctx, getState());
 		enterRule(_localctx, 4, RULE_variable);
 		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
-			{
+        try {
+            enterOuterAlt(_localctx, 1);
+            {
                 setState(78);
                 _la = _input.LA(1);
-			if ( !(_la==This || _la==Identifier) ) {
-			_errHandler.recoverInline(this);
-			}
-			else {
-				if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-				_errHandler.reportMatch(this);
-				consume();
-			}
-			}
-		}
-		catch (RecognitionException re) {
+                if (!(_la == This || _la == Identifier)) {
+                    _errHandler.recoverInline(this);
+                } else {
+                    if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                    _errHandler.reportMatch(this);
+                    consume();
+                }
+            }
+        } catch (RecognitionException re) {
             _localctx.exception = re;
             _errHandler.reportError(this, re);
             _errHandler.recover(this, re);
@@ -441,20 +437,21 @@ public class MxParser extends Parser {
         @Override
         public void exitRule(ParseTreeListener listener) {
             if (listener instanceof MxListener) ((MxListener) listener).exitTypename(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxVisitor ) return ((MxVisitor<? extends T>)visitor).visitTypename(this);
-			else return visitor.visitChildren(this);
-		}
-	}
+        }
 
-	public final TypenameContext typename() throws RecognitionException {
-		TypenameContext _localctx = new TypenameContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_typename);
-		int _la;
-		try {
-			enterOuterAlt(_localctx, 1);
+        @Override
+        public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+            if (visitor instanceof MxVisitor) return ((MxVisitor<? extends T>) visitor).visitTypename(this);
+            else return visitor.visitChildren(this);
+        }
+    }
+
+    public final TypenameContext typename() throws RecognitionException {
+        TypenameContext _localctx = new TypenameContext(_ctx, getState());
+        enterRule(_localctx, 8, RULE_typename);
+        int _la;
+        try {
+            enterOuterAlt(_localctx, 1);
             {
                 setState(82);
                 simpleType();
@@ -469,13 +466,13 @@ public class MxParser extends Parser {
                             setState(84);
                             match(RBrack);
                         }
-				}
+                    }
                     setState(89);
                     _errHandler.sync(this);
-				_la = _input.LA(1);
-			}
-			}
-		}
+                    _la = _input.LA(1);
+                }
+            }
+        }
 		catch (RecognitionException re) {
 			_localctx.exception = re;
 			_errHandler.reportError(this, re);
@@ -521,7 +518,7 @@ public class MxParser extends Parser {
 		enterRule(_localctx, 10, RULE_suite);
 		int _la;
 		try {
-			enterOuterAlt(_localctx, 1);
+            enterOuterAlt(_localctx, 1);
             {
                 setState(90);
                 match(LBrace);
@@ -542,7 +539,7 @@ public class MxParser extends Parser {
                 setState(97);
                 match(RBrace);
             }
-		}
+        }
 		catch (RecognitionException re) {
 			_localctx.exception = re;
 			_errHandler.reportError(this, re);
@@ -590,29 +587,29 @@ public class MxParser extends Parser {
 		try {
             setState(102);
             _errHandler.sync(this);
-			switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
-			case 1:
-				enterOuterAlt(_localctx, 1);
-				{
+            switch (getInterpreter().adaptivePredict(_input, 4, _ctx)) {
+                case 1:
+                    enterOuterAlt(_localctx, 1);
+                {
                     setState(99);
                     literal();
-				}
-				break;
-			case 2:
-				enterOuterAlt(_localctx, 2);
-				{
+                }
+                break;
+                case 2:
+                    enterOuterAlt(_localctx, 2);
+                {
                     setState(100);
                     callFunction();
-				}
-				break;
-			case 3:
-				enterOuterAlt(_localctx, 3);
-				{
+                }
+                break;
+                case 3:
+                    enterOuterAlt(_localctx, 3);
+                {
                     setState(101);
                     variable();
-				}
-				break;
-			}
+                }
+                break;
+            }
 		}
 		catch (RecognitionException re) {
 			_localctx.exception = re;
@@ -721,26 +718,35 @@ public class MxParser extends Parser {
 		}
 		public List<TerminalNode> RBrack() { return getTokens(MxParser.RBrack); }
 		public TerminalNode RBrack(int i) {
-			return getToken(MxParser.RBrack, i);
-		}
-		public ArrayExprContext(ExpressionContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).enterArrayExpr(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).exitArrayExpr(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxVisitor ) return ((MxVisitor<? extends T>)visitor).visitArrayExpr(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class BracketExprContext extends ExpressionContext {
-		public TerminalNode LParen() { return getToken(MxParser.LParen, 0); }
+            return getToken(MxParser.RBrack, i);
+        }
+
+        public ArrayExprContext(ExpressionContext ctx) {
+            copyFrom(ctx);
+        }
+
+        @Override
+        public void enterRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).enterArrayExpr(this);
+        }
+
+        @Override
+        public void exitRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).exitArrayExpr(this);
+        }
+
+        @Override
+        public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+            if (visitor instanceof MxVisitor) return ((MxVisitor<? extends T>) visitor).visitArrayExpr(this);
+            else return visitor.visitChildren(this);
+        }
+    }
+
+    @SuppressWarnings("CheckReturnValue")
+    public static class BracketExprContext extends ExpressionContext {
+        public TerminalNode LParen() {
+            return getToken(MxParser.LParen, 0);
+        }
 
         public ExpressionContext expression() {
             return getRuleContext(ExpressionContext.class, 0);
@@ -822,26 +828,31 @@ public class MxParser extends Parser {
 
         @Override
         public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).enterAtomExpr(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).exitAtomExpr(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxVisitor ) return ((MxVisitor<? extends T>)visitor).visitAtomExpr(this);
-			else return visitor.visitChildren(this);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class BinaryExprContext extends ExpressionContext {
-		public Token op;
-		public List<ExpressionContext> expression() {
-			return getRuleContexts(ExpressionContext.class);
-		}
-		public ExpressionContext expression(int i) {
-			return getRuleContext(ExpressionContext.class,i);
+            if (listener instanceof MxListener) ((MxListener) listener).enterAtomExpr(this);
+        }
+
+        @Override
+        public void exitRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).exitAtomExpr(this);
+        }
+
+        @Override
+        public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+            if (visitor instanceof MxVisitor) return ((MxVisitor<? extends T>) visitor).visitAtomExpr(this);
+            else return visitor.visitChildren(this);
+        }
+    }
+
+    @SuppressWarnings("CheckReturnValue")
+    public static class BinaryExprContext extends ExpressionContext {
+        public Token op;
+
+        public List<ExpressionContext> expression() {
+            return getRuleContexts(ExpressionContext.class);
+        }
+
+        public ExpressionContext expression(int i) {
+            return getRuleContext(ExpressionContext.class,i);
 		}
 		public TerminalNode Mul() { return getToken(MxParser.Mul, 0); }
 		public TerminalNode Div() { return getToken(MxParser.Div, 0); }
@@ -938,354 +949,348 @@ public class MxParser extends Parser {
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
-			{
+            {
                 setState(113);
                 _errHandler.sync(this);
-			switch (_input.LA(1)) {
-			case Null:
-			case True:
-			case False:
-			case This:
-			case Identifier:
-			case IntLiteral:
-			case StringLiteral:
-				{
-				_localctx = new AtomExprContext(_localctx);
-				_ctx = _localctx;
-				_prevctx = _localctx;
+                switch (_input.LA(1)) {
+                    case Null:
+                    case True:
+                    case False:
+                    case This:
+                    case Identifier:
+                    case IntLiteral:
+                    case StringLiteral: {
+                        _localctx = new AtomExprContext(_localctx);
+                        _ctx = _localctx;
+                        _prevctx = _localctx;
 
-                    setState(105);
-                    primary();
-				}
-				break;
-			case LParen:
-				{
-				_localctx = new BracketExprContext(_localctx);
-				_ctx = _localctx;
-                    _prevctx = _localctx;
-                    setState(106);
-                    match(LParen);
-                    setState(107);
-                    expression(0);
-                    setState(108);
-                    match(RParen);
-				}
-				break;
-			case Sub:
-			case Not:
-			case Invert:
-			case AddAdd:
-			case SubSub: {
-                _localctx = new UnaryExprContext(_localctx);
-                _ctx = _localctx;
-                _prevctx = _localctx;
-                setState(110);
-                _la = _input.LA(1);
-                if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 14712836L) != 0))) {
-                    _errHandler.recoverInline(this);
-                } else {
-                    if (_input.LA(1) == Token.EOF) matchedEOF = true;
-                    _errHandler.reportMatch(this);
-                    consume();
+                        setState(105);
+                        primary();
+                    }
+                    break;
+                    case LParen: {
+                        _localctx = new BracketExprContext(_localctx);
+                        _ctx = _localctx;
+                        _prevctx = _localctx;
+                        setState(106);
+                        match(LParen);
+                        setState(107);
+                        expression(0);
+                        setState(108);
+                        match(RParen);
+                    }
+                    break;
+                    case Sub:
+                    case Not:
+                    case Invert:
+                    case AddAdd:
+                    case SubSub: {
+                        _localctx = new UnaryExprContext(_localctx);
+                        _ctx = _localctx;
+                        _prevctx = _localctx;
+                        setState(110);
+                        _la = _input.LA(1);
+                        if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 14712836L) != 0))) {
+                            _errHandler.recoverInline(this);
+                        } else {
+                            if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                            _errHandler.reportMatch(this);
+                            consume();
+                        }
+                        setState(111);
+                        expression(14);
+                    }
+                    break;
+                    case New: {
+                        _localctx = new NewExprContext(_localctx);
+                        _ctx = _localctx;
+                        _prevctx = _localctx;
+                        setState(112);
+                        newExpression();
+                    }
+                    break;
+                    default:
+                        throw new NoViableAltException(this);
                 }
-                setState(111);
-                expression(14);
-            }
-				break;
-			case New:
-				{
-				_localctx = new NewExprContext(_localctx);
-				_ctx = _localctx;
-                    _prevctx = _localctx;
-                    setState(112);
-                    newExpression();
-				}
-				break;
-			default:
-				throw new NoViableAltException(this);
-			}
                 _ctx.stop = _input.LT(-1);
                 setState(173);
                 _errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
-			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
-				if ( _alt==1 ) {
-					if ( _parseListeners!=null ) triggerExitRuleEvent();
-					_prevctx = _localctx;
-					{
-                        setState(171);
-                        _errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
-					case 1:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(115);
-						if (!(precpred(_ctx, 12))) throw new FailedPredicateException(this, "precpred(_ctx, 12)");
-                            setState(116);
-                            ((BinaryExprContext) _localctx).op = _input.LT(1);
-						_la = _input.LA(1);
-						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 56L) != 0)) ) {
-							((BinaryExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-                            setState(117);
-                            expression(13);
-						}
-						break;
-					case 2:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(118);
-						if (!(precpred(_ctx, 11))) throw new FailedPredicateException(this, "precpred(_ctx, 11)");
-                            setState(119);
-                            ((BinaryExprContext) _localctx).op = _input.LT(1);
-						_la = _input.LA(1);
-						if ( !(_la==Add || _la==Sub) ) {
-							((BinaryExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-                            setState(120);
-                            expression(12);
-						}
-						break;
-					case 3:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(121);
-						if (!(precpred(_ctx, 10))) throw new FailedPredicateException(this, "precpred(_ctx, 10)");
-                            setState(122);
-                            ((BinaryExprContext) _localctx).op = _input.LT(1);
-						_la = _input.LA(1);
-						if ( !(_la==RShift || _la==LShift) ) {
-							((BinaryExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-                            setState(123);
-                            expression(11);
-						}
-						break;
-					case 4:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(124);
-						if (!(precpred(_ctx, 9))) throw new FailedPredicateException(this, "precpred(_ctx, 9)");
-                            setState(125);
-                            ((BinaryExprContext) _localctx).op = _input.LT(1);
-						_la = _input.LA(1);
-						if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 1920L) != 0)) ) {
-							((BinaryExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-                            setState(126);
-                            expression(10);
-						}
-						break;
-					case 5:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(127);
-						if (!(precpred(_ctx, 8))) throw new FailedPredicateException(this, "precpred(_ctx, 8)");
-                            setState(128);
-                            ((BinaryExprContext) _localctx).op = _input.LT(1);
-						_la = _input.LA(1);
-						if ( !(_la==Equal || _la==NotEqual) ) {
-							((BinaryExprContext)_localctx).op = (Token)_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-                            setState(129);
-                            expression(9);
-						}
-						break;
-					case 6:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(130);
-						if (!(precpred(_ctx, 7))) throw new FailedPredicateException(this, "precpred(_ctx, 7)");
-                            setState(131);
-                            ((BinaryExprContext) _localctx).op = match(And);
-                            setState(132);
-                            expression(8);
-						}
-						break;
-					case 7:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(133);
-						if (!(precpred(_ctx, 6))) throw new FailedPredicateException(this, "precpred(_ctx, 6)");
-                            setState(134);
-                            ((BinaryExprContext) _localctx).op = match(Xor);
-                            setState(135);
-                            expression(7);
-						}
-						break;
-					case 8:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(136);
-						if (!(precpred(_ctx, 5))) throw new FailedPredicateException(this, "precpred(_ctx, 5)");
-                            setState(137);
-                            ((BinaryExprContext) _localctx).op = match(Or);
-                            setState(138);
-                            expression(6);
-						}
-						break;
-					case 9:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(139);
-						if (!(precpred(_ctx, 4))) throw new FailedPredicateException(this, "precpred(_ctx, 4)");
-                            setState(140);
-                            ((BinaryExprContext) _localctx).op = match(AndAnd);
-                            setState(141);
-                            expression(5);
-						}
-						break;
-					case 10:
-						{
-						_localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(142);
-						if (!(precpred(_ctx, 3))) throw new FailedPredicateException(this, "precpred(_ctx, 3)");
-                            setState(143);
-                            ((BinaryExprContext) _localctx).op = match(OrOr);
-                            setState(144);
-                            expression(4);
-						}
-						break;
-					case 11:
-						{
-						_localctx = new AssignExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(145);
-						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-                            setState(146);
-                            match(Assign);
-                            setState(147);
-                            expression(2);
-						}
-						break;
-					case 12:
-						{
-						_localctx = new TernaryExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(148);
-						if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-                            setState(149);
-                            match(Question);
-                            setState(150);
-                            expression(0);
-                            setState(151);
-                            match(Colon);
-                            setState(152);
-                            expression(1);
-						}
-						break;
-					case 13: {
-                        _localctx = new MemberExprContext(new ExpressionContext(_parentctx, _parentState));
-                        pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                        setState(154);
-                        if (!(precpred(_ctx, 18))) throw new FailedPredicateException(this, "precpred(_ctx, 18)");
-                        setState(155);
-                        match(Dot);
-                        setState(156);
-                        callFunction();
-                    }
-						break;
-					case 14: {
-                        _localctx = new MemberExprContext(new ExpressionContext(_parentctx, _parentState));
-                        pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                        setState(157);
-                        if (!(precpred(_ctx, 17))) throw new FailedPredicateException(this, "precpred(_ctx, 17)");
-                        setState(158);
-                        match(Dot);
-                        setState(159);
-                        variable();
-                    }
-						break;
-					case 15: {
-                        _localctx = new ArrayExprContext(new ExpressionContext(_parentctx, _parentState));
-                        pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                        setState(160);
-                        if (!(precpred(_ctx, 16))) throw new FailedPredicateException(this, "precpred(_ctx, 16)");
-                        setState(165);
-                        _errHandler.sync(this);
-                        _alt = 1;
-                        do {
-                            switch (_alt) {
+                _alt = getInterpreter().adaptivePredict(_input, 8, _ctx);
+                while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER) {
+                    if (_alt == 1) {
+                        if (_parseListeners != null) triggerExitRuleEvent();
+                        _prevctx = _localctx;
+                        {
+                            setState(171);
+                            _errHandler.sync(this);
+                            switch (getInterpreter().adaptivePredict(_input, 7, _ctx)) {
                                 case 1: {
-                                    {
-                                        setState(161);
-                                        match(LBrack);
-                                        setState(162);
-                                        expression(0);
-                                        setState(163);
-                                        match(RBrack);
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(115);
+                                    if (!(precpred(_ctx, 12)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 12)");
+                                    setState(116);
+                                    ((BinaryExprContext) _localctx).op = _input.LT(1);
+                                    _la = _input.LA(1);
+                                    if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 56L) != 0))) {
+                                        ((BinaryExprContext) _localctx).op = (Token) _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
+                                    }
+                                    setState(117);
+                                    expression(13);
+                                }
+                                break;
+                                case 2: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(118);
+                                    if (!(precpred(_ctx, 11)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 11)");
+                                    setState(119);
+                                    ((BinaryExprContext) _localctx).op = _input.LT(1);
+                                    _la = _input.LA(1);
+                                    if (!(_la == Add || _la == Sub)) {
+                                        ((BinaryExprContext) _localctx).op = (Token) _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
+                                    }
+                                    setState(120);
+                                    expression(12);
+                                }
+                                break;
+                                case 3: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(121);
+                                    if (!(precpred(_ctx, 10)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 10)");
+                                    setState(122);
+                                    ((BinaryExprContext) _localctx).op = _input.LT(1);
+                                    _la = _input.LA(1);
+                                    if (!(_la == RShift || _la == LShift)) {
+                                        ((BinaryExprContext) _localctx).op = (Token) _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
+                                    }
+                                    setState(123);
+                                    expression(11);
+                                }
+                                break;
+                                case 4: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(124);
+                                    if (!(precpred(_ctx, 9)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 9)");
+                                    setState(125);
+                                    ((BinaryExprContext) _localctx).op = _input.LT(1);
+                                    _la = _input.LA(1);
+                                    if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 1920L) != 0))) {
+                                        ((BinaryExprContext) _localctx).op = (Token) _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
+                                    }
+                                    setState(126);
+                                    expression(10);
+                                }
+                                break;
+                                case 5: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(127);
+                                    if (!(precpred(_ctx, 8)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 8)");
+                                    setState(128);
+                                    ((BinaryExprContext) _localctx).op = _input.LT(1);
+                                    _la = _input.LA(1);
+                                    if (!(_la == Equal || _la == NotEqual)) {
+                                        ((BinaryExprContext) _localctx).op = (Token) _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
+                                    }
+                                    setState(129);
+                                    expression(9);
+                                }
+                                break;
+                                case 6: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(130);
+                                    if (!(precpred(_ctx, 7)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 7)");
+                                    setState(131);
+                                    ((BinaryExprContext) _localctx).op = match(And);
+                                    setState(132);
+                                    expression(8);
+                                }
+                                break;
+                                case 7: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(133);
+                                    if (!(precpred(_ctx, 6)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 6)");
+                                    setState(134);
+                                    ((BinaryExprContext) _localctx).op = match(Xor);
+                                    setState(135);
+                                    expression(7);
+                                }
+                                break;
+                                case 8: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(136);
+                                    if (!(precpred(_ctx, 5)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 5)");
+                                    setState(137);
+                                    ((BinaryExprContext) _localctx).op = match(Or);
+                                    setState(138);
+                                    expression(6);
+                                }
+                                break;
+                                case 9: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(139);
+                                    if (!(precpred(_ctx, 4)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 4)");
+                                    setState(140);
+                                    ((BinaryExprContext) _localctx).op = match(AndAnd);
+                                    setState(141);
+                                    expression(5);
+                                }
+                                break;
+                                case 10: {
+                                    _localctx = new BinaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(142);
+                                    if (!(precpred(_ctx, 3)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 3)");
+                                    setState(143);
+                                    ((BinaryExprContext) _localctx).op = match(OrOr);
+                                    setState(144);
+                                    expression(4);
+                                }
+                                break;
+                                case 11: {
+                                    _localctx = new TernaryExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(145);
+                                    if (!(precpred(_ctx, 2)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 2)");
+                                    setState(146);
+                                    match(Question);
+                                    setState(147);
+                                    expression(0);
+                                    setState(148);
+                                    match(Colon);
+                                    setState(149);
+                                    expression(2);
+                                }
+                                break;
+                                case 12: {
+                                    _localctx = new AssignExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(151);
+                                    if (!(precpred(_ctx, 1)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 1)");
+                                    setState(152);
+                                    match(Assign);
+                                    setState(153);
+                                    expression(1);
+                                }
+                                break;
+                                case 13: {
+                                    _localctx = new MemberExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(154);
+                                    if (!(precpred(_ctx, 18)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 18)");
+                                    setState(155);
+                                    match(Dot);
+                                    setState(156);
+                                    callFunction();
+                                }
+                                break;
+                                case 14: {
+                                    _localctx = new MemberExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(157);
+                                    if (!(precpred(_ctx, 17)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 17)");
+                                    setState(158);
+                                    match(Dot);
+                                    setState(159);
+                                    variable();
+                                }
+                                break;
+                                case 15: {
+                                    _localctx = new ArrayExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(160);
+                                    if (!(precpred(_ctx, 16)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 16)");
+                                    setState(165);
+                                    _errHandler.sync(this);
+                                    _alt = 1;
+                                    do {
+                                        switch (_alt) {
+                                            case 1: {
+                                                {
+                                                    setState(161);
+                                                    match(LBrack);
+                                                    setState(162);
+                                                    expression(0);
+                                                    setState(163);
+                                                    match(RBrack);
+                                                }
+                                            }
+                                            break;
+                                            default:
+                                                throw new NoViableAltException(this);
+                                        }
+                                        setState(167);
+                                        _errHandler.sync(this);
+                                        _alt = getInterpreter().adaptivePredict(_input, 6, _ctx);
+                                    } while (_alt != 2 && _alt != org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER);
+                                }
+                                break;
+                                case 16: {
+                                    _localctx = new PostfixUpdateExprContext(new ExpressionContext(_parentctx, _parentState));
+                                    pushNewRecursionContext(_localctx, _startState, RULE_expression);
+                                    setState(169);
+                                    if (!(precpred(_ctx, 15)))
+                                        throw new FailedPredicateException(this, "precpred(_ctx, 15)");
+                                    setState(170);
+                                    _la = _input.LA(1);
+                                    if (!(_la == AddAdd || _la == SubSub)) {
+                                        _errHandler.recoverInline(this);
+                                    } else {
+                                        if (_input.LA(1) == Token.EOF) matchedEOF = true;
+                                        _errHandler.reportMatch(this);
+                                        consume();
                                     }
                                 }
                                 break;
-                                default:
-                                    throw new NoViableAltException(this);
                             }
-                            setState(167);
-                            _errHandler.sync(this);
-                            _alt = getInterpreter().adaptivePredict(_input, 6, _ctx);
-                        } while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER );
-						}
-						break;
-					case 16:
-						{
-						_localctx = new PostfixUpdateExprContext(new ExpressionContext(_parentctx, _parentState));
-                            pushNewRecursionContext(_localctx, _startState, RULE_expression);
-                            setState(169);
-						if (!(precpred(_ctx, 15))) throw new FailedPredicateException(this, "precpred(_ctx, 15)");
-                            setState(170);
-                            _la = _input.LA(1);
-						if ( !(_la==AddAdd || _la==SubSub) ) {
-						_errHandler.recoverInline(this);
-						}
-						else {
-							if ( _input.LA(1)==Token.EOF ) matchedEOF = true;
-							_errHandler.reportMatch(this);
-							consume();
-						}
-						}
-						break;
-					}
-					} 
-				}
-                setState(175);
-                _errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
-			}
+                        }
+                    }
+                    setState(175);
+                    _errHandler.sync(this);
+                    _alt = getInterpreter().adaptivePredict(_input, 8, _ctx);
+                }
 			}
 		}
 		catch (RecognitionException re) {
@@ -1302,26 +1307,38 @@ public class MxParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class StatementContext extends ParserRuleContext {
 		public StatementContext(ParserRuleContext parent, int invokingState) {
-			super(parent, invokingState);
-		}
-		@Override public int getRuleIndex() { return RULE_statement; }
-	 
-		public StatementContext() { }
-		public void copyFrom(StatementContext ctx) {
-			super.copyFrom(ctx);
-		}
-	}
-	@SuppressWarnings("CheckReturnValue")
-	public static class VarDefStmtContext extends StatementContext {
-		public VarDefContext varDef() {
-			return getRuleContext(VarDefContext.class,0);
-		}
-		public VarDefStmtContext(StatementContext ctx) { copyFrom(ctx); }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).enterVarDefStmt(this);
-		}
-		@Override
+            super(parent, invokingState);
+        }
+
+        @Override
+        public int getRuleIndex() {
+            return RULE_statement;
+        }
+
+        public StatementContext() {
+        }
+
+        public void copyFrom(StatementContext ctx) {
+            super.copyFrom(ctx);
+        }
+    }
+
+    @SuppressWarnings("CheckReturnValue")
+    public static class VarDefStmtContext extends StatementContext {
+        public VarDefContext varDef() {
+            return getRuleContext(VarDefContext.class, 0);
+        }
+
+        public VarDefStmtContext(StatementContext ctx) {
+            copyFrom(ctx);
+        }
+
+        @Override
+        public void enterRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).enterVarDefStmt(this);
+        }
+
+        @Override
         public void exitRule(ParseTreeListener listener) {
             if (listener instanceof MxListener) ((MxListener) listener).exitVarDefStmt(this);
         }
@@ -1594,16 +1611,14 @@ public class MxParser extends Parser {
                 }
                 break;
             }
-		}
-		catch (RecognitionException re) {
-			_localctx.exception = re;
-			_errHandler.reportError(this, re);
-			_errHandler.recover(this, re);
-		}
-		finally {
-			exitRule();
-		}
-		return _localctx;
+        } catch (RecognitionException re) {
+            _localctx.exception = re;
+            _errHandler.reportError(this, re);
+            _errHandler.recover(this, re);
+        } finally {
+            exitRule();
+        }
+        return _localctx;
 	}
 
 	@SuppressWarnings("CheckReturnValue")
@@ -1795,7 +1810,7 @@ public class MxParser extends Parser {
                 default:
                     throw new NoViableAltException(this);
             }
-		}
+        }
 		catch (RecognitionException re) {
 			_localctx.exception = re;
 			_errHandler.reportError(this, re);
@@ -2296,10 +2311,10 @@ public class MxParser extends Parser {
 	}
 
 	public final VarDefContext varDef() throws RecognitionException {
-		VarDefContext _localctx = new VarDefContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_varDef);
-		int _la;
-		try {
+        VarDefContext _localctx = new VarDefContext(_ctx, getState());
+        enterRule(_localctx, 38, RULE_varDef);
+        int _la;
+        try {
             enterOuterAlt(_localctx, 1);
             {
                 setState(253);
@@ -2440,15 +2455,16 @@ public class MxParser extends Parser {
         }
 
         @Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).exitNewArrayExpr(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxVisitor ) return ((MxVisitor<? extends T>)visitor).visitNewArrayExpr(this);
-			else return visitor.visitChildren(this);
-		}
-	}
+        public void exitRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).exitNewArrayExpr(this);
+        }
+
+        @Override
+        public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+            if (visitor instanceof MxVisitor) return ((MxVisitor<? extends T>) visitor).visitNewArrayExpr(this);
+            else return visitor.visitChildren(this);
+        }
+    }
 
 	public final NewArrayExprContext newArrayExpr() throws RecognitionException {
 		NewArrayExprContext _localctx = new NewArrayExprContext(_ctx, getState());
@@ -2746,20 +2762,27 @@ public class MxParser extends Parser {
         public ConditionContext(ParserRuleContext parent, int invokingState) {
             super(parent, invokingState);
         }
-		@Override public int getRuleIndex() { return RULE_condition; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).enterCondition(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof MxListener ) ((MxListener)listener).exitCondition(this);
-		}
-		@Override
-		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
-			if ( visitor instanceof MxVisitor ) return ((MxVisitor<? extends T>)visitor).visitCondition(this);
-			else return visitor.visitChildren(this);
-		}
+
+        @Override
+        public int getRuleIndex() {
+            return RULE_condition;
+        }
+
+        @Override
+        public void enterRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).enterCondition(this);
+        }
+
+        @Override
+        public void exitRule(ParseTreeListener listener) {
+            if (listener instanceof MxListener) ((MxListener) listener).exitCondition(this);
+        }
+
+        @Override
+        public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+            if (visitor instanceof MxVisitor) return ((MxVisitor<? extends T>) visitor).visitCondition(this);
+            else return visitor.visitChildren(this);
+        }
 	}
 
 	public final ConditionContext condition() throws RecognitionException {
@@ -3088,9 +3111,9 @@ public class MxParser extends Parser {
 	}
 
 	public final ForStatementContext forStatement() throws RecognitionException {
-		ForStatementContext _localctx = new ForStatementContext(_ctx, getState());
+        ForStatementContext _localctx = new ForStatementContext(_ctx, getState());
         enterRule(_localctx, 62, RULE_forStatement);
-		try {
+        try {
             enterOuterAlt(_localctx, 1);
             {
                 setState(324);
@@ -3201,26 +3224,26 @@ public class MxParser extends Parser {
 			return precpred(_ctx, 11);
 		case 2:
 			return precpred(_ctx, 10);
-		case 3:
-			return precpred(_ctx, 9);
-		case 4:
-			return precpred(_ctx, 8);
-		case 5:
-			return precpred(_ctx, 7);
-		case 6:
-			return precpred(_ctx, 6);
-		case 7:
-			return precpred(_ctx, 5);
-		case 8:
-			return precpred(_ctx, 4);
-		case 9:
-			return precpred(_ctx, 3);
-		case 10:
-			return precpred(_ctx, 2);
-		case 11:
-			return precpred(_ctx, 1);
-		case 12:
-			return precpred(_ctx, 18);
+            case 3:
+                return precpred(_ctx, 9);
+            case 4:
+                return precpred(_ctx, 8);
+            case 5:
+                return precpred(_ctx, 7);
+            case 6:
+                return precpred(_ctx, 6);
+            case 7:
+                return precpred(_ctx, 5);
+            case 8:
+                return precpred(_ctx, 4);
+            case 9:
+                return precpred(_ctx, 3);
+            case 10:
+                return precpred(_ctx, 2);
+            case 11:
+                return precpred(_ctx, 1);
+            case 12:
+                return precpred(_ctx, 18);
             case 13:
                 return precpred(_ctx, 17);
             case 14:
@@ -3339,11 +3362,11 @@ public class MxParser extends Parser {
                     "\u000e\u0007\u0006\u008b\u008c\n\u0004\u0000\u0000\u008c\u008d\u0005\r" +
                     "\u0000\u0000\u008d\u00ac\u0003\u000e\u0007\u0005\u008e\u008f\n\u0003\u0000" +
                     "\u0000\u008f\u0090\u0005\u000e\u0000\u0000\u0090\u00ac\u0003\u000e\u0007" +
-                    "\u0004\u0091\u0092\n\u0002\u0000\u0000\u0092\u0093\u0005\u0006\u0000\u0000" +
-                    "\u0093\u00ac\u0003\u000e\u0007\u0002\u0094\u0095\n\u0001\u0000\u0000\u0095" +
-                    "\u0096\u0005\u001f\u0000\u0000\u0096\u0097\u0003\u000e\u0007\u0000\u0097" +
-                    "\u0098\u0005 \u0000\u0000\u0098\u0099\u0003\u000e\u0007\u0001\u0099\u00ac" +
-                    "\u0001\u0000\u0000\u0000\u009a\u009b\n\u0012\u0000\u0000\u009b\u009c\u0005" +
+                    "\u0004\u0091\u0092\n\u0002\u0000\u0000\u0092\u0093\u0005\u001f\u0000\u0000" +
+                    "\u0093\u0094\u0003\u000e\u0007\u0000\u0094\u0095\u0005 \u0000\u0000\u0095" +
+                    "\u0096\u0003\u000e\u0007\u0002\u0096\u00ac\u0001\u0000\u0000\u0000\u0097" +
+                    "\u0098\n\u0001\u0000\u0000\u0098\u0099\u0005\u0006\u0000\u0000\u0099\u00ac" +
+                    "\u0003\u000e\u0007\u0001\u009a\u009b\n\u0012\u0000\u0000\u009b\u009c\u0005" +
                     "\u0018\u0000\u0000\u009c\u00ac\u0003\u001c\u000e\u0000\u009d\u009e\n\u0011" +
                     "\u0000\u0000\u009e\u009f\u0005\u0018\u0000\u0000\u009f\u00ac\u0003\u0004" +
                     "\u0002\u0000\u00a0\u00a5\n\u0010\u0000\u0000\u00a1\u00a2\u0005\u001b\u0000" +
@@ -3357,7 +3380,7 @@ public class MxParser extends Parser {
                     "\u0000\u0000\u0000\u00ab\u0082\u0001\u0000\u0000\u0000\u00ab\u0085\u0001" +
                     "\u0000\u0000\u0000\u00ab\u0088\u0001\u0000\u0000\u0000\u00ab\u008b\u0001" +
                     "\u0000\u0000\u0000\u00ab\u008e\u0001\u0000\u0000\u0000\u00ab\u0091\u0001" +
-                    "\u0000\u0000\u0000\u00ab\u0094\u0001\u0000\u0000\u0000\u00ab\u009a\u0001" +
+                    "\u0000\u0000\u0000\u00ab\u0097\u0001\u0000\u0000\u0000\u00ab\u009a\u0001" +
                     "\u0000\u0000\u0000\u00ab\u009d\u0001\u0000\u0000\u0000\u00ab\u00a0\u0001" +
                     "\u0000\u0000\u0000\u00ab\u00a9\u0001\u0000\u0000\u0000\u00ac\u00af\u0001" +
                     "\u0000\u0000\u0000\u00ad\u00ab\u0001\u0000\u0000\u0000\u00ad\u00ae\u0001" +

@@ -13,6 +13,7 @@ import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 import IR.Type.*;
 import Util.Error.CodegenError;
+import Util.Error.SemanticError;
 import Util.Scope.*;
 import Util.Type;
 
@@ -23,7 +24,7 @@ public class IRBuilder implements ASTVisitor {
     private IRBlock curBlock = null;
     private IRFunction curFunction = null;
     private final IRFunction globalVarInit = IRFunction.globalVarInit();
-    IRRoot root;
+    private final IRRoot root;
 
     public IRBuilder(GlobalScope gScope, IRRoot root) {
         this.gScope = gScope;
@@ -41,8 +42,22 @@ public class IRBuilder implements ASTVisitor {
         curBlock.addInstruct(new Store(value, destExpr.getAssignDest()));
     }
 
-    private void jumpRet() {
-        curBlock.addInstruct(new Jump(curFunction.returnBlock));
+    private boolean isReturned() { //whenever entering a function, isReturned is initially false
+        return curBlock == null;
+    }
+
+    private void terminateBlock(Terminator terminator) {
+        if (isReturned()) return;
+        curBlock.setTerminator(terminator);
+        curFunction.addBlock(curBlock);
+        curBlock = null;
+    }
+
+    private void tryTerminateBlock(Terminator terminator) { //recommend: safer version
+        if (isReturned()) return;
+        curBlock.trySetTerminator(terminator);
+        curFunction.addBlock(curBlock);
+        curBlock = null;
     }
 
     // ------------------------------ visit ------------------------------
@@ -105,29 +120,66 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ReturnStmtNode node) {
+        if (isReturned()) return;
         if (node.returnExpr != null) {
             node.returnExpr.accept(this);
             Entity retVal = node.returnExpr.entity;
             curBlock.addInstruct(new Store(retVal, curFunction.returnReg));
         }
-        jumpRet();
+        terminateBlock(new Jump(curFunction.returnBlock));
     }
 
     @Override
     public void visit(BlockStmtNode node) {
-        curScope = new Scope(curScope, curType);
+        if (isReturned()) return;
+        curScope = new Scope(curScope);
         node.stmts.forEach(stmt -> stmt.accept(this));
         curScope = curScope.getParent();
     }
 
     @Override
     public void visit(BranchStmtNode node) {
+        if (isReturned()) return;
         node.condition.accept(this);
-//        Entity cond = node.condition.entity;
-//        String postfix = curFunction.getLabelPostfix();
-//        IRBlock thenBlock = new IRBlock("if.then" + postfix, curFunction);
-//        IRBlock elseBlock = node.elseStmt == null ? null : new IRBlock("if.else" + postfix, curFunction);
-//        IRBlock mergeBlock = new IRBlock("if.merge" + postfix, curFunction);
+        Entity cond = node.condition.entity;
+        boolean ret = false;
+
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock thenBlock = new IRBlock("if.then" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("if.end" + postfix, curFunction);
+
+        if (node.elseStmt == null) {
+            tryTerminateBlock(new Branch(cond, thenBlock, endBlock));
+
+            curBlock = thenBlock;
+            curScope = new Scope(curScope);
+            node.ifStmt.accept(this); //curBlock maybe terminated already
+            tryTerminateBlock(new Jump(endBlock));
+        } else {
+            IRBlock elseBlock = new IRBlock("if.else" + postfix, curFunction);
+            tryTerminateBlock(new Branch(cond, thenBlock, elseBlock));
+
+            curBlock = thenBlock;
+            curScope = new Scope(curScope);
+            node.ifStmt.accept(this);
+            boolean ifReturned = isReturned();
+            tryTerminateBlock(new Jump(endBlock));
+            curScope = curScope.getParent();
+
+            curBlock = elseBlock;
+            curScope = new Scope(curScope);
+            node.elseStmt.accept(this);
+            ret = ifReturned && isReturned(); //if both branches are returned, we can return
+            tryTerminateBlock(new Jump(endBlock));
+        }
+        curScope = curScope.getParent();
+        if (!ret) curBlock = endBlock;
+    }
+
+    @Override
+    public void visit(ExprStmtNode node) {
+        if (isReturned() || node.expression == null) return;
+        node.expression.accept(this);
     }
 
     // ------------------------------ expression ------------------------------
@@ -139,6 +191,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(VarExprNode node) {
+        if (isReturned()) return;
         if (node.entity == null) { //todo: this
             Entity entity = curScope.getVarEntity(node.identifier);
             node.setAssignDest(entity);
@@ -150,6 +203,7 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(UnaryExprNode node) {
+        if (isReturned()) return;
         if (node.entity == null) {
             node.expression.accept(this);
             Entity src = node.expression.entity;
@@ -172,6 +226,39 @@ public class IRBuilder implements ASTVisitor {
                 node.setAssignDest(node.expression.getAssignDest());
             }
         }
+    }
+
+    @Override
+    public void visit(PostfixUpdateExprNode node) {
+        if (isReturned()) return;
+        node.expression.accept(this);
+        Entity src = node.expression.entity;
+        node.entity = src; //store previous i
+        Entity reg = Register.anonymous(INType.IRInt); //store latest i
+        var op = node.add ? Binary.BinaryOp.add : Binary.BinaryOp.sub;
+        curBlock.addInstruct(new Binary(reg, op, INType.IRInt, src, Entity.from(1))); //reg = i +/- 1
+        assign(reg, node.expression);
+    }
+
+    @Override
+    public void visit(AssignExprNode node) {
+        if (isReturned()) return;
+        node.rhs.accept(this);
+        node.lhs.accept(this); //we need to set assign dest here
+        assign(node.rhs.entity, node.lhs);
+        node.entity = node.rhs.entity;
+    }
+
+    @Override
+    public void visit(TernaryExprNode node) {
+        if (isReturned()) return;
+        node.condition.accept(this);
+        Entity cond = node.condition.entity;
+        node.ifExpr.accept(this);
+        node.elseExpr.accept(this);
+
+        node.entity = Register.anonymous(IRType.from(node.type));
+        curBlock.addInstruct(new Select(node.entity, cond, node.ifExpr.entity, node.elseExpr.entity));
     }
 
 }

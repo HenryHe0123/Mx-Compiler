@@ -104,3 +104,9 @@ call void @<name>(<type1> <operand>, <type2> <operand>, ...)
 ; ex: %y = phi i32 [1, %btrue], [2, %bfalse]
 ```
 
++ select
+
+```
+%<name> = select i1 <cond>, <type> <operand1>, <type> <operand2>
+; ex: %y = select i1 %cond, i32 1, i32 2
+```

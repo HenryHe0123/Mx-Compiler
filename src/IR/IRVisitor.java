@@ -42,4 +42,7 @@ public interface IRVisitor {
     default void visit(GlobalDef it) {
     }
 
+    default void visit(Select it) {
+    }
+
 }
