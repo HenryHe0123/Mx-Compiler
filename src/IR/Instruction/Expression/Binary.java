@@ -3,6 +3,7 @@ package IR.Instruction.Expression;
 import IR.Entity.Entity;
 import IR.IRVisitor;
 import IR.Type.IRType;
+import Util.Error.CodegenError;
 
 public class Binary extends Expression {
     public enum BinaryOp {
@@ -30,5 +31,21 @@ public class Binary extends Expression {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public static BinaryOp convert(String op) {
+        return switch (op) {
+            case "+" -> BinaryOp.add;
+            case "-" -> BinaryOp.sub;
+            case "*" -> BinaryOp.mul;
+            case "/" -> BinaryOp.sdiv;
+            case "%" -> BinaryOp.srem;
+            case "<<" -> BinaryOp.shl;
+            case ">>" -> BinaryOp.ashr;
+            case "&" -> BinaryOp.and;
+            case "|" -> BinaryOp.or;
+            case "^" -> BinaryOp.xor;
+            default -> throw new CodegenError("Unexpected binary option in IR convert: " + op);
+        };
     }
 }

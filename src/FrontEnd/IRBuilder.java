@@ -13,7 +13,6 @@ import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 import IR.Type.*;
 import Util.Error.CodegenError;
-import Util.Error.SemanticError;
 import Util.Scope.*;
 import Util.Type;
 
@@ -92,6 +91,18 @@ public class IRBuilder implements ASTVisitor {
                 curBlock = null; //prevent misuse
             }
             root.globals.add(new GlobalDef(reg, init, GlobalDef.globalDefType.global));
+            curScope.putVarEntity(node.identifier, reg);
+        } else {
+            if (isReturned()) return;
+            IRType type = IRType.from(curType);
+            Entity reg = new Register(node.identifier + curScope.asPostfix(), type);
+            curBlock.addInstruct(new Alloca(reg, type));
+            Entity init = Entity.init(curType);
+            if (node.expression != null) {
+                node.expression.accept(this);
+                init = node.expression.entity;
+            }
+            curBlock.addInstruct(new Store(init, reg));
             curScope.putVarEntity(node.identifier, reg);
         }
     }
@@ -202,6 +213,12 @@ public class IRBuilder implements ASTVisitor {
     }
 
     @Override
+    public void visit(FuncExprNode node) {
+        if (isReturned()) return;
+        //todo
+    }
+
+    @Override
     public void visit(UnaryExprNode node) {
         if (isReturned()) return;
         if (node.entity == null) {
@@ -259,6 +276,53 @@ public class IRBuilder implements ASTVisitor {
 
         node.entity = Register.anonymous(IRType.from(node.type));
         curBlock.addInstruct(new Select(node.entity, cond, node.ifExpr.entity, node.elseExpr.entity));
+    }
+
+    @Override
+    public void visit(BinaryExprNode node) {
+        if (isReturned()) return;
+        node.lhs.accept(this);
+
+        if (node.isLogic()) { //short circuit assignment: avoid phi version
+            node.entity = Register.anonymous(INType.IRBool);
+            var ptr = Register.anonymous(new PtrType(INType.IRBool));
+            curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
+            curBlock.addInstruct(new Store(node.lhs.entity, ptr));
+
+            String postfix = curFunction.getLabelPostfix();
+            IRBlock rhsBlock = new IRBlock("logic.rhs" + postfix, curFunction);
+            IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
+
+            boolean and = node.operator.equals("&&");
+            //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
+            //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
+            var condition = Register.anonymous(INType.IRBool);
+            curBlock.addInstruct(new Icmp(condition, Icmp.IcmpOp.ne, node.lhs.entity, Entity.from(and)));
+            tryTerminateBlock(new Branch(condition, endBlock, rhsBlock));
+
+            curBlock = rhsBlock;
+            node.rhs.accept(this);
+            curBlock.addInstruct(new Store(node.rhs.entity, ptr));
+            tryTerminateBlock(new Jump(endBlock));
+
+            curBlock = endBlock;
+            curBlock.addInstruct(new Load(node.entity, INType.IRBool, ptr));
+            return;
+        }
+
+        node.rhs.accept(this);
+        if (node.isCmp()) {
+            node.entity = Register.anonymous(INType.IRBool);
+            var op = Icmp.convert(node.operator);
+            curBlock.addInstruct(new Icmp(node.entity, op, node.lhs.entity, node.rhs.entity));
+        } else if (node.isAdd()) { //todo: string also support add operation
+            node.entity = Register.anonymous(INType.IRInt);
+            curBlock.addInstruct(new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, node.lhs.entity, node.rhs.entity));
+        } else { //arithmetic or bits operation
+            node.entity = Register.anonymous(INType.IRInt);
+            var op = Binary.convert(node.operator);
+            curBlock.addInstruct(new Binary(node.entity, op, INType.IRInt, node.lhs.entity, node.rhs.entity));
+        }
     }
 
 }
