@@ -45,4 +45,7 @@ public interface IRVisitor {
     default void visit(Select it) {
     }
 
+    default void visit(Call it) {
+    }
+
 }

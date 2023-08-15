@@ -16,12 +16,16 @@ import Util.Error.CodegenError;
 import Util.Scope.*;
 import Util.Type;
 
+import java.util.Stack;
+
 public class IRBuilder implements ASTVisitor {
     GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;
     private IRBlock curBlock = null;
     private IRFunction curFunction = null;
+    private final Stack<IRBlock> loopContinueBlock = new Stack<>();
+    private final Stack<IRBlock> loopEndBlock = new Stack<>();
     private final IRFunction globalVarInit = IRFunction.globalVarInit();
     private final IRRoot root;
 
@@ -95,7 +99,8 @@ public class IRBuilder implements ASTVisitor {
         } else {
             if (isReturned()) return;
             IRType type = IRType.from(curType);
-            Entity reg = new Register(node.identifier + curScope.asPostfix(), type);
+            //debug: register would not use ptr automatically
+            Entity reg = new Register(node.identifier + curScope.asPostfix(), new PtrType(type));
             curBlock.addInstruct(new Alloca(reg, type));
             Entity init = Entity.init(curType);
             if (node.expression != null) {
@@ -113,6 +118,7 @@ public class IRBuilder implements ASTVisitor {
         curFunction = new IRFunction(node.identifier, IRType.from(node.type));
         curBlock = curFunction.entry;
         root.functions.add(curFunction);
+        if (curFunction.isMain()) curBlock.addInstruct(Call.callGlobalVarInit());
         if (node.parameter != null) node.parameter.args.forEach(arg -> arg.accept(this));
         node.stmts.forEach(stmt -> stmt.accept(this));
         curScope = curScope.getParent();
@@ -193,6 +199,76 @@ public class IRBuilder implements ASTVisitor {
         node.expression.accept(this);
     }
 
+    @Override
+    public void visit(ForStmtNode node) {
+        if (isReturned()) return;
+        curScope = new Scope(curScope);
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock condBlock = new IRBlock("for.cond" + postfix, curFunction);
+        IRBlock bodyBlock = new IRBlock("for.body" + postfix, curFunction);
+        IRBlock stepBlock = new IRBlock("for.step" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("for.end" + postfix, curFunction);
+        loopEndBlock.add(endBlock);
+        loopContinueBlock.add(stepBlock);
+
+        if (node.init != null) node.init.accept(this); //add to curBlock
+        tryTerminateBlock(new Jump(condBlock));
+
+        curBlock = condBlock;
+        if (node.condition != null) node.condition.accept(this);
+        Entity cond = (node.condition != null) ? node.condition.entity : Entity.from(true);
+        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+
+        curBlock = bodyBlock;
+        if (node.body != null) node.body.accept(this);
+        tryTerminateBlock(new Jump(stepBlock));
+
+        curBlock = stepBlock;
+        if (node.step != null) node.step.accept(this);
+        tryTerminateBlock(new Jump(condBlock));
+
+        curBlock = endBlock;
+        curScope = curScope.getParent();
+        loopEndBlock.pop();
+        loopContinueBlock.pop();
+    }
+
+    @Override
+    public void visit(WhileStmtNode node) {
+        if (isReturned()) return;
+        curScope = new Scope(curScope);
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock condBlock = new IRBlock("while.cond" + postfix, curFunction);
+        IRBlock bodyBlock = new IRBlock("while.body" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("while.end" + postfix, curFunction);
+        loopEndBlock.add(endBlock);
+        loopContinueBlock.add(condBlock);
+
+        tryTerminateBlock(new Jump(condBlock));
+
+        curBlock = condBlock;
+        node.condition.accept(this);
+        Entity cond = node.condition.entity;
+        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+
+        curBlock = bodyBlock;
+        if (node.body != null) node.body.accept(this);
+        tryTerminateBlock(new Jump(condBlock));
+
+        curBlock = endBlock;
+        curScope = curScope.getParent();
+
+        loopEndBlock.pop();
+        loopContinueBlock.pop();
+    }
+
+    @Override
+    public void visit(CtrlStmtNode node) {
+        if (isReturned()) return;
+        IRBlock block = node.isBreak ? loopEndBlock.peek() : loopContinueBlock.peek();
+        tryTerminateBlock(new Jump(block));
+    }
+
     // ------------------------------ expression ------------------------------
 
     @Override
@@ -215,7 +291,15 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(FuncExprNode node) {
         if (isReturned()) return;
-        //todo
+        //todo: currently only for global function
+        IRType returnType = IRType.from(node.type);
+        node.entity = returnType.isVoid() ? null : Register.anonymous(returnType);
+        Call call = new Call(node.entity, node.funcName, returnType);
+        node.args.forEach(arg -> {
+            arg.accept(this);
+            call.addArg(arg.entity);
+        });
+        curBlock.addInstruct(call);
     }
 
     @Override

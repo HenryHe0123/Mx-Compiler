@@ -22,7 +22,7 @@ public class IRFunction extends Instruction {
     public ArrayList<IRBlock> blocks = new ArrayList<>(); //blocks between entry and returnBlock
 
     public IRFunction(String name, IRType returnType, Entity... para) {
-        this.name = "_func_" + name;
+        this.name = functionReNaming(name);
         this.returnType = returnType;
         this.returnReg = Register.retReg(returnType); //if returnType is void, returnReg is null
         parameters.addAll(List.of(para));
@@ -79,9 +79,17 @@ public class IRFunction extends Instruction {
         return returnType.isVoid();
     }
 
+    public boolean isMain() {
+        return name.equals("main");
+    }
+
     private int labelPostfix = 0;
 
     public String getLabelPostfix() {
         return String.valueOf(++labelPostfix);
+    }
+
+    public static String functionReNaming(String name) {
+        return name.equals("main") ? "main" : "_func_" + name;
     }
 }
