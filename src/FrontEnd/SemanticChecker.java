@@ -43,6 +43,12 @@ public class SemanticChecker implements ASTVisitor {
         }
     }
 
+    public void implConstructorReturn(ClassConstructorNode node) {
+        if (currentScope.isReturned) return;
+        node.stmts.add(new ReturnStmtNode(Position.none));
+        currentScope.isReturned = true;
+    }
+
     // ------------------------------ definition ------------------------------
 
     @Override
@@ -96,6 +102,7 @@ public class SemanticChecker implements ASTVisitor {
         currentScope = new Scope(currentScope, Type.Void());
         node.stmts.forEach(stmt -> stmt.accept(this));
         //return check in returnStmt visit (just like void function)
+        implConstructorReturn(node); //for IR
         currentScope = currentScope.getParent();
     }
 

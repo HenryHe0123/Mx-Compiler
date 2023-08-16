@@ -25,7 +25,5 @@ public class PtrType extends IRType {
     public IRType deconstruct() {
         return baseType;
     }
-
-    public static final PtrType IRString = new PtrType(new INType(8));
     public static final PtrType IRNull = new PtrType(null);
 }

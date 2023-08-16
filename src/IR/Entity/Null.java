@@ -13,10 +13,5 @@ public class Null extends Entity {
         return "null";
     }
 
-    @Override
-    public String getFullText() {
-        return "null";
-    }
-
     public static final Null instance = new Null();
 }

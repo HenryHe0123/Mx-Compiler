@@ -24,6 +24,7 @@ public class IRBuilder implements ASTVisitor {
     private Type curType = null;
     private IRBlock curBlock = null;
     private IRFunction curFunction = null;
+    private ClassType curClass = null;
     private final Stack<IRBlock> loopContinueBlock = new Stack<>();
     private final Stack<IRBlock> loopEndBlock = new Stack<>();
     private final IRFunction globalVarInit = IRFunction.globalVarInit();
@@ -63,11 +64,31 @@ public class IRBuilder implements ASTVisitor {
         curBlock = null;
     }
 
+    private void addParameter(String name, Register reg) {
+        //add parameter to function, and allocate entity to stack
+        curFunction.addParameter(reg);
+        Register addr = new Register(reg.name + ".addr", reg.type.asPtr());
+        curBlock.addInstruct(new Alloca(addr, reg.type));
+        curBlock.addInstruct(new Store(reg, addr));
+        curScope.putVarEntity(name, addr);
+    }
+
+    private void addThisParameter() {
+        addParameter("this", new Register("this", curClass.asPtr()));
+    }
+
+    private void collectClassTypes(RootNode node) {
+        IRType.addIRClassType("string");
+        node.classDefs.forEach(classDef -> IRType.addIRClassType(classDef.identifier));
+    }
+
     // ------------------------------ visit ------------------------------
 
     @Override
     public void visit(RootNode node) {
         root.functions.add(globalVarInit);
+        collectClassTypes(node); //collect all class types first
+        node.classDefs.forEach(classDef -> classDef.accept(this));
         node.varDefs.forEach(varDef -> varDef.accept(this));
         node.funcDefs.forEach(funcDef -> funcDef.accept(this));
     }
@@ -100,7 +121,7 @@ public class IRBuilder implements ASTVisitor {
             if (isReturned()) return;
             IRType type = IRType.from(curType);
             //debug: register would not use ptr automatically
-            Entity reg = new Register(node.identifier + curScope.asPostfix(), new PtrType(type));
+            Entity reg = new Register(node.identifier + curScope.asPostfix(), type.asPtr());
             curBlock.addInstruct(new Alloca(reg, type));
             Entity init = Entity.init(curType);
             if (node.expression != null) {
@@ -119,6 +140,7 @@ public class IRBuilder implements ASTVisitor {
         curBlock = curFunction.entry;
         root.functions.add(curFunction);
         if (curFunction.isMain()) curBlock.addInstruct(Call.callGlobalVarInit());
+        if (curClass != null) addThisParameter();
         if (node.parameter != null) node.parameter.args.forEach(arg -> arg.accept(this));
         node.stmts.forEach(stmt -> stmt.accept(this));
         curScope = curScope.getParent();
@@ -128,9 +150,43 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(ParameterUnitNode node) {
-        node.entity = new Register(node.identifier + curScope.asPostfix(), IRType.from(node.type));
-        curScope.putVarEntity(node.identifier, node.entity);
-        curFunction.addParameter(node.entity);
+        String rename = node.identifier + curScope.asPostfix();
+        addParameter(node.identifier, new Register(rename, IRType.from(node.type)));
+    }
+
+    @Override
+    public void visit(ClassDefNode node) {
+        curScope = new Scope(curScope, node);
+        String className = node.identifier;
+        curClass = IRType.getIRClassType(className); //already collected
+        for (VarDefNode vars : node.varDefs) {
+            IRType type = IRType.from(vars.type);
+            for (VarDeclareUnitNode var : vars.varDeclareUnits) {
+                curClass.addMember(var.identifier, type);
+            }
+        }
+        if (node.constructor != null) node.constructor.accept(this);
+        for (FuncDefNode func : node.funcDefs) { //class method renaming
+            func.identifier = curClass.asPrefix() + func.identifier;
+            func.accept(this);
+        }
+        root.globals.add(new ClassDef(curClass));
+        curClass = null;
+        curScope = curScope.getParent();
+    }
+
+    @Override
+    public void visit(ClassConstructorNode node) { //view like a void function
+        curScope = new Scope(curScope, Type.Void());
+        String rename = curClass.asPrefix() + node.identifier;
+        curFunction = new IRFunction(rename, VoidType.IRVoid);
+        curBlock = curFunction.entry;
+        root.functions.add(curFunction);
+        addThisParameter();
+        node.stmts.forEach(stmt -> stmt.accept(this));
+        curBlock = null;
+        curFunction = null;
+        curScope = curScope.getParent();
     }
 
     // ------------------------------ statement ------------------------------
@@ -279,7 +335,8 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(VarExprNode node) {
         if (isReturned()) return;
-        if (node.entity == null) { //todo: this
+        if (node.entity == null) {
+            //"this" is handled just like normal variable, as we have already added it to the map
             Entity entity = curScope.getVarEntity(node.identifier);
             node.setAssignDest(entity);
             IRType baseType = entity.type.deconstruct();
@@ -369,7 +426,7 @@ public class IRBuilder implements ASTVisitor {
 
         if (node.isLogic()) { //short circuit assignment: avoid phi version
             node.entity = Register.anonymous(INType.IRBool);
-            var ptr = Register.anonymous(new PtrType(INType.IRBool));
+            var ptr = Register.anonymous(INType.IRBool.asPtr());
             curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
             curBlock.addInstruct(new Store(node.lhs.entity, ptr));
 

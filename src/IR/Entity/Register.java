@@ -23,7 +23,7 @@ public class Register extends Entity {
     }
 
     public static Register anonymous(IRType type) {
-        return new Register(String.valueOf(anonymous_cnt++), type);
+        return new Register("_" + anonymous_cnt++, type);
     }
 
     public static Register retReg(IRType type) {

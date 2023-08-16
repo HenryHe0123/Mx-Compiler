@@ -27,7 +27,7 @@ public class Call extends Expression {
     @Override
     public String getText() {
         String prefix = (dest == null) ? "" : dest.getText() + " = ";
-        String argumentText = (args.size() == 0) ? "" : args.stream().map(Entity::getFullText).reduce("", (a, b) -> a + ", " + b).substring(2);
+        String argumentText = args.stream().map(Entity::getFullText).reduce((a, b) -> a + ", " + b).orElse("");
         return prefix + "call " + returnType.getText() + " @" + funcName + "(" + argumentText + ")\n";
     }
 

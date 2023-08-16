@@ -1,7 +1,6 @@
 package IR;
 
-import IR.Instruction.IRFunction;
-import IR.Instruction.GlobalDef;
+import IR.Instruction.*;
 import IR.Instruction.Terminal.*;
 import IR.Instruction.Expression.*;
 
@@ -46,6 +45,9 @@ public interface IRVisitor {
     }
 
     default void visit(Call it) {
+    }
+
+    default void visit(ClassDef it) {
     }
 
 }

@@ -90,6 +90,6 @@ public class IRFunction extends Instruction {
     }
 
     public static String functionReNaming(String name) {
-        return name.equals("main") ? "main" : "_func_" + name;
+        return (name.equals("main") || name.startsWith("__") ? "" : "_func_") + name;
     }
 }
