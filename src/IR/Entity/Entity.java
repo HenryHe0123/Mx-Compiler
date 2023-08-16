@@ -25,7 +25,6 @@ public abstract class Entity {
         return switch (type.typename) {
             case "int" -> new Int(0);
             case "bool" -> new Bool(false);
-            case "string" -> null; //todo
             case "void" -> Void.instance;
             default -> Null.instance;
         };
@@ -33,19 +32,18 @@ public abstract class Entity {
 
     public static Entity init(IRType type) {
         if (type.isVoid()) return Void.instance;
-        if (type instanceof PtrType) return Null.instance;
         if (type instanceof INType) {
             if (type.getBytes() == 1) return new Bool(false);
             else return new Int(0);
         }
-        return null; //todo
+        return Null.instance;
     }
 
     public static Entity from(Basic value) {
         if (value.isNull) return Null.instance;
         if (value.isBool) return new Bool(value.boolVal);
         if (value.isInt) return new Int((int) value.intVal);
-        return null; //todo: string
+        return new StringLiteral(value.stringVal);
     }
 
     public static Entity from(boolean value) {

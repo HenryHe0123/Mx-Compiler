@@ -23,9 +23,10 @@ public abstract class IRType {
         IRType t = switch (type.typename) {
             case "int" -> INType.IRInt;
             case "bool" -> INType.IRBool;
+            case "string" -> PtrType.IRString;
             case "void" -> VoidType.IRVoid;
             case "null" -> PtrType.IRNull;
-            default -> new PtrType(getIRClassType(type.typename)); //string is also viewed as class
+            default -> new PtrType(getIRClassType(type.typename));
         };
         return t.dimension(type.dim);
     }
@@ -48,5 +49,9 @@ public abstract class IRType {
 
     public PtrType asPtr() {
         return new PtrType(this);
+    }
+
+    public String asPrefix() {
+        return "";
     }
 }

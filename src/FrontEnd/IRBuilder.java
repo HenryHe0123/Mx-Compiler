@@ -24,7 +24,7 @@ public class IRBuilder implements ASTVisitor {
     private Type curType = null;
     private IRBlock curBlock = null;
     private IRFunction curFunction = null;
-    private ClassType curClass = null;
+    private ClassType curClass = null; //not null only when visiting class
     private final Stack<IRBlock> loopContinueBlock = new Stack<>();
     private final Stack<IRBlock> loopEndBlock = new Stack<>();
     private final IRFunction globalVarInit = IRFunction.globalVarInit();
@@ -77,9 +77,22 @@ public class IRBuilder implements ASTVisitor {
         addParameter("this", new Register("this", curClass.asPtr()));
     }
 
+    private Entity getThisParameter() {
+        Entity entity = curScope.getVarEntity("this");
+        IRType baseType = entity.type.deconstruct(); //classType.asPtr()
+        Entity base = Register.anonymous(baseType);
+        curBlock.addInstruct(new Load(base, baseType, entity));
+        return base;
+    }
+
     private void collectClassTypes(RootNode node) {
-        IRType.addIRClassType("string");
         node.classDefs.forEach(classDef -> IRType.addIRClassType(classDef.identifier));
+    }
+
+    private GlobalVar initStringLiteral(StringLiteral literal) {
+        GlobalVar srcStr = GlobalVar.anonymousSrcStr();
+        root.globals.add(new GlobalDef(srcStr, literal, true));
+        return srcStr;
     }
 
     // ------------------------------ visit ------------------------------
@@ -105,7 +118,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(VarDeclareUnitNode node) {
         if (inGlobal()) {
-            Entity reg = new GlobalVar(node.identifier + curScope.asPostfix(), IRType.from(curType));
+            Entity reg = new GlobalVar(node.identifier + curScope.asPostfix(), IRType.from(curType).asPtr());
             Entity init = Entity.init(curType);
             if (node.expression != null) { //if with an init expression
                 curBlock = globalVarInit.entry;
@@ -115,7 +128,7 @@ public class IRBuilder implements ASTVisitor {
                 else curBlock.addInstruct(new Store(entity, reg));
                 curBlock = null; //prevent misuse
             }
-            root.globals.add(new GlobalDef(reg, init, GlobalDef.globalDefType.global));
+            root.globals.add(new GlobalDef(reg, init));
             curScope.putVarEntity(node.identifier, reg);
         } else {
             if (isReturned()) return;
@@ -329,7 +342,11 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(LiteralExprNode node) {
-        if (node.entity == null) node.entity = Entity.from(node.value);
+        if (node.entity == null) {
+            Entity literal = Entity.from(node.value);
+            node.entity = (literal instanceof StringLiteral) ?
+                    initStringLiteral((StringLiteral) literal) : literal;
+        }
     }
 
     @Override
@@ -348,15 +365,74 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(FuncExprNode node) {
         if (isReturned()) return;
-        //todo: currently only for global function
         IRType returnType = IRType.from(node.type);
         node.entity = returnType.isVoid() ? null : Register.anonymous(returnType);
-        Call call = new Call(node.entity, node.funcName, returnType);
+        Call call;
+        if (curClass == null) { //global function
+            call = new Call(node.entity, node.funcName, returnType);
+        } else { //class method in class environment
+            call = new Call(node.entity, curClass.asPrefix() + node.funcName, returnType);
+            call.addArg(getThisParameter());
+        }
         node.args.forEach(arg -> {
             arg.accept(this);
             call.addArg(arg.entity);
         });
         curBlock.addInstruct(call);
+    }
+
+    @Override
+    public void visit(MemberExprNode node) {
+        if (isReturned()) return;
+        //todo: ignore array first
+        node.caller.accept(this);
+        Entity caller = node.caller.entity; //class* or IRString
+        IRType baseType = caller.type.deconstruct(); //classType or IRStringLiteral
+
+        if (node.dotFunc()) {
+            FuncExprNode method = (FuncExprNode) node.member;
+            IRType returnType = IRType.from(node.type);
+            Entity entity = returnType.isVoid() ? null : Register.anonymous(returnType);
+
+            Call call = new Call(entity, baseType.asPrefix() + method.funcName, returnType);
+            call.addArg(caller); //add this pointer
+            method.args.forEach(arg -> {
+                arg.accept(this);
+                call.addArg(arg.entity);
+            });
+            curBlock.addInstruct(call);
+
+            node.entity = entity;
+            node.member.entity = entity;
+        } else { //caller dot variable, caller won't be string
+            VarExprNode member = (VarExprNode) node.member;
+            ClassType classType = (ClassType) baseType;
+            IRType memberType = classType.getMemberType(member.identifier);
+            if (memberType == null) throw new CodegenError("dot variable expression build IR failed");
+
+            Entity destPtr = Register.anonymous(memberType.asPtr());
+            curBlock.addInstruct(new GetElementPtr(destPtr, baseType, caller, Entity.from(0), Entity.from(classType.getMemberIndex(member.identifier))));
+            Entity entity = Register.anonymous(memberType);
+            curBlock.addInstruct(new Load(entity, memberType, destPtr));
+            node.entity = entity;
+            node.member.entity = entity;
+            node.setAssignDest(destPtr);
+        }
+    }
+
+    @Override
+    public void visit(NewExprNode node) {
+        if (node.isNewClass()) {
+            IRType classPtrType = IRType.from(node.type);
+            ClassType classType = (ClassType) classPtrType.deconstruct();
+            Register mallocPtr = Register.anonymous(classPtrType); //class*
+            Call malloc = new Call(mallocPtr, "__malloc", classPtrType);
+            curBlock.addInstruct(malloc);
+            Call construct = new Call(null, classType.getConstructorName(), VoidType.IRVoid);
+            construct.addArg(mallocPtr);
+            curBlock.addInstruct(construct);
+            node.entity = mallocPtr;
+        }
     }
 
     @Override
@@ -456,9 +532,17 @@ public class IRBuilder implements ASTVisitor {
             node.entity = Register.anonymous(INType.IRBool);
             var op = Icmp.convert(node.operator);
             curBlock.addInstruct(new Icmp(node.entity, op, node.lhs.entity, node.rhs.entity));
-        } else if (node.isAdd()) { //todo: string also support add operation
-            node.entity = Register.anonymous(INType.IRInt);
-            curBlock.addInstruct(new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, node.lhs.entity, node.rhs.entity));
+        } else if (node.isAdd()) {
+            if (node.type.isInt()) {
+                node.entity = Register.anonymous(INType.IRInt);
+                curBlock.addInstruct(new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, node.lhs.entity, node.rhs.entity));
+            } else { //string
+                node.entity = Register.anonymous(PtrType.IRStringLiteral);
+                Call call = new Call(node.entity, "__string.add", PtrType.IRStringLiteral);
+                call.addArg(node.lhs.entity);
+                call.addArg(node.rhs.entity);
+                curBlock.addInstruct(call);
+            }
         } else { //arithmetic or bits operation
             node.entity = Register.anonymous(INType.IRInt);
             var op = Binary.convert(node.operator);

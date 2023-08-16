@@ -4,22 +4,24 @@ import IR.Entity.Entity;
 import IR.IRVisitor;
 
 public class GlobalDef extends Instruction {
-    public enum globalDefType {
-        global, constant
-    }
-
-    public globalDefType dType;
+    public boolean isStringLiteral = false;
     public Entity dest, init;
 
-    public GlobalDef(Entity dest, Entity init, globalDefType dType) {
-        this.dType = dType;
+    public GlobalDef(Entity dest, Entity init) {
         this.dest = dest;
         this.init = init;
     }
 
+    public GlobalDef(Entity dest, Entity init, boolean isStringLiteral) {
+        this.dest = dest;
+        this.init = init;
+        this.isStringLiteral = isStringLiteral;
+    }
+
     @Override
     public String getText() {
-        return dest.getText() + " = " + dType.name() + " " + init.getFullText() + "\n";
+        String rhs = (isStringLiteral ? "" : "global ") + init.getFullText();
+        return dest.getText() + " = " + rhs + "\n";
     }
 
     @Override

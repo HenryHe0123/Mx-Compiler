@@ -6,7 +6,7 @@ import java.util.HashMap;
 public class ClassType extends IRType { //base type
     public String className;
     public ArrayList<IRType> memberTypes = new ArrayList<>();
-    public HashMap<String, Integer> memberMap = new HashMap<>(); //store index
+    public HashMap<String, Integer> memberIndexes = new HashMap<>();
 
     ClassType(String name) {
         className = name;
@@ -14,17 +14,22 @@ public class ClassType extends IRType { //base type
 
     public void addMember(String name, IRType type) {
         memberTypes.add(type);
-        memberMap.put(name, memberTypes.size() - 1);
+        memberIndexes.put(name, memberTypes.size() - 1);
     }
 
     public boolean hasMember(String name) {
-        return memberMap.containsKey(name);
+        return memberIndexes.containsKey(name);
+    }
+
+    public int getMemberIndex(String name) {
+        return memberIndexes.get(name);
     }
 
     public IRType getMemberType(String name) {
-        return hasMember(name) ? memberTypes.get(memberMap.get(name)) : null;
+        return hasMember(name) ? memberTypes.get(memberIndexes.get(name)) : null;
     }
 
+    @Override
     public String asPrefix() {
         return "__" + className + ".";
     }
@@ -37,5 +42,9 @@ public class ClassType extends IRType { //base type
     @Override
     public int getBytes() {
         return memberTypes.size() << 2;
+    }
+
+    public String getConstructorName() {
+        return asPrefix() + className;
     }
 }

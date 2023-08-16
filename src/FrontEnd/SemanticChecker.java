@@ -237,6 +237,7 @@ public class SemanticChecker implements ASTVisitor {
                 throw new SemanticError("call class method " + className + "." + method.funcName + " failed", node.pos);
             }
             node.type = type;
+            node.member.type = type;
             return;
         }
         if (node.dotVar()) {
@@ -249,6 +250,7 @@ public class SemanticChecker implements ASTVisitor {
                 if (type == null)
                     throw new SemanticError("call class member " + className + "." + member.identifier + " failed", node.pos);
                 node.type = type;
+                node.member.type = type;
                 return;
             }
             throw new SemanticError("variable member expression's caller type should not be " + className, node.pos);

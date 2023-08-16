@@ -43,6 +43,7 @@ public class Basic { //unified basic type of Mx (including null)
             isInt = true;
         } else if (ctx.StringLiteral() != null) {
             stringVal = ctx.StringLiteral().getText();
+            stringVal = stringVal.substring(1, stringVal.length() - 1); //remove the quotation marks
         } else if (ctx.False() != null) {
             boolVal = false;
             isBool = true;

@@ -50,4 +50,6 @@ public interface IRVisitor {
     default void visit(ClassDef it) {
     }
 
+    default void visit(GetElementPtr it) {
+    }
 }

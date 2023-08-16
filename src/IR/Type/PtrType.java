@@ -25,5 +25,13 @@ public class PtrType extends IRType {
     public IRType deconstruct() {
         return baseType;
     }
+
+    @Override
+    public String asPrefix() {
+        return this == IRStringLiteral ? "__string." : "";
+    }
+
     public static final PtrType IRNull = new PtrType(null);
+    public static final PtrType IRStringLiteral = new PtrType(new INType(8));
+    public static final PtrType IRString = IRStringLiteral.asPtr();
 }

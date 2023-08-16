@@ -8,7 +8,7 @@ public class GlobalVar extends Entity {
     public String name;
 
     public GlobalVar(String name, IRType type) {
-        super(new PtrType(type)); //all global variables are pointers
+        super(type); //notice: all global variables should be pointers
         this.name = name;
     }
 
@@ -19,6 +19,16 @@ public class GlobalVar extends Entity {
 
     @Override
     public boolean isConstant() {
-        return false;
+        return isStringLiteral();
+    }
+
+    private static long anonymous_cnt = 0;
+
+    public static GlobalVar anonymousSrcStr() { //source string literal
+        return new GlobalVar(".str." + anonymous_cnt++, PtrType.IRStringLiteral);
+    }
+
+    public boolean isStringLiteral() {
+        return type == PtrType.IRStringLiteral;
     }
 }
