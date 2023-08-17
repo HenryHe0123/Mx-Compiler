@@ -1,12 +1,14 @@
 package IR.Type;
 
+import Util.Error.CodegenError;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class ClassType extends IRType { //base type
     public String className;
-    public ArrayList<IRType> memberTypes = new ArrayList<>();
-    public HashMap<String, Integer> memberIndexes = new HashMap<>();
+    public final ArrayList<IRType> memberTypes = new ArrayList<>();
+    public final HashMap<String, Integer> memberIndexes = new HashMap<>();
 
     ClassType(String name) {
         className = name;
@@ -22,11 +24,16 @@ public class ClassType extends IRType { //base type
     }
 
     public int getMemberIndex(String name) {
-        return memberIndexes.get(name);
+        if (hasMember(name)) return memberIndexes.get(name);
+        throw new CodegenError("Class " + className + " has no member named " + name);
     }
 
     public IRType getMemberType(String name) {
         return hasMember(name) ? memberTypes.get(memberIndexes.get(name)) : null;
+    }
+
+    public IRType getMemberType(int index) {
+        return memberTypes.get(index);
     }
 
     @Override

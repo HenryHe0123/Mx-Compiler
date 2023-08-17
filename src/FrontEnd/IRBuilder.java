@@ -79,7 +79,7 @@ public class IRBuilder implements ASTVisitor {
 
     private Entity getThisParameter() {
         Entity entity = curScope.getVarEntity("this");
-        IRType baseType = entity.type.deconstruct(); //classType.asPtr()
+        IRType baseType = entity.type.deconstruct(); //class*
         Entity base = Register.anonymous(baseType);
         curBlock.addInstruct(new Load(base, baseType, entity));
         return base;
@@ -93,6 +93,19 @@ public class IRBuilder implements ASTVisitor {
         GlobalVar srcStr = GlobalVar.anonymousSrcStr();
         root.globals.add(new GlobalDef(srcStr, literal, true));
         return srcStr;
+    }
+
+    private void visitClassMemberExpr(VarExprNode member, Entity caller, ExprNode node) {
+        ClassType classType = (ClassType) caller.type.deconstruct(); //caller is class*
+        int index = classType.getMemberIndex(member.identifier);
+        IRType memberType = classType.getMemberType(index);
+        Entity destPtr = Register.anonymous(memberType.asPtr());
+        curBlock.addInstruct(new GetElementPtr(destPtr, classType, caller, Entity.from(0), Entity.from(index)));
+        Entity entity = Register.anonymous(memberType);
+        curBlock.addInstruct(new Load(entity, memberType, destPtr));
+        node.entity = entity;
+        if (node instanceof MemberExprNode) ((MemberExprNode) node).member.entity = entity;
+        node.setAssignDest(destPtr);
     }
 
     // ------------------------------ visit ------------------------------
@@ -355,6 +368,10 @@ public class IRBuilder implements ASTVisitor {
         if (node.entity == null) {
             //"this" is handled just like normal variable, as we have already added it to the map
             Entity entity = curScope.getVarEntity(node.identifier);
+            if (entity == null) { //entity belongs to this
+                visitClassMemberExpr(node, getThisParameter(), node);
+                return;
+            }
             node.setAssignDest(entity);
             IRType baseType = entity.type.deconstruct();
             node.entity = Register.anonymous(baseType);
@@ -384,16 +401,15 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(MemberExprNode node) {
         if (isReturned()) return;
-        //todo: ignore array first
+        //todo: array.size() unsupported
         node.caller.accept(this);
         Entity caller = node.caller.entity; //class* or IRString
-        IRType baseType = caller.type.deconstruct(); //classType or IRStringLiteral
-
         if (node.dotFunc()) {
             FuncExprNode method = (FuncExprNode) node.member;
             IRType returnType = IRType.from(node.type);
             Entity entity = returnType.isVoid() ? null : Register.anonymous(returnType);
 
+            IRType baseType = caller.type.deconstruct(); //classType or IRStringLiteral
             Call call = new Call(entity, baseType.asPrefix() + method.funcName, returnType);
             call.addArg(caller); //add this pointer
             method.args.forEach(arg -> {
@@ -406,17 +422,7 @@ public class IRBuilder implements ASTVisitor {
             node.member.entity = entity;
         } else { //caller dot variable, caller won't be string
             VarExprNode member = (VarExprNode) node.member;
-            ClassType classType = (ClassType) baseType;
-            IRType memberType = classType.getMemberType(member.identifier);
-            if (memberType == null) throw new CodegenError("dot variable expression build IR failed");
-
-            Entity destPtr = Register.anonymous(memberType.asPtr());
-            curBlock.addInstruct(new GetElementPtr(destPtr, baseType, caller, Entity.from(0), Entity.from(classType.getMemberIndex(member.identifier))));
-            Entity entity = Register.anonymous(memberType);
-            curBlock.addInstruct(new Load(entity, memberType, destPtr));
-            node.entity = entity;
-            node.member.entity = entity;
-            node.setAssignDest(destPtr);
+            visitClassMemberExpr(member, caller, node);
         }
     }
 
