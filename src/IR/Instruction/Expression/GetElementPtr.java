@@ -8,15 +8,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GetElementPtr extends Expression {
-    public IRType baseType;
-    public Entity ptrVal;
+    public Entity ptr;
     public ArrayList<Entity> indexList = new ArrayList<>();
+    private final IRType baseType;
 
-    public GetElementPtr(Entity dest, IRType baseType, Entity ptrVal, Entity... indexes) {
+    public GetElementPtr(Entity dest, Entity ptr, Entity... indexes) {
         super(dest);
-        this.baseType = baseType;
-        this.ptrVal = ptrVal;
+        this.ptr = ptr;
         indexList.addAll(List.of(indexes));
+        baseType = ptr.type.deconstruct();
     }
 
     public void addIndex(Entity index) {
@@ -25,7 +25,7 @@ public class GetElementPtr extends Expression {
 
     @Override
     public String getText() {
-        StringBuilder s = new StringBuilder(dest.getText() + " = getelementptr " + baseType.getText() + ", " + ptrVal.getFullText());
+        StringBuilder s = new StringBuilder(dest.getText() + " = getelementptr " + baseType.getText() + ", " + ptr.getFullText());
         for (Entity index : indexList) {
             s.append(", ").append(index.getFullText());
         }

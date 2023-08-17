@@ -15,4 +15,9 @@ public class Int extends Entity {
         return String.valueOf(value);
     }
 
+    public static final Int four = new Int(4);
+    public static final Int zero = new Int(0);
+    public static final Int one = new Int(1);
+    public static final Int minusOne = new Int(-1);
+
 }

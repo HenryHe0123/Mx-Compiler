@@ -73,7 +73,7 @@ public class IRBlock { //Basic Block
             ret.setTerminator(new Ret(Void.instance));
         } else {
             Register tmpReg = Register.anonymous(type);
-            ret.addInstruct(new Load(tmpReg, type, function.returnReg));
+            ret.addInstruct(new Load(tmpReg, function.returnReg));
             ret.setTerminator(new Ret(tmpReg));
         }
         return ret;

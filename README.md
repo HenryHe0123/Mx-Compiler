@@ -10,6 +10,7 @@
 - [x] Symbol Collector
 - [x] Semantic Checker
 - [x] Pass Semantic Test
-- [ ] IR Design
-- [ ] IR Builder
-- [ ] Code Generation
+- [x] IR Design
+- [x] IR Builder
+- [ ] Pass IR Test
+- [ ] Assembly Generation

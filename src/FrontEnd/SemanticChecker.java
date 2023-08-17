@@ -281,8 +281,10 @@ public class SemanticChecker implements ASTVisitor {
             return;
         }
         boolean flag = false; //if null appeared
-        for (var index : node.dimExpr) {
+        for (int i = 0; i < node.dimExpr.size(); ++i) {
+            var index = node.dimExpr.get(i);
             if (index == null) {
+                if (i == 0) throw new SemanticError("first-index null in new array expression", node.pos);
                 flag = true;
             } else if (flag) {
                 throw new SemanticError("non-null index appeared after null in new array expression", node.pos);

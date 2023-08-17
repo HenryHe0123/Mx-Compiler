@@ -28,6 +28,6 @@ public class Register extends Entity {
 
     public static Register retReg(IRType type) {
         if (type.isVoid()) return null;
-        return new Register("_ret_val", type);
+        return new Register("_ret_val", type.asPtr());
     }
 }

@@ -5,18 +5,18 @@ import IR.IRVisitor;
 import IR.Type.IRType;
 
 public class Load extends Expression {
-    public IRType type;
     public Entity src; //ptr
+    private final IRType baseType;
 
-    public Load(Entity dest, IRType type, Entity src) {
+    public Load(Entity dest, Entity src) {
         super(dest);
-        this.type = type;
         this.src = src;
+        baseType = src.type.deconstruct();
     }
 
     @Override
     public String getText() {
-        return dest.getText() + " = load " + type.getText() + ", ptr " + src.getText() + "\n";
+        return dest.getText() + " = load " + baseType.getText() + ", ptr " + src.getText() + "\n";
     }
 
     @Override
