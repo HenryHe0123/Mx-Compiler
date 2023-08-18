@@ -40,6 +40,12 @@ public class IRBuilder implements ASTVisitor {
 
     // ------------------------------ utility ------------------------------
 
+    private Entity getExprEntity(ExprNode node) {
+        if (node == null) return null;
+        node.accept(this);
+        return node.entity;
+    }
+
     private void setCurBlock(IRBlock block) {
         curBlock = block;
         if (curFunction == globalVarInit) lastGlobalVarInitBlock = block;
@@ -157,7 +163,7 @@ public class IRBuilder implements ASTVisitor {
 
     private Entity getArrayBytes(Entity size) {
         if (size instanceof Int) {
-            int bytes = ((Int) size).value * 4 + 4;
+            int bytes = ((Int) size).toInt() * 4 + 4;
             return Entity.from(bytes);
         }
 
@@ -171,58 +177,13 @@ public class IRBuilder implements ASTVisitor {
         return bytes;
     }
 
-    private Entity createNewArray(IRType ptrType, int layer, ArrayList<ExprNode> dimSizes) {
-        if (dimSizes.get(layer) == null) return Null.instance;
-        dimSizes.get(layer).accept(this);
-        Entity size = dimSizes.get(layer).entity; //i32
-        Entity bytes = getArrayBytes(size); //i32
-
-        //malloc
-        Register mallocPtr = Register.anonymous(ptrType);
-        curBlock.addInstruct(malloc(mallocPtr, bytes));
-
-        //store size at the beginning of the array
-        curBlock.addInstruct(new Store(size, mallocPtr));
-
-        //move pointer to offset 1 (real array ptr)
-        Register realArrayPtr = offsetPtr(mallocPtr, Int.one);
-
-        //return immediately if last layer
-        if (layer < dimSizes.size() - 1) {
-            //create array by while loop
-            String postfix = curFunction.getLabelPostfix();
-            IRBlock condBlock = new IRBlock("array.while.cond" + postfix, curFunction);
-            IRBlock bodyBlock = new IRBlock("array.while.body" + postfix, curFunction);
-            IRBlock endBlock = new IRBlock("array.while.end" + postfix, curFunction);
-
-            //int i = 0
-            Register IPtr = new Register("_array.i." + layer + "." + postfix, INType.IRInt.asPtr());
-            curBlock.addInstruct(new Alloca(IPtr, INType.IRInt));
-            curBlock.addInstruct(new Store(Int.zero, IPtr));
-            tryTerminateBlock(new Jump(condBlock));
-
-            //cond: i < size
-            setCurBlock(condBlock);
-            Register IVal = Register.anonymous(INType.IRInt);
-            curBlock.addInstruct(new Load(IVal, IPtr));
-            Register cond = Register.anonymous(INType.IRBool);
-            curBlock.addInstruct(new Icmp(cond, Icmp.IcmpOp.slt, IVal, size));
-            tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
-
-            //body: create next layer array
-            setCurBlock(bodyBlock);
-            Entity nextLayerPtr = createNewArray(ptrType.deconstruct(), layer + 1, dimSizes);
-            Register curPtr = offsetPtr(realArrayPtr, IVal);
-            curBlock.addInstruct(new Store(nextLayerPtr, curPtr));
-            //i++
-            Register IValPlus = Register.anonymous(INType.IRInt);
-            curBlock.addInstruct(new Binary(IValPlus, Binary.BinaryOp.add, INType.IRInt, IVal, Int.one));
-            curBlock.addInstruct(new Store(IValPlus, IPtr));
-            tryTerminateBlock(new Jump(condBlock));
-
-            setCurBlock(endBlock);
-        }
-        return realArrayPtr;
+    private void visitAssignDest(ExprNode node) {
+        if (node instanceof VarExprNode varNode) {
+            Entity entity = curScope.getVarEntity(varNode.identifier);
+            if (entity == null) visitClassMemberExpr(varNode, getThisParameter(), node);
+            else node.setAssignDest(entity);
+            //optimization: we don't need to load the value of the variable for assign dest
+        } else node.accept(this);
     }
 
     // ------------------------------ visit ------------------------------
@@ -254,8 +215,7 @@ public class IRBuilder implements ASTVisitor {
             if (node.expression != null) { //if with an init expression
                 curFunction = globalVarInit;
                 setCurBlock(lastGlobalVarInitBlock);
-                node.expression.accept(this);
-                var entity = node.expression.entity;
+                var entity = getExprEntity(node.expression);
                 if (entity.isConstant()) init = entity;
                 else curBlock.addInstruct(new Store(entity, reg));
                 resetCurBlock(); //prevent misuse
@@ -271,8 +231,7 @@ public class IRBuilder implements ASTVisitor {
             curBlock.addInstruct(new Alloca(reg, type));
             Entity init = Entity.init(curType);
             if (node.expression != null) {
-                node.expression.accept(this);
-                init = node.expression.entity;
+                init = getExprEntity(node.expression);
             }
             curBlock.addInstruct(new Store(init, reg));
             curScope.putVarEntity(node.identifier, reg);
@@ -335,8 +294,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(ReturnStmtNode node) {
         if (isReturned()) return;
         if (node.returnExpr != null) {
-            node.returnExpr.accept(this);
-            Entity retVal = node.returnExpr.entity;
+            Entity retVal = getExprEntity(node.returnExpr);
             curBlock.addInstruct(new Store(retVal, curFunction.returnReg));
         }
         terminateBlock(new Jump(curFunction.returnBlock));
@@ -353,8 +311,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(BranchStmtNode node) {
         if (isReturned()) return;
-        node.condition.accept(this);
-        Entity cond = node.condition.entity;
+        Entity cond = getExprEntity(node.condition);
         boolean ret = false;
 
         String postfix = curFunction.getLabelPostfix();
@@ -412,8 +369,7 @@ public class IRBuilder implements ASTVisitor {
         tryTerminateBlock(new Jump(condBlock));
 
         setCurBlock(condBlock);
-        if (node.condition != null) node.condition.accept(this);
-        Entity cond = (node.condition != null) ? node.condition.entity : Entity.from(true);
+        Entity cond = (node.condition != null) ? getExprEntity(node.condition) : Bool.True;
         tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
 
         setCurBlock(bodyBlock);
@@ -444,8 +400,7 @@ public class IRBuilder implements ASTVisitor {
         tryTerminateBlock(new Jump(condBlock));
 
         setCurBlock(condBlock);
-        node.condition.accept(this);
-        Entity cond = node.condition.entity;
+        Entity cond = getExprEntity(node.condition);
         tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
 
         setCurBlock(bodyBlock);
@@ -507,18 +462,14 @@ public class IRBuilder implements ASTVisitor {
             call = new Call(node.entity, curClass.asPrefix() + node.funcName, returnType);
             call.addArg(getThisParameter());
         }
-        node.args.forEach(arg -> {
-            arg.accept(this);
-            call.addArg(arg.entity);
-        });
+        node.args.forEach(arg -> call.addArg(getExprEntity(arg)));
         curBlock.addInstruct(call);
     }
 
     @Override
     public void visit(MemberExprNode node) {
         if (isReturned()) return;
-        node.caller.accept(this);
-        Entity caller = node.caller.entity; //class* or IRString or array
+        Entity caller = getExprEntity(node.caller); //class* or IRString or array
         if (node.dotFunc()) {
             FuncExprNode method = (FuncExprNode) node.member;
             IRType returnType = IRType.from(node.type);
@@ -536,10 +487,7 @@ public class IRBuilder implements ASTVisitor {
             IRType baseType = caller.type.deconstruct(); //classType or IRStringLiteral
             Call call = new Call(entity, baseType.asPrefix() + method.funcName, returnType);
             call.addArg(caller); //add this pointer
-            method.args.forEach(arg -> {
-                arg.accept(this);
-                call.addArg(arg.entity);
-            });
+            method.args.forEach(arg -> call.addArg(getExprEntity(arg)));
             curBlock.addInstruct(call);
 
             node.entity = entity;
@@ -548,6 +496,59 @@ public class IRBuilder implements ASTVisitor {
             VarExprNode member = (VarExprNode) node.member;
             visitClassMemberExpr(member, caller, node);
         }
+    }
+
+    private Entity createNewArray(IRType ptrType, int layer, ArrayList<ExprNode> dimSizes) {
+        if (dimSizes.get(layer) == null) return Null.instance;
+        Entity size = getExprEntity(dimSizes.get(layer)); //i32
+        Entity bytes = getArrayBytes(size); //i32
+
+        //malloc
+        Register mallocPtr = Register.anonymous(ptrType);
+        curBlock.addInstruct(malloc(mallocPtr, bytes));
+
+        //store size at the beginning of the array
+        curBlock.addInstruct(new Store(size, mallocPtr));
+
+        //move pointer to offset 1 (real array ptr)
+        Register realArrayPtr = offsetPtr(mallocPtr, Int.one);
+
+        //return immediately if last layer
+        if (layer < dimSizes.size() - 1) {
+            //create array by while loop
+            String postfix = curFunction.getLabelPostfix();
+            IRBlock condBlock = new IRBlock("array.while.cond" + postfix, curFunction);
+            IRBlock bodyBlock = new IRBlock("array.while.body" + postfix, curFunction);
+            IRBlock endBlock = new IRBlock("array.while.end" + postfix, curFunction);
+
+            //int i = 0
+            Register IPtr = new Register("_array.i." + layer + "." + postfix, INType.IRInt.asPtr());
+            curBlock.addInstruct(new Alloca(IPtr, INType.IRInt));
+            curBlock.addInstruct(new Store(Int.zero, IPtr));
+            tryTerminateBlock(new Jump(condBlock));
+
+            //cond: i < size
+            setCurBlock(condBlock);
+            Register IVal = Register.anonymous(INType.IRInt);
+            curBlock.addInstruct(new Load(IVal, IPtr));
+            Register cond = Register.anonymous(INType.IRBool);
+            curBlock.addInstruct(new Icmp(cond, Icmp.IcmpOp.slt, IVal, size));
+            tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+
+            //body: create next layer array
+            setCurBlock(bodyBlock);
+            Entity nextLayerPtr = createNewArray(ptrType.deconstruct(), layer + 1, dimSizes);
+            Register curPtr = offsetPtr(realArrayPtr, IVal);
+            curBlock.addInstruct(new Store(nextLayerPtr, curPtr));
+            //i++
+            Register IValPlus = Register.anonymous(INType.IRInt);
+            curBlock.addInstruct(new Binary(IValPlus, Binary.BinaryOp.add, INType.IRInt, IVal, Int.one));
+            curBlock.addInstruct(new Store(IValPlus, IPtr));
+            tryTerminateBlock(new Jump(condBlock));
+
+            setCurBlock(endBlock);
+        }
+        return realArrayPtr;
     }
 
     @Override
@@ -571,12 +572,11 @@ public class IRBuilder implements ASTVisitor {
     public void visit(UnaryExprNode node) {
         if (isReturned()) return;
         if (node.entity == null) {
-            node.expression.accept(this);
-            Entity src = node.expression.entity;
+            Entity src = getExprEntity(node.expression);
             node.entity = Register.anonymous(IRType.from(node.type)); //dest
             Instruction instruction;
             if (node.isBool()) {
-                instruction = new Binary(node.entity, Binary.BinaryOp.xor, INType.IRBool, src, Entity.from(true));
+                instruction = new Binary(node.entity, Binary.BinaryOp.xor, INType.IRBool, src, Bool.True);
             } else {
                 instruction = switch (node.operator) {
                     case "++" -> new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, src, Int.one);
@@ -597,22 +597,12 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(PostfixUpdateExprNode node) {
         if (isReturned()) return;
-        node.expression.accept(this);
-        Entity src = node.expression.entity;
+        Entity src = getExprEntity(node.expression);
         node.entity = src; //store previous i
         Entity reg = Register.anonymous(INType.IRInt); //store latest i
         var op = node.add ? Binary.BinaryOp.add : Binary.BinaryOp.sub;
         curBlock.addInstruct(new Binary(reg, op, INType.IRInt, src, Int.one)); //reg = i +/- 1
         assign(reg, node.expression);
-    }
-
-    private void visitAssignDest(ExprNode node) {
-        if (node instanceof VarExprNode varNode) {
-            Entity entity = curScope.getVarEntity(varNode.identifier);
-            if (entity == null) visitClassMemberExpr(varNode, getThisParameter(), node);
-            else node.setAssignDest(entity);
-            //optimization: we don't need to load the value of the variable for assign dest
-        } else node.accept(this);
     }
 
     @Override
@@ -627,8 +617,7 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(TernaryExprNode node) {
         if (isReturned()) return;
-        node.condition.accept(this);
-        Entity cond = node.condition.entity;
+        Entity cond = getExprEntity(node.condition);
         node.ifExpr.accept(this);
         node.elseExpr.accept(this);
 
@@ -636,44 +625,110 @@ public class IRBuilder implements ASTVisitor {
         curBlock.addInstruct(new Select(node.entity, cond, node.ifExpr.entity, node.elseExpr.entity));
     }
 
-    @Override
-    public void visit(BinaryExprNode node) {
-        if (isReturned()) return;
+    private void visitLogicExprByAlloc(BinaryExprNode node) {
         node.lhs.accept(this);
+        node.entity = Register.anonymous(INType.IRBool);
+        var ptr = Register.anonymous(INType.IRBool.asPtr());
+        curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
+        curBlock.addInstruct(new Store(node.lhs.entity, ptr));
 
-        if (node.isLogic()) { //short circuit assignment: avoid phi version
-            node.entity = Register.anonymous(INType.IRBool);
-            var ptr = Register.anonymous(INType.IRBool.asPtr());
-            curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
-            curBlock.addInstruct(new Store(node.lhs.entity, ptr));
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock rhsBlock = new IRBlock("logic.rhs" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
+        boolean and = node.operator.equals("&&");
+        //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
+        //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
+        Branch branch = and ?
+                new Branch(node.lhs.entity, rhsBlock, endBlock) :
+                new Branch(node.lhs.entity, endBlock, rhsBlock);
+        tryTerminateBlock(branch);
 
-            String postfix = curFunction.getLabelPostfix();
-            IRBlock rhsBlock = new IRBlock("logic.rhs" + postfix, curFunction);
-            IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
+        setCurBlock(rhsBlock);
+        curBlock.addInstruct(new Store(getExprEntity(node.rhs), ptr));
+        tryTerminateBlock(new Jump(endBlock));
 
-            boolean and = node.operator.equals("&&");
-            //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
-            //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
+        setCurBlock(endBlock);
+        curBlock.addInstruct(new Load(node.entity, ptr));
+    }
 
-            Branch branch = and ? new Branch(node.lhs.entity, rhsBlock, endBlock) :
-                    new Branch(node.lhs.entity, endBlock, rhsBlock);
-            tryTerminateBlock(branch);
+    private void visitLogicExprByPhi(BinaryExprNode node) {
+        Entity lhs = getExprEntity(node.lhs);
+        boolean isAnd = node.operator.equals("&&");
 
-            setCurBlock(rhsBlock);
-            node.rhs.accept(this);
-            curBlock.addInstruct(new Store(node.rhs.entity, ptr));
-            tryTerminateBlock(new Jump(endBlock));
-
-            setCurBlock(endBlock);
-            curBlock.addInstruct(new Load(node.entity, ptr));
+        if (lhs instanceof Bool) { //optimization
+            boolean value = ((Bool) lhs).toBool();
+            if (isAnd) { // value && rhs
+                node.entity = value ? getExprEntity(node.rhs) : Bool.False;
+            } else { // value || rhs
+                node.entity = value ? Bool.True : getExprEntity(node.rhs);
+            }
             return;
         }
 
+        node.entity = Register.anonymous(INType.IRBool);
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock rhsBlock = new IRBlock("logic.rhs" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
+        IRBlock entry = curBlock;
+
+        if (isAnd) {
+            tryTerminateBlock(new Branch(lhs, rhsBlock, endBlock));
+            setCurBlock(rhsBlock);
+            node.rhs.accept(this);
+            tryTerminateBlock(new Jump(endBlock));
+
+            setCurBlock(endBlock);
+            Phi phi = new Phi(node.entity);
+            phi.addBranch(Bool.False, entry);
+            phi.addBranch(node.rhs.entity, rhsBlock);
+            curBlock.addInstruct(phi);
+        } else { // a||b
+            tryTerminateBlock(new Branch(lhs, endBlock, rhsBlock));
+            setCurBlock(rhsBlock);
+            node.rhs.accept(this);
+            tryTerminateBlock(new Jump(endBlock));
+
+            setCurBlock(endBlock);
+            Phi phi = new Phi(node.entity);
+            phi.addBranch(Bool.True, entry);
+            phi.addBranch(node.rhs.entity, rhsBlock);
+            curBlock.addInstruct(phi);
+        }
+    }
+
+    @Override
+    public void visit(BinaryExprNode node) {
+        if (isReturned()) return;
+        if (node.isLogic()) {
+            //short circuit assignment
+            //visitLogicExprByAlloc(node);
+            visitLogicExprByPhi(node);
+            return;
+        }
+
+        node.lhs.accept(this);
         node.rhs.accept(this);
+
         if (node.isCmp()) {
             node.entity = Register.anonymous(INType.IRBool);
-            var op = Icmp.convert(node.operator);
-            curBlock.addInstruct(new Icmp(node.entity, op, node.lhs.entity, node.rhs.entity));
+            if (node.lhs.type.isString()) {
+                String funcName = switch (node.operator) {
+                    case "<" -> "__string.lt";
+                    case "<=" -> "__string.le";
+                    case ">" -> "__string.gt";
+                    case ">=" -> "__string.ge";
+                    case "==" -> "__string.eq";
+                    case "!=" -> "__string.ne";
+                    default -> throw new CodegenError("Unexpected cmp option: " + node.operator);
+                };
+                Call call = new Call(node.entity, funcName, INType.IRBool);
+                call.addArg(node.lhs.entity);
+                call.addArg(node.rhs.entity);
+                curBlock.addInstruct(call);
+            } else {
+                var op = Icmp.convert(node.operator);
+                curBlock.addInstruct(new Icmp(node.entity, op, node.lhs.entity, node.rhs.entity));
+            }
         } else if (node.isAdd()) {
             if (node.type.isInt()) {
                 node.entity = Register.anonymous(INType.IRInt);
@@ -699,8 +754,7 @@ public class IRBuilder implements ASTVisitor {
         Entity prePtr = null, ptr = node.array.entity;
         for (ExprNode indexNode : node.indexes) {
             prePtr = ptr;
-            indexNode.accept(this);
-            Entity index = indexNode.entity;
+            Entity index = getExprEntity(indexNode);
             prePtr = offsetPtr(prePtr, index);
             ptr = Register.anonymous(prePtr.type.deconstruct());
             curBlock.addInstruct(new Load(ptr, prePtr));

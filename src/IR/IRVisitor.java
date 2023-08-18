@@ -52,4 +52,7 @@ public interface IRVisitor {
 
     default void visit(GetElementPtr it) {
     }
+
+    default void visit(Phi it) {
+    }
 }

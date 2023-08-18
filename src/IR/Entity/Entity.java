@@ -23,8 +23,8 @@ public abstract class Entity {
     public static Entity init(Type type) {
         if (type.dim > 0) return Null.instance;
         return switch (type.typename) {
-            case "int" -> new Int(0);
-            case "bool" -> new Bool(false);
+            case "int" -> Int.zero;
+            case "bool" -> Bool.False;
             case "void" -> Void.instance;
             default -> Null.instance;
         };
@@ -33,8 +33,8 @@ public abstract class Entity {
     public static Entity init(IRType type) {
         if (type.isVoid()) return Void.instance;
         if (type instanceof INType) {
-            if (type.getBytes() == 1) return new Bool(false);
-            else return new Int(0);
+            if (type.getBytes() == 1) return Bool.False;
+            else return Int.zero;
         }
         return Null.instance;
     }
