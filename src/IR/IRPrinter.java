@@ -10,6 +10,7 @@ public class IRPrinter {
     }
 
     public void print(IRRoot root) {
+        if (out == null) return;
         out.println(root.getText());
     }
 }

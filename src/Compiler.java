@@ -52,6 +52,6 @@ public class Compiler {
 
         IRRoot rootIR = new IRRoot();
         new IRBuilder(globalScope, rootIR).visit(ASTRoot);
-        if (output != null) new IRPrinter(output).print(rootIR);
+        new IRPrinter(output).print(rootIR);
     }
 }

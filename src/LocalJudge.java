@@ -12,6 +12,7 @@ public class LocalJudge {
     private static final String semanticFolderName = "testcases/sema";
     private static final String codeGenFolderPathPrefix = "testcases/codegen/";
     private static final String tmpFolderName = ".tmp";
+    private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPath = "builtin/builtin.ll";
 
     public static void main(String[] args) throws Exception {
@@ -77,7 +78,7 @@ public class LocalJudge {
         try {
             //compile to llvm ir
             final String mxFileName = codeGenFolderPathPrefix + fileName;
-            final String llFileName = tmpFolderName + "/test.ll";
+            final String llFileName = tmpFilePath + ".ll";
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(llFileName))) {
                 Compiler.compile(compilerInput, compilerOutput);
@@ -90,7 +91,7 @@ public class LocalJudge {
             }
 
             //build executable file by clang
-            final String exeFileName = tmpFolderName + "/test";
+            final String exeFileName = tmpFilePath;
             ProcessBuilder processBuilder = new ProcessBuilder("wsl", "clang-15", builtinPath, llFileName, "-o", exeFileName, "-m32");
             Process process = processBuilder.start();
             int processExitCode = process.waitFor();
@@ -114,13 +115,13 @@ public class LocalJudge {
             int exitCode = getExitCodeFromFile(mxFileName);
 
             //write input to tmp.in
-            final String inFileName = tmpFolderName + "/tmp.in";
+            final String inFileName = tmpFilePath + ".in";
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(inFileName))) {
                 writer.write(input);
             }
 
             //redirect process input and output
-            final String outFileName = tmpFolderName + "/tmp.out";
+            final String outFileName = tmpFilePath + ".out";
             processBuilder = new ProcessBuilder("wsl", exeFileName);
             processBuilder.redirectInput(new File(inFileName));
             processBuilder.redirectOutput(new File(outFileName));
