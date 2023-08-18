@@ -70,9 +70,7 @@ public class IRFunction extends Instruction {
     }
 
     public static IRFunction globalVarInit() {
-        IRFunction func = new IRFunction("_mx_global_var_init", VoidType.IRVoid);
-        func.entry.setTerminator(new Jump(func.returnBlock));
-        return func;
+        return new IRFunction("_mx_global_var_init", VoidType.IRVoid);
     }
 
     public boolean isVoid() {

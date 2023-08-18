@@ -15,21 +15,23 @@ import Util.MxErrorListener;
 public class Compiler {
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
-        boolean online = true;
+        PrintStream output = null;
+        boolean online = false;
 
         if (!online) { //local
             input = new FileInputStream("test.mx");
+            output = new PrintStream(new FileOutputStream("test.ll"));
         }
 
         try {
-            compile(input);
+            compile(input, output);
         } catch (Error er) {
             System.err.println(er.getText());
             throw new RuntimeException();
         }
     }
 
-    public static void compile(InputStream input) throws Exception {
+    public static void compile(InputStream input, PrintStream output) throws Exception {
         GlobalScope globalScope = new GlobalScope();
         globalScope.initialize();
 
@@ -49,7 +51,7 @@ public class Compiler {
         new SemanticChecker(globalScope).visit(ASTRoot);
 
         IRRoot rootIR = new IRRoot();
-        //new IRBuilder(globalScope, rootIR).visit(ASTRoot);
-        //new IRPrinter(System.out).print(rootIR);
+        new IRBuilder(globalScope, rootIR).visit(ASTRoot);
+        if (output != null) new IRPrinter(output).print(rootIR);
     }
 }

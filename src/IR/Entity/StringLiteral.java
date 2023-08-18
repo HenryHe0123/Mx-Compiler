@@ -11,7 +11,7 @@ public class StringLiteral extends Entity {
     }
 
     public int size() {
-        return str.length() + 1;
+        return str.length() + 1 - escCount(str);
     }
 
     @Override
@@ -24,7 +24,7 @@ public class StringLiteral extends Entity {
         return "private unnamed_addr constant [" + size() + " x i8] " + getText();
     }
 
-    public String convertForIR(String s) {
+    public static String convertForIR(String s) {
         StringBuilder conversion = new StringBuilder();
         for (int i = 0; i < s.length(); ++i) {
             char c = s.charAt(i);
@@ -43,5 +43,20 @@ public class StringLiteral extends Entity {
             } else conversion.append(c);
         }
         return conversion.toString();
+    }
+
+    public static int escCount(String s) {
+        int cnt = 0;
+        for (int i = 0; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if (c == '\\') { //look ahead
+                char next = s.charAt(i + 1);
+                if (next == 'n' || next == '\\' || next == '\"') {
+                    ++cnt;
+                    ++i;
+                }
+            }
+        }
+        return cnt;
     }
 }

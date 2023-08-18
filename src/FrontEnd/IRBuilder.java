@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
-    GlobalScope gScope;
+    private final GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;
     private IRBlock curBlock = null;
@@ -29,6 +29,7 @@ public class IRBuilder implements ASTVisitor {
     private final Stack<IRBlock> loopContinueBlock = new Stack<>();
     private final Stack<IRBlock> loopEndBlock = new Stack<>();
     private final IRFunction globalVarInit = IRFunction.globalVarInit();
+    private IRBlock lastGlobalVarInitBlock = globalVarInit.entry;
     private final IRRoot root;
 
     public IRBuilder(GlobalScope gScope, IRRoot root) {
@@ -39,8 +40,24 @@ public class IRBuilder implements ASTVisitor {
 
     // ------------------------------ utility ------------------------------
 
-    private boolean inGlobal() {
-        return curScope instanceof GlobalScope;
+    private void setCurBlock(IRBlock block) {
+        curBlock = block;
+        if (curFunction == globalVarInit) lastGlobalVarInitBlock = block;
+    }
+
+    private void resetCurBlock() {
+        curBlock = null;
+    }
+
+    private void tryTerminateLastGlobalVarInitBlock() {
+        //debug: last globalVarInit block won't be terminated normally
+        assert lastGlobalVarInitBlock != null : "last globalVarInit block shouldn't be null";
+        lastGlobalVarInitBlock.trySetTerminator(new Jump(globalVarInit.returnBlock));
+        globalVarInit.addBlock(lastGlobalVarInitBlock);
+    }
+
+    private boolean isGlobalFunction(String funcName) {
+        return gScope.funcMembers.containsKey(funcName);
     }
 
     private void assign(Entity value, ExprNode destExpr) {
@@ -55,14 +72,14 @@ public class IRBuilder implements ASTVisitor {
         if (isReturned()) return;
         curBlock.setTerminator(terminator);
         curFunction.addBlock(curBlock);
-        curBlock = null;
+        resetCurBlock();
     }
 
     private void tryTerminateBlock(Terminator terminator) { //recommend: safer version
         if (isReturned()) return;
         curBlock.trySetTerminator(terminator);
         curFunction.addBlock(curBlock);
-        curBlock = null;
+        resetCurBlock();
     }
 
     private void addParameter(String name, Register reg) {
@@ -88,6 +105,15 @@ public class IRBuilder implements ASTVisitor {
 
     private void collectClassTypes(RootNode node) {
         node.classDefs.forEach(classDef -> IRType.addIRClassType(classDef.identifier));
+        node.classDefs.forEach(classDef -> {
+            ClassType classType = IRType.getIRClassType(classDef.identifier);
+            classDef.varDefs.forEach(varDef -> {
+                IRType type = IRType.from(varDef.type);
+                for (VarDeclareUnitNode var : varDef.varDeclareUnits) {
+                    classType.addMember(var.identifier, type);
+                }
+            });
+        });
     }
 
     private GlobalVar initStringLiteral(StringLiteral literal) {
@@ -170,7 +196,7 @@ public class IRBuilder implements ASTVisitor {
             tryTerminateBlock(new Jump(condBlock));
 
             //cond: i < size
-            curBlock = condBlock;
+            setCurBlock(condBlock);
             Register IVal = Register.anonymous(INType.IRInt);
             curBlock.addInstruct(new Load(IVal, IPtr));
             Register cond = Register.anonymous(INType.IRBool);
@@ -178,7 +204,7 @@ public class IRBuilder implements ASTVisitor {
             tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
 
             //body: create next layer array
-            curBlock = bodyBlock;
+            setCurBlock(bodyBlock);
             Entity nextLayerPtr = createNewArray(ptrType.deconstruct(), layer + 1, dimSizes);
             Register curPtr = offsetPtr(realArrayPtr, IVal);
             curBlock.addInstruct(new Store(nextLayerPtr, curPtr));
@@ -188,7 +214,7 @@ public class IRBuilder implements ASTVisitor {
             curBlock.addInstruct(new Store(IValPlus, IPtr));
             tryTerminateBlock(new Jump(condBlock));
 
-            curBlock = endBlock;
+            setCurBlock(endBlock);
         }
         return realArrayPtr;
     }
@@ -199,9 +225,10 @@ public class IRBuilder implements ASTVisitor {
     public void visit(RootNode node) {
         root.functions.add(globalVarInit);
         collectClassTypes(node); //collect all class types first
-        node.classDefs.forEach(classDef -> classDef.accept(this));
         node.varDefs.forEach(varDef -> varDef.accept(this));
+        node.classDefs.forEach(classDef -> classDef.accept(this));
         node.funcDefs.forEach(funcDef -> funcDef.accept(this));
+        tryTerminateLastGlobalVarInitBlock();
     }
 
     // ------------------------------ definition ------------------------------
@@ -215,17 +242,17 @@ public class IRBuilder implements ASTVisitor {
 
     @Override
     public void visit(VarDeclareUnitNode node) {
-        if (inGlobal()) {
+        if (curScope instanceof GlobalScope) { //global
             Entity reg = new GlobalVar(node.identifier + curScope.asPostfix(), IRType.from(curType).asPtr());
             Entity init = Entity.init(curType);
             if (node.expression != null) { //if with an init expression
                 curFunction = globalVarInit;
-                curBlock = globalVarInit.entry;
+                setCurBlock(lastGlobalVarInitBlock);
                 node.expression.accept(this);
                 var entity = node.expression.entity;
                 if (entity.isConstant()) init = entity;
                 else curBlock.addInstruct(new Store(entity, reg));
-                curBlock = null; //prevent misuse
+                resetCurBlock(); //prevent misuse
                 curFunction = null;
             }
             root.globals.add(new GlobalDef(reg, init));
@@ -250,7 +277,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(FuncDefNode node) {
         curScope = new Scope(curScope, node.type);
         curFunction = new IRFunction(node.identifier, IRType.from(node.type));
-        curBlock = curFunction.entry;
+        setCurBlock(curFunction.entry);
         root.functions.add(curFunction);
         if (curFunction.isMain()) curBlock.addInstruct(Call.callGlobalVarInit());
         if (curClass != null) addThisParameter();
@@ -258,7 +285,7 @@ public class IRBuilder implements ASTVisitor {
         node.stmts.forEach(stmt -> stmt.accept(this));
         curScope = curScope.getParent();
         curFunction = null;
-        curBlock = null;
+        resetCurBlock();
     }
 
     @Override
@@ -271,13 +298,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(ClassDefNode node) {
         curScope = new Scope(curScope, node);
         String className = node.identifier;
-        curClass = IRType.getIRClassType(className); //already collected
-        for (VarDefNode vars : node.varDefs) {
-            IRType type = IRType.from(vars.type);
-            for (VarDeclareUnitNode var : vars.varDeclareUnits) {
-                curClass.addMember(var.identifier, type);
-            }
-        }
+        curClass = IRType.getIRClassType(className); //class type already collected
         if (node.constructor != null) node.constructor.accept(this);
         for (FuncDefNode func : node.funcDefs) { //class method renaming
             func.identifier = curClass.asPrefix() + func.identifier;
@@ -293,11 +314,11 @@ public class IRBuilder implements ASTVisitor {
         curScope = new Scope(curScope, Type.Void());
         String rename = curClass.asPrefix() + node.identifier;
         curFunction = new IRFunction(rename, VoidType.IRVoid);
-        curBlock = curFunction.entry;
+        setCurBlock(curFunction.entry);
         root.functions.add(curFunction);
         addThisParameter();
         node.stmts.forEach(stmt -> stmt.accept(this));
-        curBlock = null;
+        resetCurBlock();
         curFunction = null;
         curScope = curScope.getParent();
     }
@@ -337,29 +358,29 @@ public class IRBuilder implements ASTVisitor {
         if (node.elseStmt == null) {
             tryTerminateBlock(new Branch(cond, thenBlock, endBlock));
 
-            curBlock = thenBlock;
+            setCurBlock(thenBlock);
             curScope = new Scope(curScope);
-            node.ifStmt.accept(this); //curBlock maybe terminated already
+            if (node.ifStmt != null) node.ifStmt.accept(this); //curBlock maybe terminated already
             tryTerminateBlock(new Jump(endBlock));
         } else {
             IRBlock elseBlock = new IRBlock("if.else" + postfix, curFunction);
             tryTerminateBlock(new Branch(cond, thenBlock, elseBlock));
 
-            curBlock = thenBlock;
+            setCurBlock(thenBlock);
             curScope = new Scope(curScope);
-            node.ifStmt.accept(this);
+            if (node.ifStmt != null) node.ifStmt.accept(this);
             boolean ifReturned = isReturned();
             tryTerminateBlock(new Jump(endBlock));
             curScope = curScope.getParent();
 
-            curBlock = elseBlock;
+            setCurBlock(elseBlock);
             curScope = new Scope(curScope);
             node.elseStmt.accept(this);
             ret = ifReturned && isReturned(); //if both branches are returned, we can return
             tryTerminateBlock(new Jump(endBlock));
         }
         curScope = curScope.getParent();
-        if (!ret) curBlock = endBlock;
+        if (!ret) setCurBlock(endBlock);
     }
 
     @Override
@@ -383,20 +404,20 @@ public class IRBuilder implements ASTVisitor {
         if (node.init != null) node.init.accept(this); //add to curBlock
         tryTerminateBlock(new Jump(condBlock));
 
-        curBlock = condBlock;
+        setCurBlock(condBlock);
         if (node.condition != null) node.condition.accept(this);
         Entity cond = (node.condition != null) ? node.condition.entity : Entity.from(true);
         tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
 
-        curBlock = bodyBlock;
+        setCurBlock(bodyBlock);
         if (node.body != null) node.body.accept(this);
         tryTerminateBlock(new Jump(stepBlock));
 
-        curBlock = stepBlock;
+        setCurBlock(stepBlock);
         if (node.step != null) node.step.accept(this);
         tryTerminateBlock(new Jump(condBlock));
 
-        curBlock = endBlock;
+        setCurBlock(endBlock);
         curScope = curScope.getParent();
         loopEndBlock.pop();
         loopContinueBlock.pop();
@@ -415,16 +436,16 @@ public class IRBuilder implements ASTVisitor {
 
         tryTerminateBlock(new Jump(condBlock));
 
-        curBlock = condBlock;
+        setCurBlock(condBlock);
         node.condition.accept(this);
         Entity cond = node.condition.entity;
         tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
 
-        curBlock = bodyBlock;
+        setCurBlock(bodyBlock);
         if (node.body != null) node.body.accept(this);
         tryTerminateBlock(new Jump(condBlock));
 
-        curBlock = endBlock;
+        setCurBlock(endBlock);
         curScope = curScope.getParent();
 
         loopEndBlock.pop();
@@ -472,9 +493,10 @@ public class IRBuilder implements ASTVisitor {
         IRType returnType = IRType.from(node.type);
         node.entity = returnType.isVoid() ? null : Register.anonymous(returnType);
         Call call;
-        if (curClass == null) { //global function
+        if (isGlobalFunction(node.funcName)) { //global function
             call = new Call(node.entity, node.funcName, returnType);
         } else { //class method in class environment
+            assert curClass != null : "class method should be in class environment";
             call = new Call(node.entity, curClass.asPrefix() + node.funcName, returnType);
             call.addArg(getThisParameter());
         }
@@ -620,12 +642,12 @@ public class IRBuilder implements ASTVisitor {
             curBlock.addInstruct(new Icmp(condition, Icmp.IcmpOp.ne, node.lhs.entity, Entity.from(and)));
             tryTerminateBlock(new Branch(condition, endBlock, rhsBlock));
 
-            curBlock = rhsBlock;
+            setCurBlock(rhsBlock);
             node.rhs.accept(this);
             curBlock.addInstruct(new Store(node.rhs.entity, ptr));
             tryTerminateBlock(new Jump(endBlock));
 
-            curBlock = endBlock;
+            setCurBlock(endBlock);
             curBlock.addInstruct(new Load(node.entity, ptr));
             return;
         }
