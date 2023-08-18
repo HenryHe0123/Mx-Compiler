@@ -5,6 +5,12 @@ import java.util.*;
 import Util.Error.Error;
 
 public class LocalJudge {
+    /* INSTRUCTION:
+     * To use this local judge, you need to enable assertions for your IDE.
+     * For IntelliJ IDEA, go to Run -> Edit Configurations -> VM options, and add "-ea" to the text box.
+     * While judging, the program will generate some temporary files under tmpFolder, which will be auto-cleared after test.
+     * Please make sure that tmpFolder is useless before judging, preventing from deleting your files unexpectedly.
+     */
     public static final String RESET = "\u001B[0m";
     public static final String RED = "\u001B[31m";
     public static final String GREEN = "\u001B[32m";
@@ -14,6 +20,7 @@ public class LocalJudge {
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPath = "builtin/builtin.ll";
+    private static final String clang = "clang-15";
 
     public static void main(String[] args) throws Exception {
         testSemantic(false);
@@ -52,12 +59,12 @@ public class LocalJudge {
     private static void initTmpFolder() {
         File folder = new File(tmpFolderName);
         if (!folder.exists()) {
-            assert folder.mkdir();
+            assert folder.mkdir() : "create tmp folder failed";
         } else { //clear previous files
             File[] files = folder.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    assert file.delete();
+                    assert file.delete() : "delete previous file in tmp folder failed";
                 }
             }
         }
@@ -68,10 +75,10 @@ public class LocalJudge {
         File[] files = folder.listFiles();
         if (files != null) {
             for (File file : files) {
-                assert file.delete();
+                assert file.delete() : "delete tmp file failed";
             }
         }
-        assert folder.delete();
+        assert folder.delete() : "delete tmp folder failed";
     }
 
     private static boolean checkIR(String fileName, boolean showDetail) {
@@ -92,7 +99,7 @@ public class LocalJudge {
 
             //build executable file by clang
             final String exeFileName = tmpFilePath;
-            ProcessBuilder processBuilder = new ProcessBuilder("wsl", "clang-15", builtinPath, llFileName, "-o", exeFileName, "-m32");
+            ProcessBuilder processBuilder = new ProcessBuilder("wsl", clang, builtinPath, llFileName, "-o", exeFileName, "-m32");
             Process process = processBuilder.start();
             int processExitCode = process.waitFor();
             if (processExitCode != 0) {
