@@ -49,6 +49,12 @@ public class IRBuilder implements ASTVisitor {
         curBlock = null;
     }
 
+    private void addEmptyBlock(IRBlock emptyBlock) {
+        if (curFunction == null) return;
+        emptyBlock.trySetTerminator(new Jump(curFunction.returnBlock));
+        curFunction.addBlock(emptyBlock);
+    }
+
     private void tryTerminateLastGlobalVarInitBlock() {
         //debug: last globalVarInit block won't be terminated normally
         assert lastGlobalVarInitBlock != null : "last globalVarInit block shouldn't be null";
@@ -380,7 +386,8 @@ public class IRBuilder implements ASTVisitor {
             tryTerminateBlock(new Jump(endBlock));
         }
         curScope = curScope.getParent();
-        if (!ret) setCurBlock(endBlock);
+        if (ret) addEmptyBlock(endBlock);
+        else setCurBlock(endBlock);
     }
 
     @Override
@@ -599,11 +606,20 @@ public class IRBuilder implements ASTVisitor {
         assign(reg, node.expression);
     }
 
+    private void visitAssignDest(ExprNode node) {
+        if (node instanceof VarExprNode varNode) {
+            Entity entity = curScope.getVarEntity(varNode.identifier);
+            if (entity == null) visitClassMemberExpr(varNode, getThisParameter(), node);
+            else node.setAssignDest(entity);
+            //optimization: we don't need to load the value of the variable for assign dest
+        } else node.accept(this);
+    }
+
     @Override
     public void visit(AssignExprNode node) {
         if (isReturned()) return;
         node.rhs.accept(this);
-        node.lhs.accept(this); //we need to set assign dest here
+        visitAssignDest(node.lhs);
         assign(node.rhs.entity, node.lhs);
         node.entity = node.rhs.entity;
     }
@@ -638,9 +654,10 @@ public class IRBuilder implements ASTVisitor {
             boolean and = node.operator.equals("&&");
             //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
             //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
-            var condition = Register.anonymous(INType.IRBool);
-            curBlock.addInstruct(new Icmp(condition, Icmp.IcmpOp.ne, node.lhs.entity, Entity.from(and)));
-            tryTerminateBlock(new Branch(condition, endBlock, rhsBlock));
+
+            Branch branch = and ? new Branch(node.lhs.entity, rhsBlock, endBlock) :
+                    new Branch(node.lhs.entity, endBlock, rhsBlock);
+            tryTerminateBlock(branch);
 
             setCurBlock(rhsBlock);
             node.rhs.accept(this);

@@ -12,5 +12,5 @@
 - [x] Pass Semantic Test
 - [x] IR Design
 - [x] IR Builder
-- [ ] Pass IR Test
+- [x] Pass IR Test
 - [ ] Assembly Generation
