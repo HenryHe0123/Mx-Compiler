@@ -10,24 +10,35 @@ public class LocalJudge {
      * For IntelliJ IDEA, go to Run -> Edit Configurations -> VM options, and add "-ea" to the text box.
      * While judging, the program will generate some temporary files under tmpFolder, which will be auto-cleared after test.
      * Please make sure that tmpFolder is useless before judging, preventing from deleting your files unexpectedly.
+     *
+     * REMARKS:
+     * In some cases, codegen/t20.mx may fail for unknown reasons. (maybe related to the mismatch of target platform)
+     * You can use ravel to test this testcase separately, or try using phi instead of alloca for logic expression.
      */
     public static final String RESET = "\u001B[0m";
     public static final String RED = "\u001B[31m";
     public static final String GREEN = "\u001B[32m";
     public static final String YELLOW = "\u001B[33m";
+    /* --------------------------------------------  configuration  --------------------------------------------- */
     private static final String semanticFolderName = "testcases/sema";
     private static final String codeGenFolderPathPrefix = "testcases/codegen/";
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPath = "builtin/builtin.ll";
     private static final String clang = "clang-15";
+    private static final boolean showSemanticDetail = false;
+    private static final boolean showIRDetail = false;
 
     public static void main(String[] args) throws Exception {
-        testSemantic(false);
+        testSemantic(true);
         testIR(true);
     }
 
-    public static void testIR(boolean showDetail) {
+    public static void testIR(boolean on) {
+        if (!on) {
+            System.out.println(RESET + "Skip IR test.");
+            return;
+        }
         System.out.println(RESET + "Start testing IR...");
         initTmpFolder();
         String fileName;
@@ -35,12 +46,12 @@ public class LocalJudge {
         try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPathPrefix + "judgelist.txt"))) {
             while ((fileName = reader.readLine()) != null) {
                 fileName = fileName.substring(2);
-                if (showDetail) System.out.println(YELLOW + fileName + ": ");
-                if (checkIR(fileName, showDetail)) {
-                    if (showDetail) System.out.println(GREEN + "Pass!");
+                if (showIRDetail) System.out.println(YELLOW + fileName + ": ");
+                if (checkIR(fileName)) {
+                    if (showIRDetail) System.out.println(GREEN + "Pass!");
                 } else {
                     failList.add(fileName);
-                    if (showDetail) System.out.println(RED + "Fail!");
+                    if (showIRDetail) System.out.println(RED + "Fail!");
                 }
             }
         } catch (IOException e) {
@@ -81,7 +92,7 @@ public class LocalJudge {
         assert folder.delete() : "delete tmp folder failed";
     }
 
-    private static boolean checkIR(String fileName, boolean showDetail) {
+    private static boolean checkIR(String fileName) {
         try {
             //compile to llvm ir
             final String mxFileName = codeGenFolderPathPrefix + fileName;
@@ -90,7 +101,7 @@ public class LocalJudge {
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(llFileName))) {
                 Compiler.compile(compilerInput, compilerOutput);
             } catch (Error er) {
-                if (showDetail) {
+                if (showIRDetail) {
                     System.err.println(er.getText());
                     System.err.println("compile error");
                 }
@@ -103,7 +114,7 @@ public class LocalJudge {
             Process process = processBuilder.start();
             int processExitCode = process.waitFor();
             if (processExitCode != 0) {
-                if (showDetail) {
+                if (showIRDetail) {
                     InputStream errorStream = process.getErrorStream();
                     try (BufferedReader reader = new BufferedReader(new InputStreamReader(errorStream))) {
                         String line;
@@ -139,14 +150,14 @@ public class LocalJudge {
 
             //check exitCode
             if (processExitCode != exitCode) {
-                if (showDetail) System.err.println("exit code not match");
+                if (showIRDetail) System.err.println("exit code not match");
                 return false;
             }
 
             //check output
             String processOutput = Files.readString(Paths.get(outFileName)).trim();
             if (!processOutput.equals(output)) {
-                if (showDetail) System.err.println("output not match");
+                if (showIRDetail) System.err.println("output not match");
                 return false;
             }
 
@@ -194,34 +205,38 @@ public class LocalJudge {
 
     //----------------------------------- Semantic ----------------------------------------
 
-    public static void testSemantic(boolean showDetail) {
+    public static void testSemantic(boolean on) {
+        if (!on) {
+            System.out.println(RESET + "Skip semantic test.");
+            return;
+        }
         System.out.println(RESET + "Start testing semantic...");
-        if (traverseFolderForSemantic(new File(semanticFolderName), showDetail)) {
+        if (traverseFolderForSemantic(new File(semanticFolderName))) {
             System.out.println(GREEN + "All semantic tests passed!");
         } else {
             System.out.println(RED + "Some semantic tests failed!");
         }
     }
 
-    private static boolean traverseFolderForSemantic(File folder, boolean showDetail) {
+    private static boolean traverseFolderForSemantic(File folder) {
         if (folder.isDirectory()) {
             boolean success = true;
             File[] files = folder.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    if (!traverseFolderForSemantic(file, showDetail)) success = false;
+                    if (!traverseFolderForSemantic(file)) success = false;
                 }
             }
             return success;
         } else {
             String fileName = folder.getAbsolutePath();
-            if (showDetail) System.out.println
+            if (showSemanticDetail) System.out.println
                     (YELLOW + fileName.substring(folder.getAbsolutePath().indexOf("sema\\") + 5) + ": ");
             if (checkSemantic(fileName)) {
-                if (showDetail) System.out.println(GREEN + "Pass!");
+                if (showSemanticDetail) System.out.println(GREEN + "Pass!");
                 return true;
             } else {
-                if (showDetail) System.out.println(RED + "Fail!");
+                if (showSemanticDetail) System.out.println(RED + "Fail!");
                 return false;
             }
         }
