@@ -8,6 +8,7 @@ public class LocalJudge {
     /* INSTRUCTION:
      * To use this local judge, you need to enable assertions for your IDE.
      * For IntelliJ IDEA, go to Run -> Edit Configurations -> VM options, and add "-ea" to the text box.
+     * You may also need to install libc6-dev-i386 ("sudo apt-get install libc6-dev-i386") for wsl to run clang-15 -m32.
      * While judging, the program will generate some temporary files under tmpFolder, which will be auto-cleared after test.
      * Please make sure that tmpFolder is useless before judging, preventing from deleting your files unexpectedly.
      *
@@ -27,7 +28,7 @@ public class LocalJudge {
     private static final String builtinPath = "builtin/builtin.ll";
     private static final String clang = "clang-15";
     private static final boolean showSemanticDetail = false;
-    private static final boolean showIRDetail = false;
+    private static final boolean showIRDetail = true;
 
     public static void main(String[] args) throws Exception {
         testSemantic(true);
@@ -45,7 +46,7 @@ public class LocalJudge {
         var failList = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPathPrefix + "judgelist.txt"))) {
             while ((fileName = reader.readLine()) != null) {
-                fileName = fileName.substring(2);
+                //fileName = fileName.substring(2);
                 if (showIRDetail) System.out.println(YELLOW + fileName + ": ");
                 if (checkIR(fileName)) {
                     if (showIRDetail) System.out.println(GREEN + "Pass!");
@@ -99,7 +100,7 @@ public class LocalJudge {
             final String llFileName = tmpFilePath + ".ll";
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(llFileName))) {
-                Compiler.compile(compilerInput, compilerOutput);
+                Compiler.compile(compilerInput, compilerOutput, null);
             } catch (Error er) {
                 if (showIRDetail) {
                     System.err.println(er.getText());
@@ -163,7 +164,7 @@ public class LocalJudge {
 
             return true;
         } catch (Exception err) {
-            System.err.println("other error occurred");
+            System.err.println("other error occurred: probably due to incorrect file path");
             return false;
         }
     }
@@ -260,7 +261,7 @@ public class LocalJudge {
         }
         try {
             InputStream input = new FileInputStream(fileName);
-            Compiler.compile(input, null);
+            Compiler.compile(input, null, null);
         } catch (Exception er) {
             return !success;
         }

@@ -9,4 +9,8 @@ public abstract class Expression extends Instruction {
     public Expression(Entity dest) {
         this.dest = dest;
     }
+
+    public int getBytes() {
+        return dest.type.getBytes();
+    }
 }

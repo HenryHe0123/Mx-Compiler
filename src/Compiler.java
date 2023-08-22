@@ -1,6 +1,8 @@
 import java.io.*;
 
 import AST.RootNode;
+import Assembly.AsmModule;
+import BackEnd.*;
 import FrontEnd.*;
 import IR.*;
 import Parser.MxLexer;
@@ -15,23 +17,26 @@ import Util.MxErrorListener;
 public class Compiler {
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
-        PrintStream output = null;
+        PrintStream IROutput = null;
+        PrintStream AsmOutput = System.out;
         boolean online = false;
 
         if (!online) { //local
             input = new FileInputStream("test.mx");
-            output = new PrintStream(new FileOutputStream("test.ll"));
+            IROutput = new PrintStream(new FileOutputStream("test.ll"));
+            AsmOutput = new PrintStream(new FileOutputStream("test.s"));
+            //AsmOutput = null;
         }
 
         try {
-            compile(input, output);
+            compile(input, IROutput, AsmOutput);
         } catch (Error er) {
             System.err.println(er.getText());
             throw new RuntimeException();
         }
     }
 
-    public static void compile(InputStream input, PrintStream output) throws Exception {
+    public static void compile(InputStream input, PrintStream IROutput, PrintStream AsmOutput) throws Exception {
         GlobalScope globalScope = new GlobalScope();
         globalScope.initialize();
 
@@ -52,6 +57,10 @@ public class Compiler {
 
         IRRoot rootIR = new IRRoot();
         new IRBuilder(globalScope, rootIR).visit(ASTRoot);
-        new IRPrinter(output).print(rootIR);
+        new IRPrinter(IROutput).print(rootIR);
+
+        AsmModule asmModule = new AsmModule();
+        new AsmBuilder(asmModule).visit(rootIR);
+        new AsmPrinter(AsmOutput).print(asmModule);
     }
 }
