@@ -5,20 +5,23 @@ import Assembly.Instruction.*;
 import Assembly.Operand.*;
 import IR.Entity.*;
 import IR.*;
+import IR.Entity.Void;
 import IR.Instruction.*;
 import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 
 import java.util.HashMap;
 
-public class AsmBuilder implements IRVisitor {
+import static Assembly.Operand.PhyReg.*;
+
+public class InstSelector implements IRVisitor {
     public final AsmModule module;
     private AsmFunction curFunction;
     private AsmBlock curBlock;
     private final HashMap<Entity, Reg> regMap = new HashMap<>();
     private final HashMap<IRBlock, AsmBlock> blockMap = new HashMap<>();
 
-    public AsmBuilder(AsmModule asmModule) {
+    public InstSelector(AsmModule asmModule) {
         module = asmModule;
     }
 
@@ -29,20 +32,33 @@ public class AsmBuilder implements IRVisitor {
     }
 
     private Reg getReg(Entity entity) {
-        if (entity instanceof Int) {
-            int val = ((Int) entity).toInt();
-            if (val == 0) return PhyReg.zero;
+        if (entity instanceof Int i) {
+            int val = i.toInt();
+            if (val == 0) return zero;
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, new Imm(val)));
             return rg;
-        } else if (entity instanceof Bool) {
-            boolean val = ((Bool) entity).toBool();
-            if (!val) return PhyReg.zero;
+        } else if (entity instanceof Bool b) {
+            boolean val = b.toBool();
+            if (!val) return zero;
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, Imm.one));
             return rg;
+        } else if (entity instanceof GlobalVar g) {
+            Reg rg = new VirReg();
+            addInst(new AsmLa(rg, g.name));
+            return rg;
         }
         return regMap.get(entity);
+    }
+
+    private int getConstantVal(Entity entity) {
+        if (entity instanceof Int i) {
+            return i.toInt();
+        } else if (entity instanceof Bool b) {
+            return b.toBool() ? 1 : 0;
+        }
+        return -19260817;
     }
 
     private VirReg createVirReg(Entity entity) {
@@ -69,28 +85,32 @@ public class AsmBuilder implements IRVisitor {
     @Override
     public void visit(IRFunction it) {
         curFunction = new AsmFunction(it.name);
+        curFunction.allocate(ra);
+        curFunction.allocate(fp);
         module.addFunction(curFunction);
 
-        // map para Entity to Reg
-        for (int i = 0; i < Integer.min(8, it.parameters.size()); ++i) {
-            Entity para = it.parameters.get(i);
-            var rd = createVirReg(para);
-            addInst(new AsmMv(rd, PhyReg.a(i))); //move ai to rd
-        }
-
-        for (int i = 8; i < it.parameters.size(); ++i) {
-            Entity para = it.parameters.get(i);
-            var rd = createVirReg(para);
-            addInst(new AsmMemoryS("lw", rd, PhyReg.s(0), (i - 8) << 2));
-        }
-
-        // collect blocks
+        //collect all blocks
         blockMap.clear();
         collectBlock(it.entry);
         it.blocks.forEach(this::collectBlock);
         collectBlock(it.returnBlock);
 
-        // visit blocks
+        curBlock = blockMap.get(it.entry);
+
+        //map parameter entity to virtual register
+        for (int i = 0; i < Integer.min(8, it.parameters.size()); ++i) {
+            Entity para = it.parameters.get(i);
+            var rd = createVirReg(para);
+            addInst(new AsmMv(rd, a(i))); //move ai to rd
+        }
+
+        for (int i = 8; i < it.parameters.size(); ++i) {
+            Entity para = it.parameters.get(i);
+            var rd = createVirReg(para);
+            addInst(new AsmMemoryS("lw", rd, fp, (i - 8) << 2));
+        }
+
+        //visit all blocks
         it.entry.accept(this);
         it.blocks.forEach(block -> block.accept(this));
         it.returnBlock.accept(this);
@@ -101,6 +121,26 @@ public class AsmBuilder implements IRVisitor {
         curBlock = blockMap.get(it);
         it.instructions.forEach(ins -> ins.accept(this));
         it.terminator.accept(this);
+    }
+
+    @Override
+    public void visit(GlobalDef it) {
+        String name = ((GlobalVar) it.dest).name;
+        if (it.isStringLiteral) {
+            String str = ((StringLiteral) it.init).str;
+            module.addData(new AsmData(name, str));
+        } else {
+            int val = getConstantVal(it.init);
+            module.addData(new AsmData(name, val));
+        }
+    }
+
+    //--------------------------------------- expression --------------------------------------------
+
+    @Override
+    public void visit(Alloca it) {
+        var rd = createVirReg(it.dest);
+        curFunction.allocate(rd);
     }
 
     @Override
@@ -120,6 +160,39 @@ public class AsmBuilder implements IRVisitor {
         };
         addInst(inst);
     }
+
+    @Override
+    public void visit(Call it) {
+        for (int i = 0; i < Integer.min(8, it.args.size()); ++i)
+            addInst(new AsmMv(a(i), getReg(it.args.get(i))));
+        int size = 0;
+        for (int i = 8; i < it.args.size(); ++i) {
+            Entity val = it.args.get(i);
+            size += 4;
+            addInst(new AsmMemoryS("sw", getReg(val), sp, (i - 8) << 2));
+        }
+        curFunction.paraOffset = Integer.max(curFunction.paraOffset, size);
+        addInst(new AsmCall(it.funcName));
+
+        if (it.dest == null || it.dest instanceof Void) return;
+        VirReg rg = createVirReg(it.dest);
+        addInst(new AsmMv(rg, a(0)));
+    }
+
+    @Override
+    public void visit(GetElementPtr it) {
+        Reg rd = createVirReg(it.dest);
+        Entity index = it.indexList.get(it.indexList.size() - 1);
+        Reg id = getReg(index);
+        if (id == zero) {
+            addInst(new AsmMv(rd, getReg(it.ptr)));
+        } else {
+            Reg tmp = new VirReg();
+            addInst(new AsmBinaryS("slli", tmp, id, new Imm(2)));
+            addInst(new AsmBinaryS("add", rd, getReg(it.ptr), tmp));
+        }
+    }
+
 
     @Override
     public void visit(Icmp it) {
@@ -143,15 +216,51 @@ public class AsmBuilder implements IRVisitor {
             //no sgt in risc-v assembly
             case sle -> {
                 addInst(new AsmBinaryS("slt", rd, rs2, rs1));
-                addInst(new AsmBinaryS("xori", rd, rd, new Imm(1)));
+                addInst(new AsmBinaryS("xori", rd, rd, Imm.one));
                 //rd = rd ^ 1 (rd: 0 -> 1 / 1 -> 0)
             }
             case sge -> {
                 addInst(new AsmBinaryS("slt", rd, rs1, rs2));
-                addInst(new AsmBinaryS("xori", rd, rd, new Imm(1)));
+                addInst(new AsmBinaryS("xori", rd, rd, Imm.one));
             }
         }
     }
+
+    @Override
+    public void visit(Load it) {
+        Reg rd = createVirReg(it.dest);
+        if (it.src instanceof GlobalVar src) {
+            addInst(new AsmLa(rd, src.name));
+            return;
+        }
+        Reg rs = getReg(it.src);
+        if (curFunction.containsReg(rs)) addInst(new AsmMv(rd, rs));
+        else addInst(new AsmMemoryS("lw", rd, rs, 0));
+    }
+
+    @Override
+    public void visit(Store it) {
+        Reg rs = getReg(it.src);
+        if (it.dest instanceof GlobalVar dest) {
+            addInst(new AsmMemoryS("sw", rs, new PhyReg(dest.name), 0));
+            return;
+        }
+        Reg rd = getReg(it.dest);
+        if (curFunction.containsReg(rd)) addInst(new AsmMv(rd, rs));
+        else addInst(new AsmMemoryS("sw", rs, rd, 0));
+    }
+
+    @Override
+    public void visit(Select it) {
+        //todo
+    }
+
+    @Override
+    public void visit(Phi it) {
+        //todo
+    }
+
+    //--------------------------------------- terminal --------------------------------------------
 
     @Override
     public void visit(Branch it) {
@@ -160,4 +269,14 @@ public class AsmBuilder implements IRVisitor {
         addInst(new AsmJ(blockMap.get(it.branchTrue).label));
     }
 
+    @Override
+    public void visit(Jump it) {
+        addInst(new AsmJ(blockMap.get(it.target).label));
+    }
+
+    @Override
+    public void visit(Ret it) {
+        if (it.returnVal != Void.instance) addInst(new AsmMv(a(0), getReg(it.returnVal)));
+        addInst(new AsmRet());
+    }
 }

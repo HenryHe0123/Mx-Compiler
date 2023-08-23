@@ -6,10 +6,6 @@ public class AsmBlock {
     public Inst headInst = null, tailInst = null;
     public String label;
 
-    public AsmBlock() {
-        label = null;
-    }
-
     public AsmBlock(String label) {
         this.label = label;
     }

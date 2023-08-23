@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class PhyReg extends Reg {
     public String name;
 
-    private PhyReg(String name) {
+    public PhyReg(String name) {
         this.name = name;
     }
 
@@ -15,12 +15,13 @@ public class PhyReg extends Reg {
     }
 
     static public final PhyReg zero = new PhyReg("zero");
-    static public final PhyReg ra = new PhyReg("ra"); // return address
-    static public final PhyReg sp = new PhyReg("sp"); // stack pointer
-    static public final PhyReg gp = new PhyReg("gp"); // global pointer
-    static public final ArrayList<PhyReg> t = tRegs(); // temporary register
-    static public final ArrayList<PhyReg> s = sRegs(); // saved register
-    static public final ArrayList<PhyReg> a = aRegs(); // argument register
+    static public final PhyReg ra = new PhyReg("ra"); //return address
+    static public final PhyReg sp = new PhyReg("sp"); //stack pointer
+    static public final PhyReg gp = new PhyReg("gp"); //global pointer
+    static public final ArrayList<PhyReg> t = tRegs(); //temporary register
+    static public final ArrayList<PhyReg> s = sRegs(); //saved register
+    static public final ArrayList<PhyReg> a = aRegs(); //argument register
+    static public final PhyReg fp = s(0); //frame pointer
 
     static public PhyReg t(int i) {
         return t.get(i);

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
+    private static final boolean usePhi = false;
     private final GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;
@@ -626,21 +627,32 @@ public class IRBuilder implements ASTVisitor {
     }
 
     private void visitLogicExprByAlloc(BinaryExprNode node) {
-        node.lhs.accept(this);
+        Entity lhs = getExprEntity(node.lhs);
+        boolean isAnd = node.operator.equals("&&");
+
+        if (lhs instanceof Bool) { //optimization
+            boolean value = ((Bool) lhs).toBool();
+            if (isAnd) { // value && rhs
+                node.entity = value ? getExprEntity(node.rhs) : Bool.False;
+            } else { // value || rhs
+                node.entity = value ? Bool.True : getExprEntity(node.rhs);
+            }
+            return;
+        }
+
         node.entity = Register.anonymous(INType.IRBool);
         var ptr = Register.anonymous(INType.IRBool.asPtr());
         curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
-        curBlock.addInstruct(new Store(node.lhs.entity, ptr));
+        curBlock.addInstruct(new Store(lhs, ptr));
 
         String postfix = curFunction.getLabelPostfix();
         IRBlock rhsBlock = new IRBlock("logic.rhs" + postfix, curFunction);
         IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
-        boolean and = node.operator.equals("&&");
         //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
         //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
-        Branch branch = and ?
-                new Branch(node.lhs.entity, rhsBlock, endBlock) :
-                new Branch(node.lhs.entity, endBlock, rhsBlock);
+        Branch branch = isAnd ?
+                new Branch(lhs, rhsBlock, endBlock) :
+                new Branch(lhs, endBlock, rhsBlock);
         tryTerminateBlock(branch);
 
         setCurBlock(rhsBlock);
@@ -701,8 +713,8 @@ public class IRBuilder implements ASTVisitor {
         if (isReturned()) return;
         if (node.isLogic()) {
             //short circuit assignment
-            //visitLogicExprByAlloc(node);
-            visitLogicExprByPhi(node);
+            if (usePhi) visitLogicExprByPhi(node);
+            else visitLogicExprByAlloc(node);
             return;
         }
 

@@ -15,12 +15,12 @@ public class AsmModule {
     }
 
     public String getText() {
-        StringBuilder text = new StringBuilder(".text\n");
+        StringBuilder text = new StringBuilder("\t.text\n");
         for (AsmFunction function : functions) {
-            text.append(function.getText());
+            text.append(function.getText()).append("\n");
         }
         for (AsmData data : data) {
-            text.append(data.getText());
+            text.append(data.getText()).append("\n");
         }
         return text.toString();
     }

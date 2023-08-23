@@ -5,7 +5,7 @@ import IR.IRVisitor;
 
 public class GlobalDef extends Instruction {
     public boolean isStringLiteral = false;
-    public Entity dest, init;
+    public Entity dest, init; //dest instanceof globalVar
 
     public GlobalDef(Entity dest, Entity init) {
         this.dest = dest;

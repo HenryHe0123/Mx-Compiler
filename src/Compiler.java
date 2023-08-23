@@ -19,13 +19,12 @@ public class Compiler {
         InputStream input = System.in;
         PrintStream IROutput = null;
         PrintStream AsmOutput = System.out;
-        boolean online = false;
+        boolean online = true;
 
         if (!online) { //local
             input = new FileInputStream("test.mx");
             IROutput = new PrintStream(new FileOutputStream("test.ll"));
             AsmOutput = new PrintStream(new FileOutputStream("test.s"));
-            //AsmOutput = null;
         }
 
         try {
@@ -60,7 +59,8 @@ public class Compiler {
         new IRPrinter(IROutput).print(rootIR);
 
         AsmModule asmModule = new AsmModule();
-        new AsmBuilder(asmModule).visit(rootIR);
+        new InstSelector(asmModule).visit(rootIR);
+        new RegAllocator().visit(asmModule);
         new AsmPrinter(AsmOutput).print(asmModule);
     }
 }

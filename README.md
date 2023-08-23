@@ -13,4 +13,5 @@
 - [x] IR Design
 - [x] IR Builder
 - [x] Pass IR Test
-- [ ] Assembly Generation
+- [x] Assembly Generation
+- [ ] Pass Assembly Test
