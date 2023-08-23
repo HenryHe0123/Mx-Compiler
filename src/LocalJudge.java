@@ -14,7 +14,7 @@ public class LocalJudge {
      *
      * REQUIREMENTS:
      * You may need to install libc6-dev-i386 ("sudo apt-get install libc6-dev-i386") to run clang-15 -m32 for IR test
-     * and install ravel (a RISC-V simulator) to run riscv32 assembly for Assembly test.
+     * and install ravel (https://github.com/Engineev/ravel) to run riscv32 assembly for Assembly test.
      *
      * REMARKS:
      * In some cases, codegen/t20.mx may fail IR test for unknown reasons (maybe related to the mismatch of target platform).
@@ -26,7 +26,7 @@ public class LocalJudge {
     public static final String YELLOW = "\u001B[33m";
     /* --------------------------------------------  configuration  --------------------------------------------- */
     private static final String semanticFolderName = "testcases/sema";
-    private static final String codeGenFolderPathPrefix = "testcases/codegen/";
+    private static final String codeGenFolderPrefix = "testcases/codegen/";
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPath = "builtin/builtin.ll";
@@ -41,6 +41,8 @@ public class LocalJudge {
         testAssembly(true);
     }
 
+    /* ---------------------------------------------  Assembly  ---------------------------------------------- */
+
     public static void testAssembly(boolean on) {
         if (!on) {
             System.out.println(RESET + "Skip assembly test.");
@@ -50,7 +52,7 @@ public class LocalJudge {
         initTmpFolder();
         String fileName;
         var failList = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPathPrefix + "judgelist.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPrefix + "judgelist.txt"))) {
             while ((fileName = reader.readLine()) != null) {
                 //fileName = fileName.substring(2);
                 if (showAsmDetail) System.out.println(YELLOW + fileName + ": ");
@@ -77,7 +79,7 @@ public class LocalJudge {
     private static boolean checkAssembly(String fileName) {
         try {
             //compile to assembly
-            final String mxFileName = codeGenFolderPathPrefix + fileName;
+            final String mxFileName = codeGenFolderPrefix + fileName;
             final String asmFileName = tmpFilePath + ".s";
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(asmFileName))) {
@@ -95,9 +97,7 @@ public class LocalJudge {
 
             //write input to tmp.in
             final String inFileName = tmpFilePath + ".in";
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(inFileName))) {
-                writer.write(input);
-            }
+            writeStringToFile(input, inFileName);
 
             //create tmp.out & tmp-ravel.out
             final String ravelOutFileName = tmpFilePath + "-ravel.out";
@@ -125,17 +125,10 @@ public class LocalJudge {
                 return false;
             }
 
-            //check exitCode
+            //check
             int ravelExitCode = getExitCodeFromFile(ravelOutFileName, "exit code:");
-            if (ravelExitCode != exitCode) {
-                if (showAsmDetail) System.err.println("exit code not match");
-                return false;
-            }
-
-            //check output
-            String processOutput = Files.readString(Paths.get(outFileName)).trim();
-            if (!processOutput.equals(output)) {
-                if (showAsmDetail) System.err.println("output not match");
+            if (ravelExitCode != exitCode || outputNotSame(output, outFileName)) {
+                if (showAsmDetail) System.err.println("running results wrong");
                 return false;
             }
 
@@ -147,7 +140,7 @@ public class LocalJudge {
         }
     }
 
-    //----------------------------------- IR ----------------------------------------
+    /* ------------------------------------------------  IR  ------------------------------------------------- */
 
     public static void testIR(boolean on) {
         if (!on) {
@@ -158,7 +151,7 @@ public class LocalJudge {
         initTmpFolder();
         String fileName;
         var failList = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPathPrefix + "judgelist.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(codeGenFolderPrefix + "judgelist.txt"))) {
             while ((fileName = reader.readLine()) != null) {
                 //fileName = fileName.substring(2);
                 if (showIRDetail) System.out.println(YELLOW + fileName + ": ");
@@ -210,7 +203,7 @@ public class LocalJudge {
     private static boolean checkIR(String fileName) {
         try {
             //compile to llvm ir
-            final String mxFileName = codeGenFolderPathPrefix + fileName;
+            final String mxFileName = codeGenFolderPrefix + fileName;
             final String llFileName = tmpFilePath + ".ll";
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(llFileName))) {
@@ -249,9 +242,7 @@ public class LocalJudge {
 
             //write input to tmp.in
             final String inFileName = tmpFilePath + ".in";
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(inFileName))) {
-                writer.write(input);
-            }
+            writeStringToFile(input, inFileName);
 
             //redirect process input and output
             final String outFileName = tmpFilePath + ".out";
@@ -264,15 +255,8 @@ public class LocalJudge {
             processExitCode = process.waitFor();
 
             //check exitCode
-            if (processExitCode != exitCode) {
-                if (showIRDetail) System.err.println("exit code not match");
-                return false;
-            }
-
-            //check output
-            String processOutput = Files.readString(Paths.get(outFileName)).trim();
-            if (!processOutput.equals(output)) {
-                if (showIRDetail) System.err.println("output not match");
+            if (processExitCode != exitCode || outputNotSame(output, outFileName)) {
+                if (showAsmDetail) System.err.println("running results wrong");
                 return false;
             }
 
@@ -281,6 +265,17 @@ public class LocalJudge {
             System.err.println("other error occurred");
             e.printStackTrace();
             return false;
+        }
+    }
+
+    public static boolean outputNotSame(String output, String outFileName) throws IOException {
+        String out = Files.readString(Paths.get(outFileName)).trim();
+        return !out.equals(output);
+    }
+
+    public static void writeStringToFile(String input, String filename) throws IOException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
+            writer.write(input);
         }
     }
 
@@ -319,7 +314,7 @@ public class LocalJudge {
         return exitCode;
     }
 
-    //----------------------------------- Semantic ----------------------------------------
+    /* ---------------------------------------------  Semantic  ---------------------------------------------- */
 
     public static void testSemantic(boolean on) {
         if (!on) {
