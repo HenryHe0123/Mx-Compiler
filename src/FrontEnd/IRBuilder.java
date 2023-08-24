@@ -618,12 +618,32 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(TernaryExprNode node) {
         if (isReturned()) return;
-        Entity cond = getExprEntity(node.condition);
-        node.ifExpr.accept(this);
-        node.elseExpr.accept(this);
+        //use if-else instead of select to support short circuit
+        var type = IRType.from(node.type);
+        node.entity = Register.anonymous(type);
 
-        node.entity = Register.anonymous(IRType.from(node.type));
-        curBlock.addInstruct(new Select(node.entity, cond, node.ifExpr.entity, node.elseExpr.entity));
+        var ptr = Register.anonymous(type.asPtr());
+        curBlock.addInstruct(new Alloca(ptr, type));
+        Entity cond = getExprEntity(node.condition);
+
+        String postfix = curFunction.getLabelPostfix();
+        IRBlock thenBlock = new IRBlock("ternary.then" + postfix, curFunction);
+        IRBlock elseBlock = new IRBlock("ternary.else" + postfix, curFunction);
+        IRBlock endBlock = new IRBlock("ternary.end" + postfix, curFunction);
+        tryTerminateBlock(new Branch(cond, thenBlock, elseBlock));
+
+        setCurBlock(thenBlock);
+        Entity thenValue = getExprEntity(node.ifExpr);
+        curBlock.addInstruct(new Store(thenValue, ptr));
+        tryTerminateBlock(new Jump(endBlock));
+
+        setCurBlock(elseBlock);
+        Entity elseValue = getExprEntity(node.elseExpr);
+        curBlock.addInstruct(new Store(elseValue, ptr));
+        tryTerminateBlock(new Jump(endBlock));
+
+        setCurBlock(endBlock);
+        curBlock.addInstruct(new Load(node.entity, ptr));
     }
 
     private void visitLogicExprByAlloc(BinaryExprNode node) {

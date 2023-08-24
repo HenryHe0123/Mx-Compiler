@@ -133,6 +133,8 @@ public class InstSelector implements IRVisitor {
         if (it.isStringLiteral) {
             String str = ((StringLiteral) it.init).str;
             module.addData(new AsmData(name, str));
+        } else if (it.init instanceof GlobalVar g) {
+            module.addData(new AsmData(name, g.name, false));
         } else {
             int val = getConstantVal(it.init);
             module.addData(new AsmData(name, val));
@@ -253,11 +255,6 @@ public class InstSelector implements IRVisitor {
         }
         if (curFunction.containsReg(rd)) addInst(new AsmMv(rd, rs));
         else addInst(new AsmMemoryS("sw", rs, rd, 0));
-    }
-
-    @Override
-    public void visit(Select it) {
-        //todo
     }
 
     @Override

@@ -22,10 +22,6 @@ public class AsmFunction {
         blocks.add(block);
     }
 
-    public void insertBlock(AsmBlock block, AsmBlock insertedBlock) {
-        blocks.add(blocks.indexOf(block), insertedBlock);
-    }
-
     public void finish() {
         int spOffset = (offset % 16 != 0) ? (((offset >> 4) + 1) << 4) : offset; //positive
         AsmBlock lastBlock = blocks.get(blocks.size() - 1);

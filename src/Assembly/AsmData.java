@@ -4,23 +4,27 @@ public class AsmData {
     public String name;
     public int val = 0;
     public String str = null;
+    private final boolean isString; //for label
 
     public AsmData(String name, int val) {
         this.name = name;
         this.val = val;
+        isString = false;
     }
 
     public AsmData(String name, String str) {
         this.name = name;
         this.str = str;
+        isString = true;
     }
 
-    public boolean isString() {
-        return str != null;
+    public AsmData(String name, String str, boolean isString) {
+        this.name = name;
+        this.str = str;
+        this.isString = isString;
     }
 
     public String getText() {
-        boolean isString = isString();
         String dataType = isString ? "rodata" : "data";
         StringBuilder text = new StringBuilder("\t.section\t.").append(dataType).append("\n");
 
@@ -28,6 +32,7 @@ public class AsmData {
         text.append(name).append(":\n\t.").append(prefix).append("\t");
 
         if (isString) text.append("\"").append(str).append("\"");
+        else if (str != null) text.append(str); //label
         else text.append(val);
 
         return text.append("\n").toString();
