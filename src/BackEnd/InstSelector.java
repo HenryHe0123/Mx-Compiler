@@ -44,12 +44,16 @@ public class InstSelector implements IRVisitor {
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, Imm.one));
             return rg;
+        } else if (entity instanceof Null || entity instanceof Void) {
+            return zero;
         } else if (entity instanceof GlobalVar g) {
             Reg rg = new VirReg();
             addInst(new AsmLa(rg, g.name));
-            return rg;
+            return rg; //return address of global variable
         }
-        return regMap.get(entity);
+        Reg rg = regMap.get(entity);
+        if (rg == null) rg = createVirReg(entity);
+        return rg;
     }
 
     private int getConstantVal(Entity entity) {
@@ -57,6 +61,8 @@ public class InstSelector implements IRVisitor {
             return i.toInt();
         } else if (entity instanceof Bool b) {
             return b.toBool() ? 1 : 0;
+        } else if (entity instanceof Null) {
+            return 0;
         }
         return -19260817;
     }
@@ -85,8 +91,6 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(IRFunction it) {
         curFunction = new AsmFunction(it.name);
-        curFunction.allocate(ra);
-        curFunction.allocate(fp);
         module.addFunction(curFunction);
 
         //collect all blocks
@@ -165,16 +169,16 @@ public class InstSelector implements IRVisitor {
     public void visit(Call it) {
         for (int i = 0; i < Integer.min(8, it.args.size()); ++i)
             addInst(new AsmMv(a(i), getReg(it.args.get(i))));
-        int size = 0;
+        int paraOffset = 0;
         for (int i = 8; i < it.args.size(); ++i) {
             Entity val = it.args.get(i);
-            size += 4;
-            addInst(new AsmMemoryS("sw", getReg(val), sp, (i - 8) << 2));
+            addInst(new AsmMemoryS("sw", getReg(val), sp, paraOffset));
+            paraOffset += 4;
         }
-        curFunction.paraOffset = Integer.max(curFunction.paraOffset, size);
+        curFunction.paraOffset = Integer.max(curFunction.paraOffset, paraOffset);
         addInst(new AsmCall(it.funcName));
 
-        if (it.dest == null || it.dest instanceof Void) return;
+        if (it.dest == null || it.dest == Void.instance) return;
         VirReg rg = createVirReg(it.dest);
         addInst(new AsmMv(rg, a(0)));
     }
@@ -229,11 +233,11 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(Load it) {
         Reg rd = createVirReg(it.dest);
-        if (it.src instanceof GlobalVar src) {
-            addInst(new AsmLa(rd, src.name));
+        Reg rs = getReg(it.src);
+        if (it.src instanceof GlobalVar) {
+            addInst(new AsmMemoryS("lw", rd, rs, 0));
             return;
         }
-        Reg rs = getReg(it.src);
         if (curFunction.containsReg(rs)) addInst(new AsmMv(rd, rs));
         else addInst(new AsmMemoryS("lw", rd, rs, 0));
     }
@@ -241,11 +245,12 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(Store it) {
         Reg rs = getReg(it.src);
-        if (it.dest instanceof GlobalVar dest) {
-            addInst(new AsmMemoryS("sw", rs, new PhyReg(dest.name), 0));
+        Reg rd = getReg(it.dest);
+        if (it.dest instanceof GlobalVar) {
+            //rd is the address of global variable
+            addInst(new AsmMemoryS("sw", rs, rd, 0));
             return;
         }
-        Reg rd = getReg(it.dest);
         if (curFunction.containsReg(rd)) addInst(new AsmMv(rd, rs));
         else addInst(new AsmMemoryS("sw", rs, rd, 0));
     }

@@ -29,7 +29,7 @@ public class LocalJudge {
     private static final String codeGenFolderPrefix = "testcases/codegen/";
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
-    private static final String builtinPath = "builtin/builtin.ll";
+    private static final String builtinPathPrefix = "builtin/builtin";
     private static final String clang = "clang-15";
     private static final boolean showSemanticDetail = false;
     private static final boolean showIRDetail = true;
@@ -108,7 +108,7 @@ public class LocalJudge {
             //redirect process output to tmp-ravel.out
             ProcessBuilder processBuilder = new ProcessBuilder("wsl", "/usr/local/opt/bin/ravel",
                     "--input-file=" + inFileName, "--output-file=" + outFileName,
-                    asmFileName, builtinPath);
+                    asmFileName, builtinPathPrefix + ".s");
 
             processBuilder.redirectOutput(new File(ravelOutFileName));
             processBuilder.redirectErrorStream(true);
@@ -218,7 +218,8 @@ public class LocalJudge {
 
             //build executable file by clang
             final String exeFileName = tmpFilePath;
-            ProcessBuilder processBuilder = new ProcessBuilder("wsl", clang, builtinPath, llFileName, "-o", exeFileName, "-m32");
+            ProcessBuilder processBuilder = new ProcessBuilder("wsl",
+                    clang, builtinPathPrefix + ".ll", llFileName, "-o", exeFileName, "-m32");
             Process process = processBuilder.start();
             int processExitCode = process.waitFor();
             if (processExitCode != 0) {

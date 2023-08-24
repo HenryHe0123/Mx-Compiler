@@ -15,11 +15,13 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import Util.MxErrorListener;
 
 public class Compiler {
+    public static final boolean online = true;
+    public static final boolean runRavel = true; //only for local
+
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
         PrintStream IROutput = null;
         PrintStream AsmOutput = System.out;
-        boolean online = true;
 
         if (!online) { //local
             input = new FileInputStream("test.mx");
@@ -33,6 +35,8 @@ public class Compiler {
             System.err.println(er.getText());
             throw new RuntimeException();
         }
+
+        if (!online && runRavel) ravel();
     }
 
     public static void compile(InputStream input, PrintStream IROutput, PrintStream AsmOutput) throws Exception {
@@ -62,5 +66,25 @@ public class Compiler {
         new InstSelector(asmModule).visit(rootIR);
         new RegAllocator().visit(asmModule);
         new AsmPrinter(AsmOutput).print(asmModule);
+    }
+
+    private static void ravel() {
+        try {
+            ProcessBuilder processBuilder = new ProcessBuilder("wsl",
+                    "/usr/local/opt/bin/ravel", "--oj-mode");
+            processBuilder.inheritIO();
+            Process process = processBuilder.start();
+
+            long timeout = 5000;
+            Thread.sleep(timeout);
+            if (process.isAlive()) {
+                process.destroy();
+                System.err.println("ravel process forcibly terminated after " + timeout + "ms");
+            }
+
+            process.waitFor();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

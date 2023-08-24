@@ -3,7 +3,7 @@ package IR.Entity;
 import IR.Type.VoidType;
 
 public class Void extends Entity {
-    public Void() {
+    private Void() {
         super(VoidType.IRVoid);
     }
 

@@ -4,7 +4,7 @@ import IR.Type.IRType;
 import IR.Type.PtrType;
 
 public class Null extends Entity {
-    public Null() {
+    private Null() {
         super(PtrType.IRNull);
     }
 
