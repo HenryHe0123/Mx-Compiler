@@ -32,8 +32,8 @@ public abstract class Entity {
 
     public static Entity init(IRType type) {
         if (type.isVoid()) return Void.instance;
-        if (type instanceof INType) {
-            if (type.getBytes() == 1) return Bool.False;
+        if (type instanceof INType iType) {
+            if (iType.bits == 1) return Bool.False;
             else return Int.zero;
         }
         return Null.instance;

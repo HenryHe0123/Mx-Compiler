@@ -7,7 +7,9 @@ import java.util.HashMap;
 public abstract class IRType {
     public abstract String getText();
 
-    public abstract int getBytes();
+    public int getBytes() {
+        return 4;
+    }
 
     private static final HashMap<String, ClassType> classTypes = new HashMap<>();
 

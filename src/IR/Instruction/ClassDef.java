@@ -11,10 +11,6 @@ public class ClassDef extends Instruction {
         this.classType = classType;
     }
 
-    public int getBytes() {
-        return classType.getBytes();
-    }
-
     @Override
     public String getText() {
         String memberText = classType.memberTypes.stream().map(IRType::getText).reduce((a, b) -> a + ", " + b).orElse("");

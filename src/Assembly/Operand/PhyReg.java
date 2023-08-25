@@ -17,7 +17,6 @@ public class PhyReg extends Reg {
     static public final PhyReg zero = new PhyReg("zero");
     static public final PhyReg ra = new PhyReg("ra"); //return address
     static public final PhyReg sp = new PhyReg("sp"); //stack pointer
-    static public final PhyReg gp = new PhyReg("gp"); //global pointer
     static public final ArrayList<PhyReg> t = tRegs(); //temporary register
     static public final ArrayList<PhyReg> s = sRegs(); //saved register
     static public final ArrayList<PhyReg> a = aRegs(); //argument register

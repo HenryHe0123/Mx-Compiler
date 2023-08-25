@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
-    private static final boolean usePhi = false;
+    private static final boolean usePhi = true;
     private final GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;

@@ -1,10 +1,13 @@
 package Assembly;
 
-import Assembly.Instruction.Inst;
+import Assembly.Instruction.*;
+
+import java.util.HashMap;
 
 public class AsmBlock {
     public Inst headInst = null, tailInst = null;
     public String label;
+    public HashMap<String, Inst> phi = new HashMap<>(); //phi inst from label
 
     public AsmBlock(String label) {
         this.label = label;
@@ -42,6 +45,16 @@ public class AsmBlock {
         inserted.prev = i;
         inserted.next = i.next;
         i.next = inserted;
+    }
+
+    public void addPhiInst(Inst i, String label) {
+        phi.put(label, i);
+    }
+
+    private static int anonymousBlockCnt = 0;
+
+    public static AsmBlock newEmptyBlockForPhi() {
+        return new AsmBlock(".phi." + anonymousBlockCnt++);
     }
 
     public String getText() {

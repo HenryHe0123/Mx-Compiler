@@ -17,11 +17,6 @@ public class PtrType extends IRType {
     }
 
     @Override
-    public int getBytes() {
-        return 4;
-    }
-
-    @Override
     public IRType deconstruct() {
         return baseType;
     }

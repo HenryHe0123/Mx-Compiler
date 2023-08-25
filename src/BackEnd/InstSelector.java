@@ -10,6 +10,7 @@ import IR.Instruction.*;
 import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import static Assembly.Operand.PhyReg.*;
@@ -80,6 +81,59 @@ public class InstSelector implements IRVisitor {
         curFunction.addBlock(asmBlock);
     }
 
+    private void addPhiInst(AsmFunction func) {
+        ArrayList<AsmBlock> addedBlocks = new ArrayList<>();
+        for (AsmBlock block : func.blocks) {
+            var phi = block.phi;
+            var tailInst = block.tailInst;
+            if (phi.isEmpty()) continue;
+            if (phi.size() == 1) { //debug: still maybe br and jump
+                assert tailInst instanceof AsmJ;
+                AsmJ jI = (AsmJ) tailInst;
+                Inst added = phi.get(jI.label);
+                if (added == null) {
+                    AsmBranchS br = (AsmBranchS) tailInst.prev;
+                    added = phi.get(br.toLabel);
+                    block.insert_before(br, added);
+                } else block.insert_before(tailInst, added);
+            } else {
+                //last two inst is br and jump
+                assert phi.size() == 2;
+                assert tailInst instanceof AsmJ;
+                AsmJ jI = (AsmJ) tailInst;
+
+                Inst br = tailInst.prev;
+                assert br instanceof AsmBranchS;
+                AsmBranchS brI = (AsmBranchS) br;
+
+                String brLabel = brI.toLabel;
+                String jLabel = jI.label;
+                Inst brAddedInst = phi.get(brLabel);
+                Inst jAddedInst = phi.get(jLabel);
+
+                assert brAddedInst != null && jAddedInst != null;
+
+                AsmBlock brEmptyBlock = AsmBlock.newEmptyBlockForPhi();
+                brEmptyBlock.push_back(brAddedInst);
+                brEmptyBlock.push_back(new AsmJ(brLabel));
+
+                AsmBlock jEmptyBlock = AsmBlock.newEmptyBlockForPhi();
+                jEmptyBlock.push_back(jAddedInst);
+                jEmptyBlock.push_back(new AsmJ(jLabel));
+
+                brI.toLabel = brEmptyBlock.label;
+                jI.label = jEmptyBlock.label;
+
+                addedBlocks.add(brEmptyBlock);
+                addedBlocks.add(jEmptyBlock);
+            }
+        }
+
+        for (AsmBlock block : addedBlocks) {
+            func.addBlock(block);
+        }
+    }
+
     //--------------------------------------- visit ------------------------------------------------
 
     @Override
@@ -118,6 +172,9 @@ public class InstSelector implements IRVisitor {
         it.entry.accept(this);
         it.blocks.forEach(block -> block.accept(this));
         it.returnBlock.accept(this);
+
+        //implement phi instructions
+        addPhiInst(curFunction);
     }
 
     @Override
@@ -259,7 +316,16 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Phi it) {
-        //todo
+        VirReg tmp = new VirReg();
+        addInst(new AsmMv(getReg(it.dest), tmp));
+        for (int i = 0; i < it.values.size(); ++i) {
+            Entity value = it.values.get(i);
+            int val = getConstantVal(value);
+            if (val != -19260817)
+                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmLi(tmp, new Imm(val)), curBlock.label);
+            else
+                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmMv(tmp, getReg(value)), curBlock.label);
+        }
     }
 
     //--------------------------------------- terminal --------------------------------------------
