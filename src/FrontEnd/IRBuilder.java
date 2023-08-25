@@ -12,6 +12,7 @@ import IR.Instruction.*;
 import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 import IR.Type.*;
+import Util.Basic;
 import Util.Error.CodegenError;
 import Util.Scope.*;
 import Util.Type;
@@ -21,6 +22,7 @@ import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
     private static final boolean usePhi = true;
+    private static final boolean simplifyUnary = true;
     private final GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;
@@ -573,6 +575,21 @@ public class IRBuilder implements ASTVisitor {
     public void visit(UnaryExprNode node) {
         if (isReturned()) return;
         if (node.entity == null) {
+            if (simplifyUnary && node.expression instanceof LiteralExprNode literalNode) { //bool or int
+                Basic value = literalNode.value;
+                if (node.isBool()) { // !value
+                    node.entity = Bool.from(!value.boolVal);
+                } else {
+                    long v = value.intVal;
+                    switch (node.operator) {
+                        case "-" -> node.entity = Int.from((int) -v);
+                        case "~" -> node.entity = Int.from((int) ~v);
+                        default -> throw new CodegenError("failed to build IR for unary expression (literal)");
+                    }
+                }
+                return;
+            }
+
             Entity src = getExprEntity(node.expression);
             node.entity = Register.anonymous(IRType.from(node.type)); //dest
             Instruction instruction;

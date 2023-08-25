@@ -54,7 +54,7 @@ public class AsmBlock {
     private static int anonymousBlockCnt = 0;
 
     public static AsmBlock newEmptyBlockForPhi() {
-        return new AsmBlock(".phi." + anonymousBlockCnt++);
+        return new AsmBlock("..phi." + anonymousBlockCnt++);
     }
 
     public String getText() {

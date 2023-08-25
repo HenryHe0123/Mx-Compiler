@@ -23,7 +23,8 @@ public class AsmFunction {
     }
 
     public void finish() {
-        int spOffset = (offset % 16 != 0) ? (((offset >> 4) + 1) << 4) : offset; //positive
+        int totalOffset = offset + paraOffset;
+        int spOffset = (totalOffset % 16 != 0) ? (((totalOffset >> 4) + 1) << 4) : totalOffset; //positive
         AsmBlock lastBlock = blocks.get(blocks.size() - 1);
         AsmBlock entry = blocks.get(0);
         Inst terminal = lastBlock.tailInst;

@@ -33,8 +33,12 @@ public class AsmData {
 
         if (isString) text.append("\"").append(str).append("\"");
         else if (str != null) text.append(str); //label
-        else text.append(val);
+        else text.append(unsignedIntVal());
 
         return text.append("\n").toString();
+    }
+
+    public long unsignedIntVal() {
+        return val & 0xFFFFFFFFL;
     }
 }

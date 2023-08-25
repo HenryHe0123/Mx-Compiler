@@ -1,8 +1,8 @@
 package Assembly.Operand;
 
 public class VirReg extends Reg {
-    private static int cnt = 0;
-    public final int id;
+    private static long cnt = 0;
+    public final long id;
 
     public VirReg() {
         id = cnt++;
