@@ -1,6 +1,4 @@
-package BackEnd;
-
-import Assembly.AsmModule;
+package Assembly;
 
 import java.io.PrintStream;
 

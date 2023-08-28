@@ -33,7 +33,7 @@ public class AsmData {
 
         if (isString) text.append("\"").append(str).append("\"");
         else if (str != null) text.append(str); //label
-        else text.append(unsignedIntVal());
+        else text.append(val);
 
         return text.append("\n").toString();
     }

@@ -1,7 +1,7 @@
 import java.io.*;
 
 import AST.RootNode;
-import Assembly.AsmModule;
+import Assembly.*;
 import BackEnd.*;
 import FrontEnd.*;
 import IR.*;
