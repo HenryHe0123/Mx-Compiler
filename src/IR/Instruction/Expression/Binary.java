@@ -50,45 +50,41 @@ public class Binary extends Expression {
     }
 
     public static Entity calcConstant(String op, Entity src1, Entity src2) {
-        switch (src1) {
-            case Int i1 && src2 instanceof Int i2 -> {
-                int val1 = i1.getVal(), val2 = i2.getVal();
-                return switch (op) {
-                    case "+" -> new Int(val1 + val2);
-                    case "-" -> new Int(val1 - val2);
-                    case "*" -> new Int(val1 * val2);
-                    case "/" -> new Int(val1 / val2);
-                    case "%" -> new Int(val1 % val2);
-                    case "<<" -> new Int(val1 << val2);
-                    case ">>" -> new Int(val1 >> val2);
-                    case "&" -> new Int(val1 & val2);
-                    case "|" -> new Int(val1 | val2);
-                    case "^" -> new Int(val1 ^ val2);
-                    case "<" -> new Bool(val1 < val2);
-                    case ">" -> new Bool(val1 > val2);
-                    case "<=" -> new Bool(val1 <= val2);
-                    case ">=" -> new Bool(val1 >= val2);
-                    case "==" -> new Bool(val1 == val2);
-                    case "!=" -> new Bool(val1 != val2);
-                    default -> throw new CodegenError("Unexpected binary option in IR int calc: " + op);
-                };
-            }
-            case Bool b1 && src2 instanceof Bool b2 -> {
-                boolean val1 = b1.getVal(), val2 = b2.getVal();
-                return switch (op) {
-                    case "==" -> new Bool(val1 == val2);
-                    case "!=" -> new Bool(val1 != val2);
-                    default -> throw new CodegenError("Unexpected binary option in IR bool calc: " + op);
-                };
-            }
-            case Null ignored && src2 instanceof Null -> {
-                return switch (op) {
-                    case "==" -> Bool.True;
-                    case "!=" -> Bool.False;
-                    default -> throw new CodegenError("Unexpected binary option in IR null calc: " + op);
-                };
-            }
-            case null, default -> throw new CodegenError("Unexpected src entity type in IR constant calc for binary");
+        if (src1 instanceof Int i1 && src2 instanceof Int i2) {
+            int val1 = i1.getVal(), val2 = i2.getVal();
+            return switch (op) {
+                case "+" -> new Int(val1 + val2);
+                case "-" -> new Int(val1 - val2);
+                case "*" -> new Int(val1 * val2);
+                case "/" -> new Int(val1 / val2);
+                case "%" -> new Int(val1 % val2);
+                case "<<" -> new Int(val1 << val2);
+                case ">>" -> new Int(val1 >> val2);
+                case "&" -> new Int(val1 & val2);
+                case "|" -> new Int(val1 | val2);
+                case "^" -> new Int(val1 ^ val2);
+                case "<" -> new Bool(val1 < val2);
+                case ">" -> new Bool(val1 > val2);
+                case "<=" -> new Bool(val1 <= val2);
+                case ">=" -> new Bool(val1 >= val2);
+                case "==" -> new Bool(val1 == val2);
+                case "!=" -> new Bool(val1 != val2);
+                default -> throw new CodegenError("Unexpected binary option in IR int calc: " + op);
+            };
+        } else if (src1 instanceof Bool b1 && src2 instanceof Bool b2) {
+            boolean val1 = b1.getVal(), val2 = b2.getVal();
+            return switch (op) {
+                case "==" -> new Bool(val1 == val2);
+                case "!=" -> new Bool(val1 != val2);
+                default -> throw new CodegenError("Unexpected binary option in IR bool calc: " + op);
+            };
+        } else if (src1 instanceof Null && src2 instanceof Null) {
+            return switch (op) {
+                case "==" -> Bool.True;
+                case "!=" -> Bool.False;
+                default -> throw new CodegenError("Unexpected binary option in IR null calc: " + op);
+            };
         }
+        throw new CodegenError("Unexpected src entity type in IR constant calc for binary");
     }
 }
