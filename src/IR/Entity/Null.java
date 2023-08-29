@@ -13,5 +13,10 @@ public class Null extends Entity {
         return "null";
     }
 
+    @Override
+    public boolean isStrictlyConstant() {
+        return true;
+    }
+
     public static final Null instance = new Null();
 }

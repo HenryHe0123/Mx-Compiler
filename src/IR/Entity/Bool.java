@@ -10,8 +10,13 @@ public class Bool extends Entity {
         value = bool;
     }
 
-    public boolean toBool() {
+    public boolean getVal() {
         return value;
+    }
+
+    @Override
+    public boolean isStrictlyConstant() {
+        return true;
     }
 
     @Override

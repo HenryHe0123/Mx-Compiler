@@ -1,6 +1,6 @@
 package IR.Instruction.Expression;
 
-import IR.Entity.Entity;
+import IR.Entity.*;
 import IR.IRVisitor;
 import IR.Type.IRType;
 import Util.Error.CodegenError;
@@ -47,5 +47,48 @@ public class Binary extends Expression {
             case "^" -> BinaryOp.xor;
             default -> throw new CodegenError("Unexpected binary option in IR convert: " + op);
         };
+    }
+
+    public static Entity calcConstant(String op, Entity src1, Entity src2) {
+        switch (src1) {
+            case Int i1 && src2 instanceof Int i2 -> {
+                int val1 = i1.getVal(), val2 = i2.getVal();
+                return switch (op) {
+                    case "+" -> new Int(val1 + val2);
+                    case "-" -> new Int(val1 - val2);
+                    case "*" -> new Int(val1 * val2);
+                    case "/" -> new Int(val1 / val2);
+                    case "%" -> new Int(val1 % val2);
+                    case "<<" -> new Int(val1 << val2);
+                    case ">>" -> new Int(val1 >> val2);
+                    case "&" -> new Int(val1 & val2);
+                    case "|" -> new Int(val1 | val2);
+                    case "^" -> new Int(val1 ^ val2);
+                    case "<" -> new Bool(val1 < val2);
+                    case ">" -> new Bool(val1 > val2);
+                    case "<=" -> new Bool(val1 <= val2);
+                    case ">=" -> new Bool(val1 >= val2);
+                    case "==" -> new Bool(val1 == val2);
+                    case "!=" -> new Bool(val1 != val2);
+                    default -> throw new CodegenError("Unexpected binary option in IR int calc: " + op);
+                };
+            }
+            case Bool b1 && src2 instanceof Bool b2 -> {
+                boolean val1 = b1.getVal(), val2 = b2.getVal();
+                return switch (op) {
+                    case "==" -> new Bool(val1 == val2);
+                    case "!=" -> new Bool(val1 != val2);
+                    default -> throw new CodegenError("Unexpected binary option in IR bool calc: " + op);
+                };
+            }
+            case Null ignored && src2 instanceof Null -> {
+                return switch (op) {
+                    case "==" -> Bool.True;
+                    case "!=" -> Bool.False;
+                    default -> throw new CodegenError("Unexpected binary option in IR null calc: " + op);
+                };
+            }
+            case null, default -> throw new CodegenError("Unexpected src entity type in IR constant calc for binary");
+        }
     }
 }

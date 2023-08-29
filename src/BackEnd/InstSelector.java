@@ -34,13 +34,13 @@ public class InstSelector implements IRVisitor {
 
     private Reg getReg(Entity entity) {
         if (entity instanceof Int i) {
-            int val = i.toInt();
+            int val = i.getVal();
             if (val == 0) return zero;
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, new Imm(val)));
             return rg;
         } else if (entity instanceof Bool b) {
-            boolean val = b.toBool();
+            boolean val = b.getVal();
             if (!val) return zero;
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, Imm.one));
@@ -59,9 +59,9 @@ public class InstSelector implements IRVisitor {
 
     private int getConstantVal(Entity entity) {
         if (entity instanceof Int i) {
-            return i.toInt();
+            return i.getVal();
         } else if (entity instanceof Bool b) {
-            return b.toBool() ? 1 : 0;
+            return b.getVal() ? 1 : 0;
         } else if (entity instanceof Null) {
             return 0;
         }

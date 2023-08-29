@@ -10,8 +10,13 @@ public class Int extends Entity {
         value = i;
     }
 
-    public int toInt() {
+    public int getVal() {
         return value;
+    }
+
+    @Override
+    public boolean isStrictlyConstant() {
+        return true;
     }
 
     @Override
@@ -23,5 +28,4 @@ public class Int extends Entity {
     public static final Int zero = new Int(0);
     public static final Int one = new Int(1);
     public static final Int minusOne = new Int(-1);
-
 }

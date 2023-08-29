@@ -21,8 +21,8 @@ import java.util.ArrayList;
 import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
+    private static final boolean localOptimize = true;
     private static final boolean usePhi = true;
-    private static final boolean simplifyUnary = true;
     private final GlobalScope gScope;
     private Scope curScope;
     private Type curType = null;
@@ -166,7 +166,7 @@ public class IRBuilder implements ASTVisitor {
 
     private Entity getArrayBytes(Entity size) {
         if (size instanceof Int) {
-            int bytes = ((Int) size).toInt() * 4 + 4;
+            int bytes = ((Int) size).getVal() * 4 + 4;
             return Entity.from(bytes);
         }
 
@@ -315,6 +315,13 @@ public class IRBuilder implements ASTVisitor {
     public void visit(BranchStmtNode node) {
         if (isReturned()) return;
         Entity cond = getExprEntity(node.condition);
+
+        if (localOptimize && cond.isStrictlyConstant()) {
+            if (((Bool) cond).getVal()) node.ifStmt.accept(this);
+            else if (node.elseStmt != null) node.elseStmt.accept(this);
+            return;
+        }
+
         boolean ret = false;
 
         String postfix = curFunction.getLabelPostfix();
@@ -575,7 +582,7 @@ public class IRBuilder implements ASTVisitor {
     public void visit(UnaryExprNode node) {
         if (isReturned()) return;
         if (node.entity == null) {
-            if (simplifyUnary && node.expression instanceof LiteralExprNode literalNode) { //bool or int
+            if (localOptimize && node.expression instanceof LiteralExprNode literalNode) { //bool or int
                 Basic value = literalNode.value;
                 if (node.isBool()) { // !value
                     node.entity = Bool.from(!value.boolVal);
@@ -591,6 +598,21 @@ public class IRBuilder implements ASTVisitor {
             }
 
             Entity src = getExprEntity(node.expression);
+
+            if (localOptimize && src.isStrictlyConstant()) { //bool or int (maybe from a binary expression)
+                if (src instanceof Bool b) { // !value
+                    node.entity = Bool.from(!b.getVal());
+                } else {
+                    int v = ((Int) src).getVal();
+                    switch (node.operator) {
+                        case "-" -> node.entity = Int.from(-v);
+                        case "~" -> node.entity = Int.from(~v);
+                        default -> throw new CodegenError("failed to build IR for unary expression (constant)");
+                    }
+                }
+                return;
+            }
+
             node.entity = Register.anonymous(IRType.from(node.type)); //dest
             Instruction instruction;
             if (node.isBool()) {
@@ -636,12 +658,19 @@ public class IRBuilder implements ASTVisitor {
     public void visit(TernaryExprNode node) {
         if (isReturned()) return;
         //use if-else instead of select to support short circuit
+        Entity cond = getExprEntity(node.condition);
+
+        if (localOptimize && cond.isStrictlyConstant()) {
+            if (((Bool) cond).getVal()) node.entity = getExprEntity(node.ifExpr);
+            else node.entity = getExprEntity(node.elseExpr);
+            return;
+        }
+
         var type = IRType.from(node.type);
         node.entity = Register.anonymous(type);
 
         var ptr = Register.anonymous(type.asPtr());
         curBlock.addInstruct(new Alloca(ptr, type));
-        Entity cond = getExprEntity(node.condition);
 
         String postfix = curFunction.getLabelPostfix();
         IRBlock thenBlock = new IRBlock("ternary.then" + postfix, curFunction);
@@ -668,7 +697,7 @@ public class IRBuilder implements ASTVisitor {
         boolean isAnd = node.operator.equals("&&");
 
         if (lhs instanceof Bool) { //optimization
-            boolean value = ((Bool) lhs).toBool();
+            boolean value = ((Bool) lhs).getVal();
             if (isAnd) { // value && rhs
                 node.entity = value ? getExprEntity(node.rhs) : Bool.False;
             } else { // value || rhs
@@ -705,7 +734,7 @@ public class IRBuilder implements ASTVisitor {
         boolean isAnd = node.operator.equals("&&");
 
         if (lhs instanceof Bool) { //optimization
-            boolean value = ((Bool) lhs).toBool();
+            boolean value = ((Bool) lhs).getVal();
             if (isAnd) { // value && rhs
                 node.entity = value ? getExprEntity(node.rhs) : Bool.False;
             } else { // value || rhs
@@ -757,6 +786,12 @@ public class IRBuilder implements ASTVisitor {
 
         node.lhs.accept(this);
         node.rhs.accept(this);
+        Entity lhs = node.lhs.entity, rhs = node.rhs.entity;
+
+        if (localOptimize && lhs.isStrictlyConstant() && rhs.isStrictlyConstant()) {
+            node.entity = Binary.calcConstant(node.operator, lhs, rhs);
+            return;
+        }
 
         if (node.isCmp()) {
             node.entity = Register.anonymous(INType.IRBool);
@@ -771,28 +806,28 @@ public class IRBuilder implements ASTVisitor {
                     default -> throw new CodegenError("Unexpected cmp option: " + node.operator);
                 };
                 Call call = new Call(node.entity, funcName, INType.IRBool);
-                call.addArg(node.lhs.entity);
-                call.addArg(node.rhs.entity);
+                call.addArg(lhs);
+                call.addArg(rhs);
                 curBlock.addInstruct(call);
             } else {
                 var op = Icmp.convert(node.operator);
-                curBlock.addInstruct(new Icmp(node.entity, op, node.lhs.entity, node.rhs.entity));
+                curBlock.addInstruct(new Icmp(node.entity, op, lhs, rhs));
             }
         } else if (node.isAdd()) {
             if (node.type.isInt()) {
                 node.entity = Register.anonymous(INType.IRInt);
-                curBlock.addInstruct(new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, node.lhs.entity, node.rhs.entity));
+                curBlock.addInstruct(new Binary(node.entity, Binary.BinaryOp.add, INType.IRInt, lhs, rhs));
             } else { //string
                 node.entity = Register.anonymous(PtrType.IRStringLiteral);
                 Call call = new Call(node.entity, "__string.add", PtrType.IRStringLiteral);
-                call.addArg(node.lhs.entity);
-                call.addArg(node.rhs.entity);
+                call.addArg(lhs);
+                call.addArg(rhs);
                 curBlock.addInstruct(call);
             }
         } else { //arithmetic or bits operation
             node.entity = Register.anonymous(INType.IRInt);
             var op = Binary.convert(node.operator);
-            curBlock.addInstruct(new Binary(node.entity, op, INType.IRInt, node.lhs.entity, node.rhs.entity));
+            curBlock.addInstruct(new Binary(node.entity, op, INType.IRInt, lhs, rhs));
         }
     }
 

@@ -13,7 +13,11 @@ public abstract class Entity {
     public abstract String getText();
 
     public boolean isConstant() {
-        return true;
+        return true; //including string* (globalVar)
+    }
+
+    public boolean isStrictlyConstant() {
+        return false;
     }
 
     public String getFullText() {

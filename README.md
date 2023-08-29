@@ -2,12 +2,11 @@
 
 > [Project Introduction](https://github.com/ACMClassCourses/Compiler-Design-Implementation)
 
-### progress
+### Progress
 
-- [x] Mx.g4
+- [x] Lexer & Parser (by ANTLR)
 - [x] AST Node Design
 - [x] AST Builder
-- [x] Symbol Collector
 - [x] Semantic Checker
 - [x] Pass Semantic Test
 - [x] IR Design
@@ -15,3 +14,12 @@
 - [x] Pass IR Test
 - [x] Assembly Generation
 - [x] Pass Assembly Test
+
+### Optimization
+
+#### Local
+
+- Constant Folding
+
+#### Global
+
