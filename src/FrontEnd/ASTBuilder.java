@@ -251,12 +251,9 @@ public class ASTBuilder extends MxBaseVisitor<ASTNode> {
         ExprNode rhs = (ExprNode) visit(ctx.expression(1));
 
         //some strange optimization from TA
-        if ((op.equals("==") || op.equals("!=")) && ctx.expression(0).getText().equals(ctx.expression(1).getText())
-                && (lhs instanceof ArrayExprNode || lhs instanceof MemberExprNode || lhs instanceof VarExprNode)) {
-            return new LiteralExprNode(new Position(ctx), new Basic(op.equals("==")));
-        }
+        boolean sameTextOnBothSides = ctx.expression(0).getText().equals(ctx.expression(1).getText());
 
-        return new BinaryExprNode(new Position(ctx), lhs, op, rhs);
+        return new BinaryExprNode(new Position(ctx), lhs, op, rhs, sameTextOnBothSides);
     }
 
     @Override

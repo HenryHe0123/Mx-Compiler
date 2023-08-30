@@ -774,9 +774,27 @@ public class IRBuilder implements ASTVisitor {
         }
     }
 
+    private boolean isComplexButStable(ExprNode node) {
+        return node instanceof ArrayExprNode || node instanceof VarExprNode || node instanceof LiteralExprNode ||
+                (node instanceof MemberExprNode n && n.dotVar());
+    }
+
     @Override
     public void visit(BinaryExprNode node) {
         if (isReturned()) return;
+
+        //some strange optimization from TA, after semantic check
+        if (localOptimize && node.sameTextOnBothSides && isComplexButStable(node.lhs)) {
+            if (node.isCmp()) {
+                node.entity = new Bool
+                        (node.operator.equals("==") || node.operator.equals("<=") || node.operator.equals(">="));
+                return;
+            } else if (node.isLogic()) {
+                node.entity = getExprEntity(node.lhs);
+                return;
+            }
+        }
+
         if (node.isLogic()) {
             //short circuit assignment
             if (usePhi) visitLogicExprByPhi(node);
@@ -784,9 +802,8 @@ public class IRBuilder implements ASTVisitor {
             return;
         }
 
-        node.lhs.accept(this);
-        node.rhs.accept(this);
-        Entity lhs = node.lhs.entity, rhs = node.rhs.entity;
+        Entity lhs = getExprEntity(node.lhs);
+        Entity rhs = getExprEntity(node.rhs);
 
         if (localOptimize && lhs.isStrictlyConstant() && rhs.isStrictlyConstant()) {
             node.entity = Binary.calcConstant(node.operator, lhs, rhs);
