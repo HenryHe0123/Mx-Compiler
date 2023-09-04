@@ -5,9 +5,10 @@ import Assembly.*;
 import BackEnd.*;
 import FrontEnd.*;
 import IR.*;
+import Optimizer.Optimizer;
 import Parser.MxLexer;
 import Parser.MxParser;
-import Util.Error.Error;
+import Util.Error.MxError;
 import Util.Scope.GlobalScope;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -31,7 +32,7 @@ public class Compiler {
 
         try {
             compile(input, IROutput, AsmOutput);
-        } catch (Error er) {
+        } catch (MxError er) {
             System.err.println(er.getText());
             throw new RuntimeException();
         }
@@ -60,12 +61,14 @@ public class Compiler {
 
         IRRoot rootIR = new IRRoot();
         new IRBuilder(globalScope, rootIR).visit(ASTRoot);
+        Optimizer.optimize(rootIR);
         new IRPrinter(IROutput).print(rootIR);
 
-        AsmModule asmModule = new AsmModule();
-        new InstSelector(asmModule).visit(rootIR);
-        new RegAllocator().visit(asmModule);
-        new AsmPrinter(AsmOutput).print(asmModule);
+        AsmRoot rootAsm = new AsmRoot();
+        new InstSelector(rootAsm).visit(rootIR);
+        new RegAllocator().visit(rootAsm);
+        Optimizer.optimize(rootAsm);
+        new AsmPrinter(AsmOutput).print(rootAsm);
     }
 
     private static void ravel() {

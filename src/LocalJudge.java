@@ -1,8 +1,8 @@
+import Util.Error.MxError;
+
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-
-import Util.Error.Error;
 
 public class LocalJudge {
     /* INSTRUCTION:
@@ -36,7 +36,7 @@ public class LocalJudge {
     private static final boolean showAsmDetail = true;
 
     public static void main(String[] args) throws Exception {
-        testSemantic(false);
+        testSemantic(true);
         testIR(false);
         testAssembly(true);
     }
@@ -84,7 +84,7 @@ public class LocalJudge {
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(asmFileName))) {
                 Compiler.compile(compilerInput, null, compilerOutput);
-            } catch (Error er) {
+            } catch (MxError er) {
                 System.err.println(er.getText());
                 System.err.println("compile error");
                 return false;
@@ -208,7 +208,7 @@ public class LocalJudge {
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(llFileName))) {
                 Compiler.compile(compilerInput, compilerOutput, null);
-            } catch (Error er) {
+            } catch (MxError er) {
                 if (showIRDetail) {
                     System.err.println(er.getText());
                     System.err.println("compile error");

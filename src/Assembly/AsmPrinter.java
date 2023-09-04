@@ -9,8 +9,8 @@ public class AsmPrinter {
         this.out = out;
     }
 
-    public void print(AsmModule asmModule) {
+    public void print(AsmRoot root) {
         if (out == null) return;
-        out.print(asmModule.getText());
+        out.print(root.getText());
     }
 }

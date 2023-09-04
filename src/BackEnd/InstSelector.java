@@ -16,14 +16,14 @@ import java.util.HashMap;
 import static Assembly.Operand.PhyReg.*;
 
 public class InstSelector implements IRVisitor {
-    public final AsmModule module;
+    public final AsmRoot root;
     private AsmFunction curFunction;
     private AsmBlock curBlock;
     private final HashMap<Entity, Reg> regMap = new HashMap<>();
     private final HashMap<IRBlock, AsmBlock> blockMap = new HashMap<>();
 
-    public InstSelector(AsmModule asmModule) {
-        module = asmModule;
+    public InstSelector(AsmRoot root) {
+        this.root = root;
     }
 
     //-------------------------------------- utility ----------------------------------------------
@@ -145,7 +145,7 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(IRFunction it) {
         curFunction = new AsmFunction(it.name);
-        module.addFunction(curFunction);
+        root.addFunction(curFunction);
 
         //collect all blocks
         blockMap.clear();
@@ -189,12 +189,12 @@ public class InstSelector implements IRVisitor {
         String name = ((GlobalVar) it.dest).name;
         if (it.isStringLiteral) {
             String str = ((StringLiteral) it.init).str;
-            module.addData(new AsmData(name, str));
+            root.addData(new AsmData(name, str));
         } else if (it.init instanceof GlobalVar g) {
-            module.addData(new AsmData(name, g.name, false));
+            root.addData(new AsmData(name, g.name, false));
         } else {
             int val = getConstantVal(it.init);
-            module.addData(new AsmData(name, val));
+            root.addData(new AsmData(name, val));
         }
     }
 

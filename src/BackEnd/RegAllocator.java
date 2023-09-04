@@ -33,7 +33,7 @@ public class RegAllocator {
         } else return operand;
     }
 
-    public void visit(AsmModule it) {
+    public void visit(AsmRoot it) {
         it.functions.forEach(this::visit);
     }
 

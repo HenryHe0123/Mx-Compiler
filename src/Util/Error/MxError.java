@@ -2,11 +2,11 @@ package Util.Error;
 
 import Util.Position;
 
-abstract public class Error extends RuntimeException {
+abstract public class MxError extends RuntimeException {
     private final Position pos;
     private final String message;
 
-    public Error(String msg, Position pos) {
+    public MxError(String msg, Position pos) {
         this.pos = pos;
         this.message = msg;
     }

@@ -17,9 +17,8 @@
 
 ### Optimization
 
-#### Local
-
-- Constant Folding
-
-#### Global
-
+- [x] Constant Folding (local)
+- [ ] Mem2Reg
+- [ ] Dead Code Elimination
+- [ ] Constant Propagation
+- [ ] Register Allocation

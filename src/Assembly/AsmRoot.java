@@ -2,7 +2,7 @@ package Assembly;
 
 import java.util.ArrayList;
 
-public class AsmModule {
+public class AsmRoot {
     public ArrayList<AsmData> data = new ArrayList<>();
     public ArrayList<AsmFunction> functions = new ArrayList<>();
 
