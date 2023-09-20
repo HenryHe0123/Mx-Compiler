@@ -1,6 +1,7 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
 import IR.Type.IRType;
 
@@ -20,5 +21,9 @@ public class Alloca extends Expression {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public Register getRegister() {
+        return (dest instanceof Register reg) ? reg : null;
     }
 }

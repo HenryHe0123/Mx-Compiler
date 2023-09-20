@@ -1,6 +1,7 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
 
 public class Load extends Expression {
@@ -9,6 +10,7 @@ public class Load extends Expression {
     public Load(Entity dest, Entity src) {
         super(dest);
         this.src = src;
+        src.addUser(this);
     }
 
     @Override
@@ -19,5 +21,14 @@ public class Load extends Expression {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (src == old) src = latest;
+    }
+
+    public Register getSrcReg() {
+        return (src instanceof Register reg) ? reg : null;
     }
 }

@@ -17,6 +17,8 @@ public class Icmp extends Expression {
         this.op = op;
         this.src1 = src1;
         this.src2 = src2;
+        src1.addUser(this);
+        src2.addUser(this);
     }
 
     @Override
@@ -39,5 +41,11 @@ public class Icmp extends Expression {
             case "<=" -> IcmpOp.sle;
             default -> throw new CodegenError("Unexpected cmp option in IR convert: " + op);
         };
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (src1 == old) src1 = latest;
+        if (src2 == old) src2 = latest;
     }
 }

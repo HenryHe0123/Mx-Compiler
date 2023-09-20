@@ -1,6 +1,7 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRBlock;
 import IR.IRVisitor;
 
@@ -17,6 +18,7 @@ public class Phi extends Expression {
     public void addBranch(Entity value, IRBlock block) {
         values.add(value == null ? Entity.init(dest.type) : value);
         blocks.add(block);
+        if (value != null) value.addUser(this);
     }
 
     @Override
@@ -32,5 +34,21 @@ public class Phi extends Expression {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        for (int i = 0; i < values.size(); ++i) {
+            if (values.get(i) == old) values.set(i, latest);
+        }
+    }
+
+    //----------------------for phi newly generated at mem2reg----------------------
+
+    public Register src = null; //source alloca register
+
+    public Phi(Entity dest, Register src) {
+        super(dest);
+        this.src = src;
     }
 }

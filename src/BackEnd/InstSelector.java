@@ -90,12 +90,20 @@ public class InstSelector implements IRVisitor {
             if (phi.size() == 1) { //debug: still maybe br and jump
                 assert tailInst instanceof AsmJ;
                 AsmJ jI = (AsmJ) tailInst;
-                Inst added = phi.get(jI.label);
-                if (added == null) {
+                ArrayList<Inst> addedList = phi.get(jI.label);
+                if (addedList == null) { //debug: still need to add empty block
                     AsmBranchS br = (AsmBranchS) tailInst.prev;
-                    added = phi.get(br.toLabel);
-                    block.insert_before(br, added);
-                } else block.insert_before(tailInst, added);
+                    addedList = phi.get(br.toLabel);
+
+                    AsmBlock brEmptyBlock = AsmBlock.newEmptyBlockForPhi();
+                    addedList.forEach(brEmptyBlock::push_back);
+                    brEmptyBlock.push_back(new AsmJ(br.toLabel));
+                    br.toLabel = brEmptyBlock.label;
+                    addedBlocks.add(brEmptyBlock);
+
+                    //addedInsts.forEach(added -> block.insert_before(br, added));
+                } else
+                    addedList.forEach(added -> block.insert_before(tailInst, added));
             } else {
                 //last two inst is br and jump
                 assert phi.size() == 2;
@@ -108,17 +116,17 @@ public class InstSelector implements IRVisitor {
 
                 String brLabel = brI.toLabel;
                 String jLabel = jI.label;
-                Inst brAddedInst = phi.get(brLabel);
-                Inst jAddedInst = phi.get(jLabel);
+                ArrayList<Inst> brAddedList = phi.get(brLabel);
+                ArrayList<Inst> jAddedList = phi.get(jLabel);
 
-                assert brAddedInst != null && jAddedInst != null;
+                assert brAddedList != null && jAddedList != null;
 
                 AsmBlock brEmptyBlock = AsmBlock.newEmptyBlockForPhi();
-                brEmptyBlock.push_back(brAddedInst);
+                brAddedList.forEach(brEmptyBlock::push_back);
                 brEmptyBlock.push_back(new AsmJ(brLabel));
 
                 AsmBlock jEmptyBlock = AsmBlock.newEmptyBlockForPhi();
-                jEmptyBlock.push_back(jAddedInst);
+                jAddedList.forEach(jEmptyBlock::push_back);
                 jEmptyBlock.push_back(new AsmJ(jLabel));
 
                 brI.toLabel = brEmptyBlock.label;
@@ -346,5 +354,6 @@ public class InstSelector implements IRVisitor {
     public void visit(Ret it) {
         if (it.returnVal != Void.instance) addInst(new AsmMv(a(0), getReg(it.returnVal)));
         addInst(new AsmRet());
+        curFunction.retBlock = curBlock;
     }
 }

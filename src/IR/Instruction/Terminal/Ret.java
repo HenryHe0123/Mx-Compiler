@@ -8,6 +8,7 @@ public class Ret extends Terminator {
 
     public Ret(Entity returnVal) {
         this.returnVal = returnVal;
+        returnVal.addUser(this);
     }
 
     @Override
@@ -18,5 +19,10 @@ public class Ret extends Terminator {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (returnVal == old) returnVal = latest;
     }
 }

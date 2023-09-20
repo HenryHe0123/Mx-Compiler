@@ -1,13 +1,14 @@
 package Assembly;
 
-import Assembly.Instruction.*;
+import Assembly.Instruction.Inst;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class AsmBlock {
     public Inst headInst = null, tailInst = null;
     public String label;
-    public HashMap<String, Inst> phi = new HashMap<>(); //phi inst from label
+    public HashMap<String, ArrayList<Inst>> phi = new HashMap<>(); //phi inst from label
 
     public AsmBlock(String label) {
         this.label = label;
@@ -48,7 +49,7 @@ public class AsmBlock {
     }
 
     public void addPhiInst(Inst i, String label) {
-        phi.put(label, i);
+        phi.computeIfAbsent(label, k -> new ArrayList<>()).add(i);
     }
 
     private static int anonymousBlockCnt = 0;

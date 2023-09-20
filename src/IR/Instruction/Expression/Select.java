@@ -3,7 +3,7 @@ package IR.Instruction.Expression;
 import IR.Entity.Entity;
 import IR.IRVisitor;
 
-public class Select extends Expression {
+public class Select extends Expression { //unused
     public Entity cond, src1, src2;
 
     public Select(Entity dest, Entity condition, Entity src1, Entity src2) {

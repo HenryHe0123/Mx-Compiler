@@ -1,7 +1,10 @@
 package IR.Entity;
 
+import IR.Instruction.Instruction;
 import IR.Type.*;
 import Util.*;
+
+import java.util.ArrayList;
 
 public abstract class Entity {
     public final IRType type;
@@ -56,5 +59,17 @@ public abstract class Entity {
 
     public static Entity from(int value) {
         return new Int(value);
+    }
+
+    //------------------------------------for mem2reg------------------------------------
+
+    public ArrayList<Instruction> users = null;
+
+    public void addUser(Instruction user) {
+        if (users != null) users.add(user);
+    }
+
+    public void updateUse(Entity newUse) {
+        if (users != null) users.forEach(user -> user.replaceUse(this, newUse));
     }
 }

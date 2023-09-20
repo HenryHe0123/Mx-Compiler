@@ -17,10 +17,16 @@ public class GetElementPtr extends Expression {
         this.ptr = ptr;
         indexList.addAll(List.of(indexes));
         baseType = ptr.type.deconstruct();
+
+        ptr.addUser(this);
+        for (Entity index : indexList) {
+            index.addUser(this);
+        }
     }
 
     public void addIndex(Entity index) {
         indexList.add(index);
+        index.addUser(this);
     }
 
     @Override
@@ -35,5 +41,13 @@ public class GetElementPtr extends Expression {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (ptr == old) ptr = latest;
+        for (int i = 0; i < indexList.size(); ++i) {
+            if (indexList.get(i) == old) indexList.set(i, latest);
+        }
     }
 }

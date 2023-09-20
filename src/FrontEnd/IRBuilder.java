@@ -18,6 +18,7 @@ import Util.Scope.*;
 import Util.Type;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Stack;
 
 public class IRBuilder implements ASTVisitor {
@@ -101,7 +102,8 @@ public class IRBuilder implements ASTVisitor {
         //add parameter to function, and allocate entity to stack
         curFunction.addParameter(reg);
         Register addr = new Register(reg.name + ".addr", reg.type.asPtr());
-        curBlock.addInstruct(new Alloca(addr, reg.type));
+        //curBlock.addInstruct(new Alloca(addr, reg.type));
+        addAlloca(new Alloca(addr, reg.type));
         curBlock.addInstruct(new Store(reg, addr));
         curScope.putVarEntity(name, addr);
     }
@@ -189,6 +191,10 @@ public class IRBuilder implements ASTVisitor {
         } else node.accept(this);
     }
 
+    private void addAlloca(Alloca alloca) { //add all alloca to entry block
+        Objects.requireNonNullElse(curFunction, globalVarInit).entry.addInstruct(alloca);
+    }
+
     // ------------------------------ visit ------------------------------
 
     @Override
@@ -231,7 +237,8 @@ public class IRBuilder implements ASTVisitor {
             IRType type = IRType.from(curType);
             //debug: register would not use ptr automatically
             Entity reg = new Register(node.identifier + curScope.asPostfix(), type.asPtr());
-            curBlock.addInstruct(new Alloca(reg, type));
+            //curBlock.addInstruct(new Alloca(reg, type));
+            addAlloca(new Alloca(reg, type));
             Entity init = Entity.init(curType);
             if (node.expression != null) {
                 init = getExprEntity(node.expression);
@@ -533,7 +540,8 @@ public class IRBuilder implements ASTVisitor {
 
             //int i = 0
             Register IPtr = new Register("_array.i." + layer + "." + postfix, INType.IRInt.asPtr());
-            curBlock.addInstruct(new Alloca(IPtr, INType.IRInt));
+            //curBlock.addInstruct(new Alloca(IPtr, INType.IRInt));
+            addAlloca(new Alloca(IPtr, INType.IRInt));
             curBlock.addInstruct(new Store(Int.zero, IPtr));
             tryTerminateBlock(new Jump(condBlock));
 
@@ -670,7 +678,8 @@ public class IRBuilder implements ASTVisitor {
         node.entity = Register.anonymous(type);
 
         var ptr = Register.anonymous(type.asPtr());
-        curBlock.addInstruct(new Alloca(ptr, type));
+        //curBlock.addInstruct(new Alloca(ptr, type));
+        addAlloca(new Alloca(ptr, type));
 
         String postfix = curFunction.getLabelPostfix();
         IRBlock thenBlock = new IRBlock("ternary.then" + postfix, curFunction);
@@ -680,12 +689,12 @@ public class IRBuilder implements ASTVisitor {
 
         setCurBlock(thenBlock);
         Entity thenValue = getExprEntity(node.ifExpr);
-        curBlock.addInstruct(new Store(thenValue, ptr));
+        if (thenValue != null) curBlock.addInstruct(new Store(thenValue, ptr));
         tryTerminateBlock(new Jump(endBlock));
 
         setCurBlock(elseBlock);
         Entity elseValue = getExprEntity(node.elseExpr);
-        curBlock.addInstruct(new Store(elseValue, ptr));
+        if (elseValue != null) curBlock.addInstruct(new Store(elseValue, ptr));
         tryTerminateBlock(new Jump(endBlock));
 
         setCurBlock(endBlock);
@@ -708,7 +717,8 @@ public class IRBuilder implements ASTVisitor {
 
         node.entity = Register.anonymous(INType.IRBool);
         var ptr = Register.anonymous(INType.IRBool.asPtr());
-        curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
+        //curBlock.addInstruct(new Alloca(ptr, INType.IRBool));
+        addAlloca(new Alloca(ptr, INType.IRBool));
         curBlock.addInstruct(new Store(lhs, ptr));
 
         String postfix = curFunction.getLabelPostfix();

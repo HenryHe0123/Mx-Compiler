@@ -7,6 +7,7 @@ import IR.Instruction.Expression.*;
 import IR.Instruction.Terminal.*;
 import IR.Type.IRType;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class IRBlock { //Basic Block
@@ -77,5 +78,48 @@ public class IRBlock { //Basic Block
             ret.setTerminator(new Ret(tmpReg));
         }
         return ret;
+    }
+
+    //------------------------- optimize -------------------------
+
+    public LinkedList<IRBlock> prev = new LinkedList<>();
+    public LinkedList<IRBlock> next = new LinkedList<>();
+    public IRBlock idom = null; //immediate dominator, father in dominator tree
+    public ArrayList<IRBlock> domChildren = new ArrayList<>();
+    public ArrayList<IRBlock> domFrontier = new ArrayList<>();
+
+    public void addCFGEdge(IRBlock block) { //this -> block
+        this.next.add(block);
+        block.prev.add(this);
+    }
+
+    public void linkCFG() {
+        if (terminator instanceof Jump) {
+            addCFGEdge(((Jump) terminator).target);
+        } else if (terminator instanceof Branch) {
+            addCFGEdge(((Branch) terminator).branchTrue);
+            addCFGEdge(((Branch) terminator).branchFalse);
+        }
+    }
+
+    public void addDomChildren(IRBlock block) {
+        domChildren.add(block);
+    }
+
+    public void addDomFrontier(IRBlock block) {
+        domFrontier.add(block);
+    }
+
+    public LinkedList<Phi> phis = new LinkedList<>();
+
+    public void addPhi(Phi phi) {
+        phis.add(phi);
+    }
+
+    public void collectAndSimplifyPhi() {
+        //todo: simplify
+        for (int i = phis.size() - 1; i >= 0; --i) {
+            instructions.addFirst(phis.get(i));
+        }
     }
 }

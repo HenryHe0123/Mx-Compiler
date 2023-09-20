@@ -1,14 +1,17 @@
 package Optimizer;
 
-import Assembly.AsmRoot;
 import IR.IRRoot;
+import Optimizer.IR.*;
 
 public class Optimizer {
-    public static void optimize(IRRoot root) {
-        //todo
-    }
+    private static final boolean on = true;
 
-    public static void optimize(AsmRoot root) {
-        //todo
+    public static void optimize(IRRoot root) {
+        if (!on) return;
+        CFGBuilder.build(root);
+        DomTreeBuilder.build(root);
+        Mem2Reg.pass(root);
+        //DeadCodeElimination.pass(root);
+        //ConstPropagation.pass(root);
     }
 }

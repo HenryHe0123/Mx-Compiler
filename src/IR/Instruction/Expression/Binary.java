@@ -20,6 +20,8 @@ public class Binary extends Expression {
         this.type = type;
         this.src1 = src1;
         this.src2 = src2;
+        src1.addUser(this);
+        src2.addUser(this);
     }
 
     @Override
@@ -86,5 +88,11 @@ public class Binary extends Expression {
             };
         }
         throw new CodegenError("Unexpected src entity type in IR constant calc for binary");
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (src1 == old) src1 = latest;
+        if (src2 == old) src2 = latest;
     }
 }

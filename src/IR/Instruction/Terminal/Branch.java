@@ -11,6 +11,7 @@ public class Branch extends Terminator {
         cond = condition;
         this.branchTrue = branchTrue;
         this.branchFalse = branchFalse;
+        cond.addUser(this);
     }
 
     @Override
@@ -21,5 +22,10 @@ public class Branch extends Terminator {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (cond == old) cond = latest;
     }
 }

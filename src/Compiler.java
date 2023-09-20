@@ -61,13 +61,12 @@ public class Compiler {
 
         IRRoot rootIR = new IRRoot();
         new IRBuilder(globalScope, rootIR).visit(ASTRoot);
-        Optimizer.optimize(rootIR);
+        Optimizer.optimize(rootIR); //middle end
         new IRPrinter(IROutput).print(rootIR);
 
         AsmRoot rootAsm = new AsmRoot();
         new InstSelector(rootAsm).visit(rootIR);
         new RegAllocator().visit(rootAsm);
-        Optimizer.optimize(rootAsm);
         new AsmPrinter(AsmOutput).print(rootAsm);
     }
 

@@ -4,7 +4,6 @@ import IR.Entity.Entity;
 import IR.Entity.Register;
 import IR.IRBlock;
 import IR.IRVisitor;
-import IR.Instruction.Terminal.Jump;
 import IR.Type.IRType;
 import IR.Type.VoidType;
 
@@ -89,5 +88,22 @@ public class IRFunction extends Instruction {
 
     public static String functionReNaming(String name) {
         return (name.equals("main") || name.startsWith("__") ? "" : "_func_") + name;
+    }
+
+    //------------------------- optimize -------------------------
+
+    public void buildCFG() {
+        entry.linkCFG();
+        for (IRBlock block : blocks) block.linkCFG();
+        returnBlock.linkCFG();
+        eliminateBlocks();
+    }
+
+    private void eliminateBlocks() {
+        ArrayList<IRBlock> newBlocks = new ArrayList<>();
+        for (IRBlock block : blocks)
+            if (!block.prev.isEmpty()) newBlocks.add(block);
+            else for (IRBlock b : block.next) b.prev.remove(block);
+        blocks = newBlocks;
     }
 }

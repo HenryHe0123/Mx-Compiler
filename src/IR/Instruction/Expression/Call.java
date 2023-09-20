@@ -22,6 +22,7 @@ public class Call extends Expression {
 
     public void addArg(Entity arg) {
         args.add(arg);
+        arg.addUser(this);
     }
 
     @Override
@@ -38,5 +39,12 @@ public class Call extends Expression {
 
     public static Call callGlobalVarInit() {
         return new Call(null, "_mx_global_var_init", VoidType.IRVoid);
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        for (int i = 0; i < args.size(); ++i) {
+            if (args.get(i) == old) args.set(i, latest);
+        }
     }
 }

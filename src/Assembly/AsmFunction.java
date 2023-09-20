@@ -11,6 +11,7 @@ import static Assembly.Operand.PhyReg.*;
 public class AsmFunction {
     public String name;
     public LinkedList<AsmBlock> blocks = new LinkedList<>();
+    public AsmBlock retBlock = null;
     public int offset = 8, paraOffset = 0; //reserve offset for sp & fp
     public HashMap<Reg, Integer> stack = new HashMap<>(); //stack (offset) for tmp variables
 
@@ -25,9 +26,9 @@ public class AsmFunction {
     public void finish() {
         int totalOffset = offset + paraOffset;
         int spOffset = (totalOffset % 16 != 0) ? (((totalOffset >> 4) + 1) << 4) : totalOffset; //positive
-        AsmBlock lastBlock = blocks.get(blocks.size() - 1);
+        //debug: return block may not be the last block
         AsmBlock entry = blocks.get(0);
-        Inst terminal = lastBlock.tailInst;
+        Inst terminal = retBlock.tailInst;
 
         if (spOffset > 2048) {
             var t0 = t(0); //t0 = imm(spOffset)
@@ -39,11 +40,11 @@ public class AsmFunction {
             entry.add_front(new AsmBinaryS("sub", sp, sp, t0));
             entry.add_front(new AsmLi(t0, new Imm(spOffset)));
 
-            lastBlock.insert_before(terminal, new AsmLi(t0, new Imm(spOffset)));
-            lastBlock.insert_before(terminal, new AsmBinaryS("add", t1, sp, t0));
-            lastBlock.insert_before(terminal, new AsmMemoryS("lw", fp, t1, -8));
-            lastBlock.insert_before(terminal, new AsmMemoryS("lw", ra, t1, -4));
-            lastBlock.insert_before(terminal, new AsmBinaryS("add", sp, sp, t0));
+            retBlock.insert_before(terminal, new AsmLi(t0, new Imm(spOffset)));
+            retBlock.insert_before(terminal, new AsmBinaryS("add", t1, sp, t0));
+            retBlock.insert_before(terminal, new AsmMemoryS("lw", fp, t1, -8));
+            retBlock.insert_before(terminal, new AsmMemoryS("lw", ra, t1, -4));
+            retBlock.insert_before(terminal, new AsmBinaryS("add", sp, sp, t0));
         } else {
             //use imm
             entry.add_front(new AsmBinaryS("addi", fp, sp, new Imm(spOffset))); //fp = previous sp
@@ -51,9 +52,9 @@ public class AsmFunction {
             entry.add_front(new AsmMemoryS("sw", ra, sp, spOffset - 4)); //store previous ra
             entry.add_front(new AsmBinaryS("addi", sp, sp, new Imm(-spOffset))); //move sp
 
-            lastBlock.insert_before(terminal, new AsmMemoryS("lw", fp, sp, spOffset - 8));
-            lastBlock.insert_before(terminal, new AsmMemoryS("lw", ra, sp, spOffset - 4));
-            lastBlock.insert_before(terminal, new AsmBinaryS("addi", sp, sp, new Imm(spOffset)));
+            retBlock.insert_before(terminal, new AsmMemoryS("lw", fp, sp, spOffset - 8));
+            retBlock.insert_before(terminal, new AsmMemoryS("lw", ra, sp, spOffset - 4));
+            retBlock.insert_before(terminal, new AsmBinaryS("addi", sp, sp, new Imm(spOffset)));
         }
     }
 
