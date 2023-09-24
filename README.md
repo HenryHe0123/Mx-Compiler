@@ -18,7 +18,7 @@
 ### Optimization
 
 - [x] Constant Folding (local)
-- [x] Mem2Reg (SSA destruction unavailable yet)
+- [x] Mem2Reg (including SSA destruction)
 - [ ] Dead Code Elimination
 - [ ] Constant Propagation
 - [ ] Register Allocation

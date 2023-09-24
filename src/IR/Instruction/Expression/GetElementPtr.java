@@ -45,9 +45,14 @@ public class GetElementPtr extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
-        if (ptr == old) ptr = latest;
+        boolean flag = ptr == old;
+        if (flag) ptr = latest;
         for (int i = 0; i < indexList.size(); ++i) {
-            if (indexList.get(i) == old) indexList.set(i, latest);
+            if (indexList.get(i) == old) {
+                indexList.set(i, latest);
+                flag = true;
+            }
         }
+        if (flag) Entity.addUser(latest, this);
     }
 }

@@ -23,6 +23,9 @@ public class Ret extends Terminator {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
-        if (returnVal == old) returnVal = latest;
+        if (returnVal == old) {
+            returnVal = latest;
+            Entity.addUser(latest, this);
+        }
     }
 }

@@ -69,6 +69,10 @@ public abstract class Entity {
         if (users != null) users.add(user);
     }
 
+    public static void addUser(Entity entity, Instruction user) {
+        if (entity != null) entity.addUser(user);
+    }
+
     public void updateUse(Entity newUse) {
         if (users != null) users.forEach(user -> user.replaceUse(this, newUse));
     }

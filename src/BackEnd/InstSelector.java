@@ -33,7 +33,11 @@ public class InstSelector implements IRVisitor {
     }
 
     private Reg getReg(Entity entity) {
-        if (entity instanceof Int i) {
+        if (entity instanceof Register) {
+            Reg rg = regMap.get(entity);
+            if (rg == null) rg = createVirReg(entity);
+            return rg;
+        } else if (entity instanceof Int i) {
             int val = i.getVal();
             if (val == 0) return zero;
             Reg rg = new VirReg();
@@ -45,16 +49,14 @@ public class InstSelector implements IRVisitor {
             Reg rg = new VirReg();
             addInst(new AsmLi(rg, Imm.one));
             return rg;
-        } else if (entity instanceof Null || entity instanceof Void) {
-            return zero;
         } else if (entity instanceof GlobalVar g) {
             Reg rg = new VirReg();
-            addInst(new AsmLa(rg, g.name));
+            //debug: when visiting globalVar for a phi inst, we should not add load to curBlock
+            curFunction.entryBlock().add_front(new AsmLa(rg, g.name));
+            //addInst(new AsmLa(rg, g.name));
             return rg; //return address of global variable
         }
-        Reg rg = regMap.get(entity);
-        if (rg == null) rg = createVirReg(entity);
-        return rg;
+        return zero;
     }
 
     private int getConstantVal(Entity entity) {
@@ -101,7 +103,7 @@ public class InstSelector implements IRVisitor {
                     br.toLabel = brEmptyBlock.label;
                     addedBlocks.add(brEmptyBlock);
 
-                    //addedInsts.forEach(added -> block.insert_before(br, added));
+                    //addedList.forEach(added -> block.insert_before(br, added));
                 } else
                     addedList.forEach(added -> block.insert_before(tailInst, added));
             } else {
@@ -216,7 +218,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Binary it) {
-        VirReg rd = createVirReg(it.dest);
+        Reg rd = getReg(it.dest);
         var inst = switch (it.op) {
             case add -> new AsmBinaryS("add", rd, getReg(it.src1), getReg(it.src2));
             case sub -> new AsmBinaryS("sub", rd, getReg(it.src1), getReg(it.src2));
@@ -246,13 +248,13 @@ public class InstSelector implements IRVisitor {
         addInst(new AsmCall(it.funcName));
 
         if (it.dest == null || it.dest == Void.instance) return;
-        VirReg rg = createVirReg(it.dest);
+        Reg rg = getReg(it.dest);
         addInst(new AsmMv(rg, a(0)));
     }
 
     @Override
     public void visit(GetElementPtr it) {
-        Reg rd = createVirReg(it.dest);
+        Reg rd = getReg(it.dest);
         Entity index = it.indexList.get(it.indexList.size() - 1);
         Reg id = getReg(index);
         if (id == zero) {
@@ -267,7 +269,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Icmp it) {
-        var rd = createVirReg(it.dest);
+        var rd = getReg(it.dest);
         var rs1 = getReg(it.src1);
         var rs2 = getReg(it.src2);
         switch (it.op) {
@@ -299,7 +301,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Load it) {
-        Reg rd = createVirReg(it.dest);
+        Reg rd = getReg(it.dest);
         Reg rs = getReg(it.src);
         if (it.src instanceof GlobalVar) {
             addInst(new AsmMemoryS("lw", rd, rs, 0));

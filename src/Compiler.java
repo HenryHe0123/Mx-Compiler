@@ -18,6 +18,7 @@ import Util.MxErrorListener;
 public class Compiler {
     public static final boolean online = true;
     public static final boolean runRavel = true; //only for local
+    private static boolean debug = false;
 
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
@@ -28,6 +29,7 @@ public class Compiler {
             input = new FileInputStream("test.mx");
             IROutput = new PrintStream(new FileOutputStream("test.ll"));
             AsmOutput = new PrintStream(new FileOutputStream("test.s"));
+            debug = true;
         }
 
         try {
@@ -66,6 +68,7 @@ public class Compiler {
 
         AsmRoot rootAsm = new AsmRoot();
         new InstSelector(rootAsm).visit(rootIR);
+        if (debug) new AsmPrinter(new PrintStream(new FileOutputStream("test.vs"))).print(rootAsm);
         new RegAllocator().visit(rootAsm);
         new AsmPrinter(AsmOutput).print(rootAsm);
     }

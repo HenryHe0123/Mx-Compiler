@@ -8,6 +8,7 @@ import IR.Instruction.Terminal.*;
 import IR.Type.IRType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 public class IRBlock { //Basic Block
@@ -117,9 +118,21 @@ public class IRBlock { //Basic Block
     }
 
     public void collectAndSimplifyPhi() {
-        //todo: simplify
         for (int i = phis.size() - 1; i >= 0; --i) {
-            instructions.addFirst(phis.get(i));
+            Phi phi = phis.get(i);
+            //System.err.println("phi to be collected and simplified: " + phi.getText());
+            Entity value = phi.values.get(0);
+            String valString = value.getText();
+            boolean allSame = true;
+            for (int j = 1; j < phi.values.size(); ++j) {
+                if (!phi.values.get(j).getText().equals(valString)) {
+                    allSame = false;
+                    break;
+                }
+            }
+            if (allSame) phi.dest.updateUse(value);
+            else instructions.addFirst(phi);
+            //System.err.println("phi after collected and simplified: " + phi.getText());
         }
     }
 }

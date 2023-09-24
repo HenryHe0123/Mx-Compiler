@@ -38,9 +38,14 @@ public class Phi extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
+        boolean flag = false;
         for (int i = 0; i < values.size(); ++i) {
-            if (values.get(i) == old) values.set(i, latest);
+            if (values.get(i) == old) {
+                values.set(i, latest);
+                flag = true;
+            }
         }
+        if (flag) Entity.addUser(latest, this);
     }
 
     //----------------------for phi newly generated at mem2reg----------------------

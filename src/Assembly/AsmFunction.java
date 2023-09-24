@@ -23,11 +23,15 @@ public class AsmFunction {
         blocks.add(block);
     }
 
+    public AsmBlock entryBlock() {
+        return blocks.get(0);
+    }
+
     public void finish() {
         int totalOffset = offset + paraOffset;
         int spOffset = (totalOffset % 16 != 0) ? (((totalOffset >> 4) + 1) << 4) : totalOffset; //positive
         //debug: return block may not be the last block
-        AsmBlock entry = blocks.get(0);
+        AsmBlock entry = entryBlock();
         Inst terminal = retBlock.tailInst;
 
         if (spOffset > 2048) {

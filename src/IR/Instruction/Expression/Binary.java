@@ -92,7 +92,9 @@ public class Binary extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
+        if (src1 != old && src2 != old) return;
         if (src1 == old) src1 = latest;
         if (src2 == old) src2 = latest;
+        Entity.addUser(latest, this);
     }
 }

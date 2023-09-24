@@ -43,8 +43,13 @@ public class Call extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
+        boolean flag = false;
         for (int i = 0; i < args.size(); ++i) {
-            if (args.get(i) == old) args.set(i, latest);
+            if (args.get(i) == old) {
+                args.set(i, latest);
+                flag = true;
+            }
         }
+        if (flag) Entity.addUser(latest, this);
     }
 }

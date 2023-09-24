@@ -25,7 +25,10 @@ public class Store extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
-        if (src == old) src = latest;
+        if (src == old) {
+            src = latest;
+            Entity.addUser(latest, this);
+        }
     }
 
     public Register getDestReg() {

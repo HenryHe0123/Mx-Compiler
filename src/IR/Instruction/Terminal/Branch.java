@@ -26,6 +26,9 @@ public class Branch extends Terminator {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
-        if (cond == old) cond = latest;
+        if (cond == old) {
+            cond = latest;
+            Entity.addUser(latest, this);
+        }
     }
 }
