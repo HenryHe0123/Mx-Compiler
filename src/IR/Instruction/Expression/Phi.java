@@ -6,6 +6,7 @@ import IR.IRBlock;
 import IR.IRVisitor;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Phi extends Expression {
     public ArrayList<Entity> values = new ArrayList<>();
@@ -46,6 +47,14 @@ public class Phi extends Expression {
             }
         }
         if (flag) Entity.addUser(latest, this);
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        for (Entity arg : values)
+            if (arg instanceof Register reg) list.add(reg);
+        return list;
     }
 
     //----------------------for phi newly generated at mem2reg----------------------

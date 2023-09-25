@@ -11,7 +11,7 @@ public class Optimizer {
         CFGBuilder.build(root);
         DomTreeBuilder.build(root);
         Mem2Reg.pass(root);
-        //DeadCodeElimination.pass(root);
-        //ConstPropagation.pass(root);
+        DeadCodeElimination.pass(root);
+        ConstPropagation.pass(root);
     }
 }

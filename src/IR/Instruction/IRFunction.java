@@ -8,6 +8,7 @@ import IR.Type.IRType;
 import IR.Type.VoidType;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class IRFunction extends Instruction {
@@ -91,6 +92,19 @@ public class IRFunction extends Instruction {
     }
 
     //------------------------- optimize -------------------------
+
+    private LinkedList<IRBlock> allBlocks = null;
+
+    private void calcAllBlocks() {
+        allBlocks = new LinkedList<>(blocks);
+        allBlocks.addFirst(entry);
+        allBlocks.addLast(returnBlock);
+    }
+
+    public LinkedList<IRBlock> allBlocks() {
+        if (allBlocks == null) calcAllBlocks();
+        return allBlocks;
+    }
 
     public void buildCFG() {
         entry.linkCFG();

@@ -19,6 +19,6 @@
 
 - [x] Constant Folding (local)
 - [x] Mem2Reg (including SSA destruction)
-- [ ] Dead Code Elimination
+- [x] Dead Code Elimination
 - [ ] Constant Propagation
 - [ ] Register Allocation

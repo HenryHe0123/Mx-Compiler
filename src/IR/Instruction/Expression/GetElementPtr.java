@@ -1,10 +1,12 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
 import IR.Type.IRType;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class GetElementPtr extends Expression {
@@ -54,5 +56,14 @@ public class GetElementPtr extends Expression {
             }
         }
         if (flag) Entity.addUser(latest, this);
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (ptr instanceof Register reg) list.add(reg);
+        for (Entity arg : indexList)
+            if (arg instanceof Register reg) list.add(reg);
+        return list;
     }
 }

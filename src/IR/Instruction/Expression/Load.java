@@ -4,6 +4,8 @@ import IR.Entity.Entity;
 import IR.Entity.Register;
 import IR.IRVisitor;
 
+import java.util.LinkedList;
+
 public class Load extends Expression {
     public Entity src; //ptr
 
@@ -29,6 +31,13 @@ public class Load extends Expression {
             src = latest;
             Entity.addUser(latest, this);
         }
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (src instanceof Register reg) list.add(reg);
+        return list;
     }
 
     public Register getSrcReg() {

@@ -5,6 +5,9 @@ import IR.IRVisitor;
 import IR.Type.IRType;
 import Util.Error.CodegenError;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class Binary extends Expression {
     public enum BinaryOp {
         add, sub, mul, sdiv, srem, shl, ashr, and, or, xor
@@ -96,5 +99,13 @@ public class Binary extends Expression {
         if (src1 == old) src1 = latest;
         if (src2 == old) src2 = latest;
         Entity.addUser(latest, this);
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (src1 instanceof Register reg) list.add(reg);
+        if (src2 instanceof Register reg) list.add(reg);
+        return list;
     }
 }

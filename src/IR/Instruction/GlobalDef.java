@@ -1,7 +1,10 @@
 package IR.Instruction;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
+
+import java.util.LinkedList;
 
 public class GlobalDef extends Instruction {
     public boolean isStringLiteral = false;
@@ -22,6 +25,21 @@ public class GlobalDef extends Instruction {
     public String getText() {
         String rhs = (isStringLiteral ? "" : "global ") + init.getFullText();
         return dest.getText() + " = " + rhs + "\n";
+    }
+
+    @Override
+    public void replaceUse(Entity old, Entity latest) {
+        if (init == old) {
+            init = latest;
+            Entity.addUser(latest, this);
+        }
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (init instanceof Register reg) list.add(reg);
+        return list;
     }
 
     @Override

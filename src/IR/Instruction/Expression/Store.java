@@ -4,6 +4,8 @@ import IR.Entity.Entity;
 import IR.Entity.Register;
 import IR.IRVisitor;
 
+import java.util.LinkedList;
+
 public class Store extends Expression {
     public Entity src;
 
@@ -29,6 +31,15 @@ public class Store extends Expression {
             src = latest;
             Entity.addUser(latest, this);
         }
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (src instanceof Register reg) list.add(reg);
+        //unlike other expression, store dest is more like a use rather than def
+        if (dest instanceof Register reg) list.add(reg);
+        return list;
     }
 
     public Register getDestReg() {

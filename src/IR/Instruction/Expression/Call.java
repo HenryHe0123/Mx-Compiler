@@ -1,6 +1,7 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
 import IR.Type.IRType;
 import IR.Type.VoidType;
@@ -8,6 +9,7 @@ import IR.Type.VoidType;
 import static IR.Instruction.IRFunction.functionReNaming;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Call extends Expression {
     public String funcName;
@@ -51,5 +53,13 @@ public class Call extends Expression {
             }
         }
         if (flag) Entity.addUser(latest, this);
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        for (Entity arg : args)
+            if (arg instanceof Register reg) list.add(reg);
+        return list;
     }
 }

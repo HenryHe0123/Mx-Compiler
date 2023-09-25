@@ -1,8 +1,11 @@
 package IR.Instruction.Expression;
 
 import IR.Entity.Entity;
+import IR.Entity.Register;
 import IR.IRVisitor;
 import Util.Error.CodegenError;
+
+import java.util.LinkedList;
 
 public class Icmp extends Expression {
     public enum IcmpOp {
@@ -49,5 +52,13 @@ public class Icmp extends Expression {
         if (src1 == old) src1 = latest;
         if (src2 == old) src2 = latest;
         Entity.addUser(latest, this);
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (src1 instanceof Register reg) list.add(reg);
+        if (src2 instanceof Register reg) list.add(reg);
+        return list;
     }
 }

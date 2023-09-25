@@ -2,6 +2,9 @@ package IR.Instruction.Terminal;
 
 import IR.*;
 import IR.Entity.Entity;
+import IR.Entity.Register;
+
+import java.util.LinkedList;
 
 public class Branch extends Terminator {
     public Entity cond;
@@ -30,5 +33,12 @@ public class Branch extends Terminator {
             cond = latest;
             Entity.addUser(latest, this);
         }
+    }
+
+    @Override
+    public LinkedList<Register> useList() {
+        LinkedList<Register> list = new LinkedList<>();
+        if (cond instanceof Register reg) list.add(reg);
+        return list;
     }
 }
