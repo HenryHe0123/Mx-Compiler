@@ -759,29 +759,20 @@ public class IRBuilder implements ASTVisitor {
         IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
         IRBlock entry = curBlock;
 
-        if (isAnd) {
-            tryTerminateBlock(new Branch(lhs, rhsBlock, endBlock));
-            setCurBlock(rhsBlock);
-            node.rhs.accept(this);
-            tryTerminateBlock(new Jump(endBlock));
+        if (isAnd) tryTerminateBlock(new Branch(lhs, rhsBlock, endBlock));
+        else tryTerminateBlock(new Branch(lhs, endBlock, rhsBlock));
 
-            setCurBlock(endBlock);
-            Phi phi = new Phi(node.entity);
-            phi.addBranch(Bool.False, entry);
-            phi.addBranch(node.rhs.entity, rhsBlock);
-            curBlock.addInstruct(phi);
-        } else { // a||b
-            tryTerminateBlock(new Branch(lhs, endBlock, rhsBlock));
-            setCurBlock(rhsBlock);
-            node.rhs.accept(this);
-            tryTerminateBlock(new Jump(endBlock));
+        setCurBlock(rhsBlock);
+        node.rhs.accept(this);
+        //debug: continue block maybe changed when visiting rhs!
+        IRBlock continueBlock = curBlock;
+        tryTerminateBlock(new Jump(endBlock));
 
-            setCurBlock(endBlock);
-            Phi phi = new Phi(node.entity);
-            phi.addBranch(Bool.True, entry);
-            phi.addBranch(node.rhs.entity, rhsBlock);
-            curBlock.addInstruct(phi);
-        }
+        setCurBlock(endBlock);
+        Phi phi = new Phi(node.entity);
+        phi.addBranch(isAnd ? Bool.False : Bool.True, entry);
+        phi.addBranch(node.rhs.entity, continueBlock);
+        curBlock.addInstruct(phi);
     }
 
     private boolean isComplexButStable(ExprNode node) {
