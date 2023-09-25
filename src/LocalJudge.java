@@ -27,6 +27,7 @@ public class LocalJudge {
     /* --------------------------------------------  configuration  --------------------------------------------- */
     private static final String semanticFolderName = "testcases/sema";
     private static final String codeGenFolderPrefix = "testcases/codegen/";
+    private static final String optimFolderName = "testcases/optim"; //optim2 or optim-new are also available
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPathPrefix = "builtin/builtin";
@@ -34,11 +35,57 @@ public class LocalJudge {
     private static final boolean showSemanticDetail = false;
     private static final boolean showIRDetail = true;
     private static final boolean showAsmDetail = true;
+    private static final boolean showOptDetail = true;
 
     public static void main(String[] args) throws Exception {
         testSemantic(true);
         testIR(false);
         testAssembly(true);
+        testAssemblyForOptimize(true);
+    }
+
+    /* ------------------------------------- Assembly For Optimize ------------------------------------------- */
+
+    public static void testAssemblyForOptimize(boolean on) { //only for assembly correctness
+        if (!on) {
+            System.out.println(RESET + "Skip assembly test for optimize.");
+            return;
+        }
+        System.out.println(RESET + "Start testing assembly for optimize...");
+        initTmpFolder();
+        var failList = new ArrayList<>();
+        File[] files = new File(optimFolderName).listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!testAssemblyForSingleFileOfOpt(file))
+                    failList.add(file.getName());
+            }
+        } else {
+            System.err.println("optim folder not found");
+            cleanUp();
+            return;
+        }
+        if (failList.isEmpty()) {
+            System.out.println(GREEN + "All assembly test for optimize passed!");
+        } else {
+            System.out.println(RED + "Some assembly test for optimize failed:");
+            failList.forEach(filename -> System.out.println(RED + filename));
+        }
+        cleanUp();
+    }
+
+    private static boolean testAssemblyForSingleFileOfOpt(File file) {
+        String fileName = file.getAbsolutePath();
+        if (!fileName.endsWith(".mx")) return true;
+        if (showOptDetail) System.out.println
+                (YELLOW + fileName.substring(fileName.indexOf("optim")) + ": ");
+        if (checkAssembly(fileName)) {
+            if (showOptDetail) System.out.println(GREEN + "Pass!");
+            return true;
+        } else {
+            if (showOptDetail) System.out.println(RED + "Fail!");
+            return false;
+        }
     }
 
     /* ---------------------------------------------  Assembly  ---------------------------------------------- */
@@ -56,7 +103,7 @@ public class LocalJudge {
             while ((fileName = reader.readLine()) != null) {
                 //fileName = fileName.substring(2);
                 if (showAsmDetail) System.out.println(YELLOW + fileName + ": ");
-                if (checkAssembly(fileName)) {
+                if (checkAssembly(codeGenFolderPrefix + fileName)) {
                     if (showAsmDetail) System.out.println(GREEN + "Pass!");
                 } else {
                     failList.add(fileName);
@@ -76,10 +123,9 @@ public class LocalJudge {
         cleanUp();
     }
 
-    private static boolean checkAssembly(String fileName) {
+    private static boolean checkAssembly(String mxFileName) {
         try {
             //compile to assembly
-            final String mxFileName = codeGenFolderPrefix + fileName;
             final String asmFileName = tmpFilePath + ".s";
             InputStream compilerInput = new FileInputStream(mxFileName);
             try (PrintStream compilerOutput = new PrintStream(new FileOutputStream(asmFileName))) {
@@ -317,16 +363,20 @@ public class LocalJudge {
 
     /* ---------------------------------------------  Semantic  ---------------------------------------------- */
 
+    private static ArrayList<String> failListForSemantic = new ArrayList<>();
+
     public static void testSemantic(boolean on) {
         if (!on) {
             System.out.println(RESET + "Skip semantic test.");
             return;
         }
         System.out.println(RESET + "Start testing semantic...");
+        failListForSemantic.clear();
         if (traverseFolderForSemantic(new File(semanticFolderName))) {
-            System.out.println(GREEN + "All semantic tests passed!");
+            System.out.println(GREEN + "All semantic test passed!");
         } else {
-            System.out.println(RED + "Some semantic tests failed!");
+            System.out.println(RED + "Some semantic test failed:");
+            failListForSemantic.forEach(filename -> System.out.println(RED + filename));
         }
     }
 
@@ -342,13 +392,15 @@ public class LocalJudge {
             return success;
         } else {
             String fileName = folder.getAbsolutePath();
+            String shortName = fileName.substring(fileName.indexOf("sema\\") + 5);
             if (showSemanticDetail) System.out.println
-                    (YELLOW + fileName.substring(folder.getAbsolutePath().indexOf("sema\\") + 5) + ": ");
+                    (YELLOW + shortName + ": ");
             if (checkSemantic(fileName)) {
                 if (showSemanticDetail) System.out.println(GREEN + "Pass!");
                 return true;
             } else {
                 if (showSemanticDetail) System.out.println(RED + "Fail!");
+                failListForSemantic.add(shortName);
                 return false;
             }
         }
