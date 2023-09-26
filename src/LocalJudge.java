@@ -27,7 +27,7 @@ public class LocalJudge {
     /* --------------------------------------------  configuration  --------------------------------------------- */
     private static final String semanticFolderName = "testcases/sema";
     private static final String codeGenFolderPrefix = "testcases/codegen/";
-    private static final String optimFolderName = "testcases/optim"; //optim2 or optim-new are also available
+    private static final String optimFolderName = "testcases/optim";
     private static final String tmpFolderName = ".tmp";
     private static final String tmpFilePath = tmpFolderName + "/test";
     private static final String builtinPathPrefix = "builtin/builtin";
@@ -54,6 +54,7 @@ public class LocalJudge {
         System.out.println(RESET + "Start testing assembly for optimize...");
         initTmpFolder();
         var failList = new ArrayList<>();
+        //test both optim and optim-new folder, optim2 unsupported yet
         File[] files = new File(optimFolderName).listFiles();
         if (files != null) {
             for (File file : files) {
@@ -62,6 +63,17 @@ public class LocalJudge {
             }
         } else {
             System.err.println("optim folder not found");
+            cleanUp();
+            return;
+        }
+        File[] newFiles = new File(optimFolderName + "-new").listFiles();
+        if (newFiles != null) {
+            for (File file : newFiles) {
+                if (!testAssemblyForSingleFileOfOpt(file))
+                    failList.add(file.getName());
+            }
+        } else {
+            System.err.println("optim-new folder not found");
             cleanUp();
             return;
         }
