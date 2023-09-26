@@ -8,6 +8,7 @@ public class Optimizer {
 
     public static void optimize(IRRoot root) {
         if (!on) return;
+        Global2Local.pass(root);
         CFGBuilder.build(root);
         DomTreeBuilder.build(root);
         Mem2Reg.pass(root);

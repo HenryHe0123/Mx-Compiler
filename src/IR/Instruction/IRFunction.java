@@ -69,8 +69,12 @@ public class IRFunction extends Instruction {
         return false;
     }
 
+    public static String varInitFuncName = "_mx_global_var_init";
+
+    public static String renamedVarInitFuncName = functionReNaming(varInitFuncName);
+
     public static IRFunction globalVarInit() {
-        return new IRFunction("_mx_global_var_init", VoidType.IRVoid);
+        return new IRFunction(varInitFuncName, VoidType.IRVoid);
     }
 
     public boolean isVoid() {

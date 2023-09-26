@@ -36,6 +36,11 @@ public class IRBlock { //Basic Block
         } else instructions.add(instruction);
     }
 
+    public void addInstructFirst(Instruction instruction) { //for global to local
+        //assert instruction instanceof Alloca || instruction instanceof Store;
+        instructions.addFirst(instruction);
+    }
+
     public void setTerminator(Terminator terminator) { //use for explicit setting
         this.terminator = terminator;
     }

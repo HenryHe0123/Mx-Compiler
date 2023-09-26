@@ -1,21 +1,21 @@
 package IR.Instruction;
 
-import IR.Entity.Entity;
-import IR.Entity.Register;
+import IR.Entity.*;
 import IR.IRVisitor;
 
 import java.util.LinkedList;
 
 public class GlobalDef extends Instruction {
     public boolean isStringLiteral = false;
-    public Entity dest, init; //dest instanceof globalVar
+    public GlobalVar dest;
+    public Entity init;
 
-    public GlobalDef(Entity dest, Entity init) {
+    public GlobalDef(GlobalVar dest, Entity init) {
         this.dest = dest;
         this.init = init;
     }
 
-    public GlobalDef(Entity dest, Entity init, boolean isStringLiteral) {
+    public GlobalDef(GlobalVar dest, Entity init, boolean isStringLiteral) {
         this.dest = dest;
         this.init = init;
         this.isStringLiteral = isStringLiteral;
@@ -45,5 +45,9 @@ public class GlobalDef extends Instruction {
     @Override
     public void accept(IRVisitor visitor) {
         visitor.visit(this);
+    }
+
+    public boolean isSimple() {
+        return dest.isSimple && init.isStrictlyConstant(); //double check
     }
 }

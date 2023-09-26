@@ -3,13 +3,18 @@ package IR.Entity;
 import IR.Type.IRType;
 import IR.Type.PtrType;
 
+import java.util.ArrayList;
+
 public class GlobalVar extends Entity {
     //global variable, add @ before name automatically
     public String name;
+    //int or bool or null and no need to call global_var_init, for global to local
+    public boolean isSimple = false;
 
     public GlobalVar(String name, IRType type) {
         super(type); //notice: all global variables should be pointers
         this.name = name;
+        users = new ArrayList<>();
     }
 
     @Override

@@ -13,6 +13,7 @@ public class Store extends Expression {
         super(dest);
         this.src = src;
         src.addUser(this);
+        dest.addUser(this);
     }
 
     @Override
@@ -27,17 +28,17 @@ public class Store extends Expression {
 
     @Override
     public void replaceUse(Entity old, Entity latest) {
-        if (src == old) {
-            src = latest;
-            Entity.addUser(latest, this);
-        }
+        //store dest sometimes should be viewed as use
+        if (src != old && dest != old) return;
+        if (src == old) src = latest;
+        if (dest == old) dest = latest;
+        Entity.addUser(latest, this);
     }
 
     @Override
     public LinkedList<Register> useList() {
         LinkedList<Register> list = new LinkedList<>();
         if (src instanceof Register reg) list.add(reg);
-        //unlike other expression, store dest is more like a use rather than def
         if (dest instanceof Register reg) list.add(reg);
         return list;
     }

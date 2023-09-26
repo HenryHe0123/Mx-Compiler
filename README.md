@@ -18,6 +18,7 @@
 ### Optimization
 
 - [x] Constant Folding (local)
+- [x] Global2Local
 - [x] Mem2Reg (including SSA destruction)
 - [x] Dead Code Elimination
 - [ ] Constant Propagation

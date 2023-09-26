@@ -219,17 +219,19 @@ public class IRBuilder implements ASTVisitor {
     @Override
     public void visit(VarDeclareUnitNode node) {
         if (curScope instanceof GlobalScope) { //global
-            Entity reg = new GlobalVar(node.identifier + curScope.asPostfix(), IRType.from(curType).asPtr());
+            GlobalVar reg = new GlobalVar(node.identifier + curScope.asPostfix(), IRType.from(curType).asPtr());
             Entity init = Entity.init(curType);
             if (node.expression != null) { //if with an init expression
                 curFunction = globalVarInit;
                 setCurBlock(lastGlobalVarInitBlock);
                 var entity = getExprEntity(node.expression);
-                if (entity.isConstant()) init = entity;
-                else curBlock.addInstruct(new Store(entity, reg));
+                if (entity.isConstant()) {
+                    init = entity;
+                    reg.isSimple = entity.isStrictlyConstant();
+                } else curBlock.addInstruct(new Store(entity, reg));
                 resetCurBlock(); //prevent misuse
                 curFunction = null;
-            }
+            } else reg.isSimple = true;
             root.globals.add(new GlobalDef(reg, init));
             curScope.putVarEntity(node.identifier, reg);
         } else {
