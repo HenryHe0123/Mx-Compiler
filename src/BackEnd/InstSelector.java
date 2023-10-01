@@ -222,12 +222,6 @@ public class InstSelector implements IRVisitor {
     //--------------------------------------- expression --------------------------------------------
 
     @Override
-    public void visit(Alloca it) {
-        var rd = createVirReg(it.dest);
-        curFunction.allocate(rd);
-    }
-
-    @Override
     public void visit(Binary it) {
         Reg rd = getReg(it.dest);
         var inst = switch (it.op) {

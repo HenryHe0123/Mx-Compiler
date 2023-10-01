@@ -85,6 +85,11 @@ public class IRFunction extends Instruction {
         return name.equals("main");
     }
 
+    public boolean isUseless() {
+        return isVoid() && blocks.isEmpty() && entry.instructions.isEmpty()
+                && returnBlock.instructions.isEmpty();
+    }
+
     private int labelPostfix = 0;
 
     public String getLabelPostfix() {

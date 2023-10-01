@@ -50,11 +50,8 @@ public class Phi extends Expression {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        for (Entity arg : values)
-            if (arg instanceof Register reg) list.add(reg);
-        return list;
+    public LinkedList<Entity> useList() {
+        return new LinkedList<>(values);
     }
 
     //----------------------for phi newly generated at mem2reg----------------------

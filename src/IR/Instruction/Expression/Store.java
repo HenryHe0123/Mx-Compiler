@@ -36,10 +36,10 @@ public class Store extends Expression {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        if (src instanceof Register reg) list.add(reg);
-        if (dest instanceof Register reg) list.add(reg);
+    public LinkedList<Entity> useList() {
+        LinkedList<Entity> list = new LinkedList<>();
+        list.add(src);
+        list.add(dest);
         return list;
     }
 

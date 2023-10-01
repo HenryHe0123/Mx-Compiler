@@ -36,9 +36,9 @@ public class Branch extends Terminator {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        if (cond instanceof Register reg) list.add(reg);
+    public LinkedList<Entity> useList() {
+        LinkedList<Entity> list = new LinkedList<>();
+        list.add(cond);
         return list;
     }
 }

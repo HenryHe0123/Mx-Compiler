@@ -56,10 +56,7 @@ public class Call extends Expression {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        for (Entity arg : args)
-            if (arg instanceof Register reg) list.add(reg);
-        return list;
+    public LinkedList<Entity> useList() {
+        return new LinkedList<>(args);
     }
 }

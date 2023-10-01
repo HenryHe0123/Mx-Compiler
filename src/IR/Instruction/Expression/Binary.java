@@ -102,10 +102,10 @@ public class Binary extends Expression {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        if (src1 instanceof Register reg) list.add(reg);
-        if (src2 instanceof Register reg) list.add(reg);
+    public LinkedList<Entity> useList() {
+        LinkedList<Entity> list = new LinkedList<>();
+        list.add(src1);
+        list.add(src2);
         return list;
     }
 }

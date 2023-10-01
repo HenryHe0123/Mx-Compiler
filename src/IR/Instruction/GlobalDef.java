@@ -36,9 +36,9 @@ public class GlobalDef extends Instruction {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        if (init instanceof Register reg) list.add(reg);
+    public LinkedList<Entity> useList() {
+        LinkedList<Entity> list = new LinkedList<>();
+        list.add(init);
         return list;
     }
 

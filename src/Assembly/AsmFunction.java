@@ -4,6 +4,7 @@ import Assembly.Instruction.*;
 import Assembly.Operand.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import static Assembly.Operand.PhyReg.*;
@@ -91,15 +92,17 @@ public class AsmFunction {
         blocks.forEach(AsmBlock::getDefUse);
     }
 
+    public HashSet<PhyReg> usedCalleeRegs = new HashSet<>();
+
     public void saveCallee() {
         var entry = entryBlock();
         var map = new HashMap<PhyReg, Integer>();
-        for (var reg : freeRegs) {
+        for (var reg : usedCalleeRegs) {
             entry.add_front(new AsmMemoryS("sw", reg, fp, -(offset += 4)));
             map.put(reg, offset);
         }
         var inst = retBlock.tailInst;
-        for (var reg : freeRegs) {
+        for (var reg : usedCalleeRegs) {
             retBlock.insert_before(inst, new AsmMemoryS("lw", reg, fp, -map.get(reg)));
         }
     }

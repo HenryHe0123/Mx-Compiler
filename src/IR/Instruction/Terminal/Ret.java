@@ -33,9 +33,9 @@ public class Ret extends Terminator {
     }
 
     @Override
-    public LinkedList<Register> useList() {
-        LinkedList<Register> list = new LinkedList<>();
-        if (returnVal instanceof Register reg) list.add(reg);
+    public LinkedList<Entity> useList() {
+        LinkedList<Entity> list = new LinkedList<>();
+        list.add(returnVal);
         return list;
     }
 }
