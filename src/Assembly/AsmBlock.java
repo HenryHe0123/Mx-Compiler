@@ -1,9 +1,11 @@
 package Assembly;
 
-import Assembly.Instruction.Inst;
+import Assembly.Instruction.*;
+import Assembly.Operand.Reg;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class AsmBlock {
     public Inst headInst = null, tailInst = null;
@@ -12,6 +14,13 @@ public class AsmBlock {
 
     public AsmBlock(String label) {
         this.label = label;
+        blockMap.put(label, this);
+    }
+
+    private static final HashMap<String, AsmBlock> blockMap = new HashMap<>();
+
+    public static AsmBlock get(String label) {
+        return blockMap.get(label);
     }
 
     public void push_back(Inst i) {
@@ -64,5 +73,38 @@ public class AsmBlock {
         for (Inst i = headInst; i != null; i = i.next)
             text.append("\t").append(i.getText()).append("\n");
         return text.toString();
+    }
+
+    //--------------------------------------------------
+
+    public ArrayList<AsmBlock> prev = new ArrayList<>();
+    public ArrayList<AsmBlock> next = new ArrayList<>();
+
+    public void addCFGEdge(AsmBlock block) { //this -> block
+        this.next.add(block);
+        block.prev.add(this);
+    }
+
+    public void linkCFG() {
+        if (tailInst instanceof AsmJ jump)
+            addCFGEdge(AsmBlock.get(jump.label));
+        if (tailInst.prev instanceof AsmBranchS br)
+            addCFGEdge(AsmBlock.get(br.toLabel));
+    }
+
+    public final HashSet<Reg> def = new HashSet<>();
+    public final HashSet<Reg> use = new HashSet<>();
+    public final HashSet<Reg> in = new HashSet<>(); //live in
+    public final HashSet<Reg> out = new HashSet<>(); //live out
+
+    public void getDefUse() {
+        for (var inst = headInst; inst != null; inst = inst.next) {
+            inst.getDefUse();
+            for (Reg used : inst.use) {
+                if (!def.contains(used)) use.add(used);
+            }
+            def.addAll(inst.def);
+        }
+        in.addAll(use);
     }
 }

@@ -18,4 +18,11 @@ public class AsmMemoryS extends Inst {
     public String getText() {
         return op + "\t" + rd.getText() + ", " + offset + "(" + rs.getText() + ")";
     }
+
+    @Override
+    public void getDefUse() {
+        use.add(rs);
+        if (op.equals("sw")) use.add(rd);
+        else def.add(rd);
+    }
 }

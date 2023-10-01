@@ -69,6 +69,7 @@ public class Compiler {
         AsmRoot rootAsm = new AsmRoot();
         new InstSelector(rootAsm).visit(rootIR);
         if (debug) new AsmPrinter(new PrintStream(new FileOutputStream("test.vs"))).print(rootAsm);
+        new GraphColoring().visit(rootAsm);
         new RegAllocator().visit(rootAsm);
         new AsmPrinter(AsmOutput).print(rootAsm);
     }
@@ -80,7 +81,7 @@ public class Compiler {
             processBuilder.inheritIO();
             Process process = processBuilder.start();
 
-            long timeout = 5000;
+            long timeout = 8000;
             Thread.sleep(timeout);
             if (process.isAlive()) {
                 process.destroy();

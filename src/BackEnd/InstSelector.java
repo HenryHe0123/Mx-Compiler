@@ -77,7 +77,7 @@ public class InstSelector implements IRVisitor {
     }
 
     private void collectBlock(IRBlock block) {
-        String label = block.label.equals("entry") ? curFunction.name : block.label + curFunction.id;
+        String label = block.label.equals("entry") ? curFunction.name : block.label + "." + curFunction.id;
         var asmBlock = new AsmBlock(label);
         blockMap.put(block, asmBlock);
         curFunction.addBlock(asmBlock);
@@ -104,8 +104,16 @@ public class InstSelector implements IRVisitor {
                     addedBlocks.add(brEmptyBlock);
 
                     //addedList.forEach(added -> block.insert_before(br, added));
-                } else
-                    addedList.forEach(added -> block.insert_before(tailInst, added));
+                } else {
+                    //debug: live block merge later, as it may cause come trouble in linking CFG
+                    AsmBlock jEmptyBlock = AsmBlock.newEmptyBlockForPhi();
+                    addedList.forEach(jEmptyBlock::push_back);
+                    jEmptyBlock.push_back(new AsmJ(jI.label));
+                    jI.label = jEmptyBlock.label;
+                    addedBlocks.add(jEmptyBlock);
+
+                    //addedList.forEach(added -> block.insert_before(tailInst, added));
+                }
             } else {
                 //last two inst is br and jump
                 assert phi.size() == 2;
@@ -185,6 +193,9 @@ public class InstSelector implements IRVisitor {
 
         //implement phi instructions
         addPhiInst(curFunction);
+
+        //build CFG for AsmFunction
+        curFunction.blocks.forEach(AsmBlock::linkCFG);
     }
 
     @Override
@@ -196,7 +207,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(GlobalDef it) {
-        String name = ((GlobalVar) it.dest).name;
+        String name = it.dest.name;
         if (it.isStringLiteral) {
             String str = ((StringLiteral) it.init).str;
             root.addData(new AsmData(name, str));

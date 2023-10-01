@@ -15,4 +15,9 @@ public class AsmLi extends Inst {
     public String getText() {
         return "li\t" + rd.getText() + ", " + imm.getText();
     }
+
+    @Override
+    public void getDefUse() {
+        def.add(rd);
+    }
 }

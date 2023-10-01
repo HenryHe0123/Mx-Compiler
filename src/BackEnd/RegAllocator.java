@@ -18,7 +18,7 @@ public class RegAllocator {
                 if (isLoad) curBlock.insert_before(ins, new AsmMemoryS("lw", tmp, fp, offset));
                 else curBlock.insert_after(ins, new AsmMemoryS("sw", tmp, fp, offset));
             } else {
-                PhyReg tfp = t(4); //tmp fp
+                PhyReg tfp = t(3); //tmp fp
                 if (isLoad) {
                     curBlock.insert_before(ins, new AsmLi(tfp, new Imm(offset)));
                     curBlock.insert_before(ins, new AsmBinaryS("add", tfp, fp, tfp));
@@ -40,6 +40,7 @@ public class RegAllocator {
     private void visit(AsmFunction it) {
         curFunction = it;
         it.blocks.forEach(this::visit);
+        it.saveCallee();
         it.finish();
     }
 

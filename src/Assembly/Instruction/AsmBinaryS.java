@@ -1,6 +1,6 @@
 package Assembly.Instruction;
 
-import Assembly.Operand.Operand;
+import Assembly.Operand.*;
 
 public class AsmBinaryS extends Inst {
     public String op; // addi, add, sub, mul, div...
@@ -16,5 +16,12 @@ public class AsmBinaryS extends Inst {
     @Override
     public String getText() {
         return op + "\t" + rd.getText() + ", " + rs1.getText() + ", " + rs2.getText();
+    }
+
+    @Override
+    public void getDefUse() {
+        if (rd instanceof Reg r) def.add(r);
+        if (rs1 instanceof Reg r) use.add(r);
+        if (rs2 instanceof Reg r) use.add(r);
     }
 }

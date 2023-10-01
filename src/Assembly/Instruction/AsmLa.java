@@ -15,4 +15,9 @@ public class AsmLa extends Inst {
     public String getText() {
         return "la\t" + rd.getText() + ", " + name;
     }
+
+    @Override
+    public void getDefUse() {
+        def.add(rd);
+    }
 }

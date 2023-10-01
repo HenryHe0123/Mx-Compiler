@@ -24,7 +24,7 @@ public class AsmFunction {
     }
 
     public AsmBlock entryBlock() {
-        return blocks.get(0);
+        return blocks.getFirst();
     }
 
     public void finish() {
@@ -84,6 +84,25 @@ public class AsmFunction {
 
     private static int cnt = 0;
     public final int id = cnt++;
+
+    //----------------------------------------------------------------------
+
+    public void getDefUse() {
+        blocks.forEach(AsmBlock::getDefUse);
+    }
+
+    public void saveCallee() {
+        var entry = entryBlock();
+        var map = new HashMap<PhyReg, Integer>();
+        for (var reg : freeRegs) {
+            entry.add_front(new AsmMemoryS("sw", reg, fp, -(offset += 4)));
+            map.put(reg, offset);
+        }
+        var inst = retBlock.tailInst;
+        for (var reg : freeRegs) {
+            retBlock.insert_before(inst, new AsmMemoryS("lw", reg, fp, -map.get(reg)));
+        }
+    }
 }
 
 

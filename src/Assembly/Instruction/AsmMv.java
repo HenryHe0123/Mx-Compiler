@@ -14,4 +14,10 @@ public class AsmMv extends Inst {
     public String getText() {
         return "mv\t" + rd.getText() + ", " + rs.getText();
     }
+
+    @Override
+    public void getDefUse() {
+        def.add(rd);
+        use.add(rs);
+    }
 }
