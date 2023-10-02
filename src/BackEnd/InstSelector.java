@@ -250,8 +250,21 @@ public class InstSelector implements IRVisitor {
             paraOffset += 4;
         }
         curFunction.paraOffset = Integer.max(curFunction.paraOffset, paraOffset);
+        //store caller-saved registers
+        var map = new HashMap<PhyReg, Integer>();
+        for (int i = 4; i <= 6; ++i) {
+            var reg = t(i);
+            addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
+            map.put(reg, curFunction.offset);
+        }
+        //
         addInst(new AsmCall(it.funcName));
-
+        //reload caller-saved registers
+        for (int i = 4; i <= 6; ++i) {
+            var reg = t(i);
+            addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
+        }
+        //
         if (it.dest == null || it.dest == Void.instance) return;
         Reg rg = getReg(it.dest);
         addInst(new AsmMv(rg, a(0)));

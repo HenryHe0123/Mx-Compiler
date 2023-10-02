@@ -204,7 +204,7 @@ public class GraphColoring {
                 coloredNodes.add(n);
                 int c = okColors.iterator().next();
                 color.put(n, c);
-                curFunction.usedCalleeRegs.add(freeRegs.get(c));
+                if (c < 11) curFunction.usedCalleeRegs.add(freeRegs.get(c));
             }
         }
     }

@@ -57,7 +57,7 @@ public class PhyReg extends Reg {
 
     //------------------------- Register Allocation -------------------------//
 
-    public static int K = 11;
+    public static int K = 11 + 3;
     public static ArrayList<PhyReg> freeRegs = freeRegs();
     public static ArrayList<Integer> colors = colors();
 
@@ -69,8 +69,8 @@ public class PhyReg extends Reg {
 
     private static ArrayList<PhyReg> freeRegs() {
         var regs = new ArrayList<PhyReg>();
-        //for (int i = 4; i <= 6; ++i) regs.add(t(i));
         for (int i = 1; i <= 11; ++i) regs.add(s(i));
+        for (int i = 4; i <= 6; ++i) regs.add(t(i));
         return regs;
     }
 }
