@@ -1,7 +1,6 @@
 package IR.Instruction.Expression;
 
-import IR.Entity.Entity;
-import IR.Entity.Register;
+import IR.Entity.*;
 import IR.IRVisitor;
 import Util.Error.CodegenError;
 
@@ -44,6 +43,35 @@ public class Icmp extends Expression {
             case "<=" -> IcmpOp.sle;
             default -> throw new CodegenError("Unexpected cmp option in IR convert: " + op);
         };
+    }
+
+    @Override
+    public Entity simplify() {
+        if (src1 instanceof Int i1 && src2 instanceof Int i2) {
+            int val1 = i1.getVal(), val2 = i2.getVal();
+            return switch (op) {
+                case eq -> new Bool(val1 == val2);
+                case ne -> new Bool(val1 != val2);
+                case sgt -> new Bool(val1 > val2);
+                case sge -> new Bool(val1 >= val2);
+                case slt -> new Bool(val1 < val2);
+                case sle -> new Bool(val1 <= val2);
+            };
+        } else if (src1 instanceof Bool b1 && src2 instanceof Bool b2) {
+            boolean val1 = b1.getVal(), val2 = b2.getVal();
+            return switch (op) {
+                case eq -> new Bool(val1 == val2);
+                case ne -> new Bool(val1 != val2);
+                default -> null;
+            };
+        } else if (src1 instanceof Null && src2 instanceof Null) {
+            return switch (op) {
+                case eq -> Bool.True;
+                case ne -> Bool.False;
+                default -> null;
+            };
+        }
+        return null;
     }
 
     @Override

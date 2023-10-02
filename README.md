@@ -21,5 +21,5 @@
 - [x] Global2Local
 - [x] Mem2Reg (including SSA destruction)
 - [x] Dead Code Elimination
-- [ ] Constant Propagation
+- [x] Constant Propagation
 - [x] Register Allocation (a naive version of graph coloring)

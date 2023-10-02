@@ -3,6 +3,7 @@ package IR.Entity;
 import IR.Type.IRType;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Register extends Entity {
     private static long anonymous_cnt = 0;
@@ -12,7 +13,7 @@ public class Register extends Entity {
     public Register(String name, IRType type) {
         super(type);
         this.name = name;
-        users = new ArrayList<>();
+        users = new LinkedList<>();
     }
 
     @Override

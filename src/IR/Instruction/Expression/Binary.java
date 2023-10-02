@@ -6,7 +6,6 @@ import IR.Type.IRType;
 import Util.Error.CodegenError;
 
 import java.util.LinkedList;
-import java.util.List;
 
 public class Binary extends Expression {
     public enum BinaryOp {
@@ -91,6 +90,29 @@ public class Binary extends Expression {
             };
         }
         throw new CodegenError("Unexpected src entity type in IR constant calc for binary");
+    }
+
+    @Override
+    public Entity simplify() {
+        if (src1 instanceof Int i1 && src2 instanceof Int i2) {
+            int val1 = i1.getVal(), val2 = i2.getVal();
+            try { //debug: some dead code may generate arithmetic exception like /0
+                return switch (op) {
+                    case add -> new Int(val1 + val2);
+                    case sub -> new Int(val1 - val2);
+                    case mul -> new Int(val1 * val2);
+                    case sdiv -> new Int(val1 / val2);
+                    case srem -> new Int(val1 % val2);
+                    case shl -> new Int(val1 << val2);
+                    case ashr -> new Int(val1 >> val2);
+                    case and -> new Int(val1 & val2);
+                    case or -> new Int(val1 | val2);
+                    case xor -> new Int(val1 ^ val2);
+                };
+            } catch (ArithmeticException e) {
+                return null;
+            }
+        } else return null;
     }
 
     @Override

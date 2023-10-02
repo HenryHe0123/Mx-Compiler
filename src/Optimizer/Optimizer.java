@@ -14,5 +14,6 @@ public class Optimizer {
         Mem2Reg.pass(root);
         DeadCodeElimination.pass(root);
         ConstPropagation.pass(root);
+        ConstPropagation.pass(root); //remain unknown: why does it work for the second time?
     }
 }

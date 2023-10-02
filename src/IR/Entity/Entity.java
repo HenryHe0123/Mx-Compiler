@@ -5,6 +5,7 @@ import IR.Type.*;
 import Util.*;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public abstract class Entity {
     public final IRType type;
@@ -63,7 +64,7 @@ public abstract class Entity {
 
     //------------------------------------for mem2reg------------------------------------
 
-    public ArrayList<Instruction> users = null;
+    public LinkedList<Instruction> users = null;
 
     public void addUser(Instruction user) {
         if (users != null) users.add(user);
@@ -71,6 +72,10 @@ public abstract class Entity {
 
     public static void addUser(Entity entity, Instruction user) {
         if (entity != null) entity.addUser(user);
+    }
+
+    public void removeUser(Instruction user) {
+        if (users != null) users.remove(user);
     }
 
     public void updateUse(Entity newUse) {

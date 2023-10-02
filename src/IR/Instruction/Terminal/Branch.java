@@ -2,18 +2,26 @@ package IR.Instruction.Terminal;
 
 import IR.*;
 import IR.Entity.Entity;
-import IR.Entity.Register;
 
 import java.util.LinkedList;
 
 public class Branch extends Terminator {
     public Entity cond;
     public IRBlock branchTrue, branchFalse;
+    public IRBlock curBlock = null;
 
     public Branch(Entity condition, IRBlock branchTrue, IRBlock branchFalse) {
         cond = condition;
         this.branchTrue = branchTrue;
         this.branchFalse = branchFalse;
+        cond.addUser(this);
+    }
+
+    public Branch(Entity condition, IRBlock branchTrue, IRBlock branchFalse, IRBlock curBlock) {
+        cond = condition;
+        this.branchTrue = branchTrue;
+        this.branchFalse = branchFalse;
+        this.curBlock = curBlock;
         cond.addUser(this);
     }
 

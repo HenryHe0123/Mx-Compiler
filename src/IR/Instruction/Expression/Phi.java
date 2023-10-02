@@ -54,6 +54,20 @@ public class Phi extends Expression {
         return new LinkedList<>(values);
     }
 
+    @Override
+    public Entity simplify() {
+        Entity value = values.get(0);
+        String valString = value.getText();
+        boolean allSame = true;
+        for (int j = 1; j < values.size(); ++j) {
+            if (!values.get(j).getText().equals(valString)) {
+                allSame = false;
+                break;
+            }
+        }
+        return allSame ? value : null;
+    }
+
     //----------------------for phi newly generated at mem2reg----------------------
 
     public Register src = null; //source alloca register

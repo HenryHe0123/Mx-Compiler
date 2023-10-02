@@ -3,7 +3,7 @@ package IR.Entity;
 import IR.Type.IRType;
 import IR.Type.PtrType;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class GlobalVar extends Entity {
     //global variable, add @ before name automatically
@@ -14,7 +14,7 @@ public class GlobalVar extends Entity {
     public GlobalVar(String name, IRType type) {
         super(type); //notice: all global variables should be pointers
         this.name = name;
-        users = new ArrayList<>();
+        users = new LinkedList<>();
     }
 
     @Override

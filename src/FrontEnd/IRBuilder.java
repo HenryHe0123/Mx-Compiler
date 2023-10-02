@@ -338,7 +338,7 @@ public class IRBuilder implements ASTVisitor {
         IRBlock endBlock = new IRBlock("if.end" + postfix, curFunction);
 
         if (node.elseStmt == null) {
-            tryTerminateBlock(new Branch(cond, thenBlock, endBlock));
+            tryTerminateBlock(new Branch(cond, thenBlock, endBlock, curBlock));
 
             setCurBlock(thenBlock);
             curScope = new Scope(curScope);
@@ -346,7 +346,7 @@ public class IRBuilder implements ASTVisitor {
             tryTerminateBlock(new Jump(endBlock));
         } else {
             IRBlock elseBlock = new IRBlock("if.else" + postfix, curFunction);
-            tryTerminateBlock(new Branch(cond, thenBlock, elseBlock));
+            tryTerminateBlock(new Branch(cond, thenBlock, elseBlock, curBlock));
 
             setCurBlock(thenBlock);
             curScope = new Scope(curScope);
@@ -389,7 +389,7 @@ public class IRBuilder implements ASTVisitor {
 
         setCurBlock(condBlock);
         Entity cond = (node.condition != null) ? getExprEntity(node.condition) : Bool.True;
-        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock, curBlock));
 
         setCurBlock(bodyBlock);
         if (node.body != null) node.body.accept(this);
@@ -420,7 +420,7 @@ public class IRBuilder implements ASTVisitor {
 
         setCurBlock(condBlock);
         Entity cond = getExprEntity(node.condition);
-        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+        tryTerminateBlock(new Branch(cond, bodyBlock, endBlock, curBlock));
 
         setCurBlock(bodyBlock);
         if (node.body != null) node.body.accept(this);
@@ -553,7 +553,7 @@ public class IRBuilder implements ASTVisitor {
             curBlock.addInstruct(new Load(IVal, IPtr));
             Register cond = Register.anonymous(INType.IRBool);
             curBlock.addInstruct(new Icmp(cond, Icmp.IcmpOp.slt, IVal, size));
-            tryTerminateBlock(new Branch(cond, bodyBlock, endBlock));
+            tryTerminateBlock(new Branch(cond, bodyBlock, endBlock, curBlock));
 
             //body: create next layer array
             setCurBlock(bodyBlock);
@@ -687,7 +687,7 @@ public class IRBuilder implements ASTVisitor {
         IRBlock thenBlock = new IRBlock("ternary.then" + postfix, curFunction);
         IRBlock elseBlock = new IRBlock("ternary.else" + postfix, curFunction);
         IRBlock endBlock = new IRBlock("ternary.end" + postfix, curFunction);
-        tryTerminateBlock(new Branch(cond, thenBlock, elseBlock));
+        tryTerminateBlock(new Branch(cond, thenBlock, elseBlock, curBlock));
 
         setCurBlock(thenBlock);
         Entity thenValue = getExprEntity(node.ifExpr);
@@ -729,8 +729,8 @@ public class IRBuilder implements ASTVisitor {
         //if and true (&&), check if lhs != true, result = lhs = false, else result = rhs
         //if and false (||), check if lhs != false, result = lhs = true, else result = rhs
         Branch branch = isAnd ?
-                new Branch(lhs, rhsBlock, endBlock) :
-                new Branch(lhs, endBlock, rhsBlock);
+                new Branch(lhs, rhsBlock, endBlock, curBlock) :
+                new Branch(lhs, endBlock, rhsBlock, curBlock);
         tryTerminateBlock(branch);
 
         setCurBlock(rhsBlock);
@@ -761,8 +761,8 @@ public class IRBuilder implements ASTVisitor {
         IRBlock endBlock = new IRBlock("logic.end" + postfix, curFunction);
         IRBlock entry = curBlock;
 
-        if (isAnd) tryTerminateBlock(new Branch(lhs, rhsBlock, endBlock));
-        else tryTerminateBlock(new Branch(lhs, endBlock, rhsBlock));
+        if (isAnd) tryTerminateBlock(new Branch(lhs, rhsBlock, endBlock, curBlock));
+        else tryTerminateBlock(new Branch(lhs, endBlock, rhsBlock, curBlock));
 
         setCurBlock(rhsBlock);
         node.rhs.accept(this);

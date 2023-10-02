@@ -115,6 +115,13 @@ public class IRFunction extends Instruction {
         return allBlocks;
     }
 
+    public boolean removeBlock(IRBlock block) {
+        if (blocks.remove(block)) {
+            calcAllBlocks();
+            return true;
+        } else return false;
+    }
+
     public void buildCFG() {
         entry.linkCFG();
         for (IRBlock block : blocks) block.linkCFG();
