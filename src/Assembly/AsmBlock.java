@@ -67,6 +67,17 @@ public class AsmBlock {
         } //won't change i.next/prev
     }
 
+    public void replace(Inst i, Inst newI) {
+        var p = i.prev;
+        var n = i.next;
+        newI.prev = p;
+        newI.next = n;
+        if (p != null) p.next = newI;
+        if (n != null) n.prev = newI;
+        if (headInst == i) headInst = newI;
+        if (tailInst == i) tailInst = newI;
+    }
+
     public void removeLast() {
         if (tailInst == null) return;
         tailInst = tailInst.prev;

@@ -225,15 +225,62 @@ public class InstSelector implements IRVisitor {
     public void visit(Binary it) {
         Reg rd = getReg(it.dest);
         var inst = switch (it.op) {
-            case add -> new AsmBinaryS("add", rd, getReg(it.src1), getReg(it.src2));
-            case sub -> new AsmBinaryS("sub", rd, getReg(it.src1), getReg(it.src2));
-            case mul -> new AsmBinaryS("mul", rd, getReg(it.src1), getReg(it.src2));
-            case sdiv -> new AsmBinaryS("div", rd, getReg(it.src1), getReg(it.src2));
+            case add -> {
+                if (it.src1 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("addi", rd, getReg(it.src2), new Imm(i.getVal()));
+                else if (it.src2 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("addi", rd, getReg(it.src1), new Imm(i.getVal()));
+                else yield new AsmBinaryS("add", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case sub -> {
+                if (it.src2 instanceof Int i && i.getVal() <= 2048 && i.getVal() > -2048)
+                    yield new AsmBinaryS("addi", rd, getReg(it.src1), new Imm(-i.getVal()));
+                else yield new AsmBinaryS("sub", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case mul -> {
+                if (it.src2 instanceof Int i) {
+                    if (i.getVal() == 2) yield new AsmBinaryS("slli", rd, getReg(it.src1), Imm.one);
+                    if (i.getVal() == 1) yield new AsmMv(rd, getReg(it.src1));
+                    if (i.getVal() == 0) yield new AsmMv(rd, zero);
+                }
+                if (it.src1 instanceof Int i) {
+                    if (i.getVal() == 2) yield new AsmBinaryS("slli", rd, getReg(it.src2), Imm.one);
+                    if (i.getVal() == 1) yield new AsmMv(rd, getReg(it.src2));
+                    if (i.getVal() == 0) yield new AsmMv(rd, zero);
+                }
+                yield new AsmBinaryS("mul", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case sdiv -> {
+                if (it.src2 instanceof Int i && i.getVal() == 1) yield new AsmMv(rd, getReg(it.src1));
+                yield new AsmBinaryS("div", rd, getReg(it.src1), getReg(it.src2));
+            }
             case srem -> new AsmBinaryS("rem", rd, getReg(it.src1), getReg(it.src2));
-            case and -> new AsmBinaryS("and", rd, getReg(it.src1), getReg(it.src2));
-            case or -> new AsmBinaryS("or", rd, getReg(it.src1), getReg(it.src2));
-            case xor -> new AsmBinaryS("xor", rd, getReg(it.src1), getReg(it.src2));
-            case shl -> new AsmBinaryS("sll", rd, getReg(it.src1), getReg(it.src2));
+            case and -> {
+                if (it.src1 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("andi", rd, getReg(it.src2), new Imm(i.getVal()));
+                else if (it.src2 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("andi", rd, getReg(it.src1), new Imm(i.getVal()));
+                else yield new AsmBinaryS("and", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case or -> {
+                if (it.src1 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("ori", rd, getReg(it.src2), new Imm(i.getVal()));
+                else if (it.src2 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("ori", rd, getReg(it.src1), new Imm(i.getVal()));
+                else yield new AsmBinaryS("or", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case xor -> {
+                if (it.src1 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("xori", rd, getReg(it.src2), new Imm(i.getVal()));
+                else if (it.src2 instanceof Int i && i.getVal() < 2048 && i.getVal() >= -2048)
+                    yield new AsmBinaryS("xori", rd, getReg(it.src1), new Imm(i.getVal()));
+                else yield new AsmBinaryS("xor", rd, getReg(it.src1), getReg(it.src2));
+            }
+            case shl -> {
+                if (it.src2 instanceof Int i && i.getVal() < 32 && i.getVal() >= -32)
+                    yield new AsmBinaryS("slli", rd, getReg(it.src1), new Imm(i.getVal()));
+                else yield new AsmBinaryS("sll", rd, getReg(it.src1), getReg(it.src2));
+            }
             case ashr -> new AsmBinaryS("sra", rd, getReg(it.src1), getReg(it.src2));
         };
         addInst(inst);
@@ -250,28 +297,27 @@ public class InstSelector implements IRVisitor {
             paraOffset += 4;
         }
         curFunction.paraOffset = Integer.max(curFunction.paraOffset, paraOffset);
-        //store caller-saved registers
-        var map = new HashMap<PhyReg, Integer>();
-        for (int i = paraRegsNum; i <= 7; ++i) {
+        //store caller-saved registers (a7-t2)
+        for (int i = 7; i >= paraRegsNum; --i) {
             var reg = a(i);
-            addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
-            map.put(reg, curFunction.offset);
+            if (!curFunction.containsReg(reg)) curFunction.allocate(reg);
+            addInst(new AsmMemoryS("sw", reg, fp, curFunction.getVarRegOffset(reg), true));
         }
-        for (int i = usedTRegsNum; i <= 6; ++i) {
+        for (int i = 6; i >= usedTRegsNum; --i) {
             var reg = t(i);
-            addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
-            map.put(reg, curFunction.offset);
+            if (!curFunction.containsReg(reg)) curFunction.allocate(reg);
+            addInst(new AsmMemoryS("sw", reg, fp, curFunction.getVarRegOffset(reg), true));
         }
         //
         addInst(new AsmCall(it.funcName));
-        //reload caller-saved registers
+        //reload caller-saved registers (t2-a7)
         for (int i = usedTRegsNum; i <= 6; ++i) {
             var reg = t(i);
-            addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
+            addInst(new AsmMemoryS("lw", reg, fp, curFunction.getVarRegOffset(reg), true));
         }
         for (int i = paraRegsNum; i <= 7; ++i) {
             var reg = a(i);
-            addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
+            addInst(new AsmMemoryS("lw", reg, fp, curFunction.getVarRegOffset(reg), true));
         }
         //
         if (it.dest == null || it.dest == Void.instance) return;
