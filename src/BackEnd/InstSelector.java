@@ -174,16 +174,16 @@ public class InstSelector implements IRVisitor {
         curBlock = blockMap.get(it.entry);
 
         //map parameter entity to virtual register
-        for (int i = 0; i < Integer.min(8, it.parameters.size()); ++i) {
+        for (int i = 0; i < Integer.min(paraRegsNum, it.parameters.size()); ++i) {
             Entity para = it.parameters.get(i);
             var rd = createVirReg(para);
             addInst(new AsmMv(rd, a(i))); //move ai to rd
         }
 
-        for (int i = 8; i < it.parameters.size(); ++i) {
+        for (int i = paraRegsNum; i < it.parameters.size(); ++i) {
             Entity para = it.parameters.get(i);
             var rd = createVirReg(para);
-            addInst(new AsmMemoryS("lw", rd, fp, (i - 8) << 2));
+            addInst(new AsmMemoryS("lw", rd, fp, (i - paraRegsNum) << 2));
         }
 
         //visit all blocks
@@ -241,10 +241,10 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Call it) {
-        for (int i = 0; i < Integer.min(8, it.args.size()); ++i)
+        for (int i = 0; i < Integer.min(paraRegsNum, it.args.size()); ++i)
             addInst(new AsmMv(a(i), getReg(it.args.get(i))));
         int paraOffset = 0;
-        for (int i = 8; i < it.args.size(); ++i) {
+        for (int i = paraRegsNum; i < it.args.size(); ++i) {
             Entity val = it.args.get(i);
             addInst(new AsmMemoryS("sw", getReg(val), sp, paraOffset));
             paraOffset += 4;
@@ -252,6 +252,11 @@ public class InstSelector implements IRVisitor {
         curFunction.paraOffset = Integer.max(curFunction.paraOffset, paraOffset);
         //store caller-saved registers
         var map = new HashMap<PhyReg, Integer>();
+        for (int i = paraRegsNum; i <= 7; ++i) {
+            var reg = a(i);
+            addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
+            map.put(reg, curFunction.offset);
+        }
         for (int i = 4; i <= 6; ++i) {
             var reg = t(i);
             addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
@@ -262,6 +267,10 @@ public class InstSelector implements IRVisitor {
         //reload caller-saved registers
         for (int i = 4; i <= 6; ++i) {
             var reg = t(i);
+            addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
+        }
+        for (int i = paraRegsNum; i <= 7; ++i) {
+            var reg = a(i);
             addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
         }
         //

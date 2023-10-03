@@ -9,6 +9,7 @@ import static Assembly.Operand.PhyReg.*;
 public class RegAllocator {
     private AsmFunction curFunction;
     private AsmBlock curBlock;
+    private final GraphColoring graphColoring = new GraphColoring();
 
     private Operand allocatePhyReg(Inst ins, Operand operand, PhyReg tmp, boolean isLoad) {
         if (operand instanceof VirReg v) {
@@ -34,6 +35,7 @@ public class RegAllocator {
     }
 
     public void visit(AsmRoot it) {
+        graphColoring.visit(it);
         it.functions.forEach(this::visit);
     }
 
