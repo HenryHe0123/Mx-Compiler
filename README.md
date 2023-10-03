@@ -1,6 +1,8 @@
 # Mx Compiler
 
-> [Project Introduction](https://github.com/ACMClassCourses/Compiler-Design-Implementation)
+> This is an experimental compiler that compiles Mx* programming language into RISCV-32I assembly and supports several
+> optimizations below. See the
+> complete [project introduction](https://github.com/ACMClassCourses/Compiler-Design-Implementation) here.
 
 ### Progress
 

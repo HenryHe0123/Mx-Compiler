@@ -6,7 +6,7 @@ import Assembly.Instruction.AsmJ;
 import java.util.HashSet;
 import java.util.LinkedList;
 
-public class BlockMerge {
+public class BlockMerging {
     private static final LinkedList<AsmBlock> order = new LinkedList<>();
     private static final HashSet<AsmBlock> visited = new HashSet<>();
 
@@ -16,7 +16,7 @@ public class BlockMerge {
     }
 
     public static void pass(AsmRoot root) {
-        root.functions.forEach(BlockMerge::promote);
+        root.functions.forEach(BlockMerging::promote);
     }
 
     private static void promote(AsmFunction func) {
@@ -58,7 +58,7 @@ public class BlockMerge {
         if (!visited.contains(block)) {
             visited.add(block);
             order.add(block);
-            block.next.forEach(BlockMerge::dfs);
+            block.next.forEach(BlockMerging::dfs);
         }
     }
 }

@@ -10,10 +10,10 @@ import java.util.Stack;
 
 import static Assembly.Operand.PhyReg.*;
 
-public class PeepholeOptimize {
+public class PeepholeOptimizer {
     public static void pass(AsmRoot root) {
         root.functions.forEach(function ->
-                function.blocks.forEach(PeepholeOptimize::promote)
+                function.blocks.forEach(PeepholeOptimizer::promote)
         );
     }
 
@@ -36,7 +36,19 @@ public class PeepholeOptimize {
             } else if (inst instanceof AsmBinaryS calc) {
                 if (calc.op.equals("addi") && calc.rd == calc.rs1 && calc.rs2 instanceof Imm imm && imm.val == 0) {
                     block.remove(calc);
-                } else if (inst.usedCallerRegs()) callerLw.clear();
+                } else {
+                    if (calc.op.equals("addi") && calc.next instanceof AsmBinaryS calc2 && calc2.op.equals("addi") &&
+                            calc.rd == calc.rs1 && calc2.rd == calc.rd && calc2.rd == calc2.rs1 &&
+                            calc.rs2 instanceof Imm imm1 && calc2.rs2 instanceof Imm imm2) {
+                        int i = imm1.val + imm2.val;
+                        if (i < 2048 && i >= -2048) {
+                            calc.rs2 = new Imm(imm1.val + imm2.val);
+                            block.remove(calc2);
+                            continue;
+                        }
+                    }
+                    if (inst.usedCallerRegs()) callerLw.clear();
+                }
             } else if (inst instanceof AsmMemoryS mem) { //important
                 if (mem.isCallerSave && mem.rd instanceof PhyReg reg && mem.rs == fp) { //caller-save
                     if (!usedCallerRegs.contains(reg)) block.remove(mem);

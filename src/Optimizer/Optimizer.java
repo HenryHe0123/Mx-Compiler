@@ -20,7 +20,7 @@ public class Optimizer {
 
     public static void optimize(AsmRoot root) {
         if (!on) return;
-        BlockMerge.pass(root);
-        PeepholeOptimize.pass(root);
+        BlockMerging.pass(root);
+        PeepholeOptimizer.pass(root);
     }
 }
