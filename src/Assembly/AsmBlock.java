@@ -57,6 +57,19 @@ public class AsmBlock {
         i.next = inserted;
     }
 
+    public void remove(Inst i) {
+        if (i == headInst) {
+            headInst = i.next;
+            headInst.prev = null;
+        } else if (i == tailInst) {
+            tailInst = i.prev;
+            tailInst.next = null;
+        } else {
+            i.prev.next = i.next;
+            i.next.prev = i.prev;
+        } //won't change i.next/prev
+    }
+
     public void addPhiInst(Inst i, String label) {
         phi.computeIfAbsent(label, k -> new ArrayList<>()).add(i);
     }

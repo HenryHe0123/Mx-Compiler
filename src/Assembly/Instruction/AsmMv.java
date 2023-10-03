@@ -20,4 +20,8 @@ public class AsmMv extends Inst {
         def.add(rd);
         use.add(rs);
     }
+
+    public boolean useless() {
+        return rd == rs;
+    }
 }

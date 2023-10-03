@@ -19,7 +19,7 @@ public class RegAllocator {
                 if (isLoad) curBlock.insert_before(ins, new AsmMemoryS("lw", tmp, fp, offset));
                 else curBlock.insert_after(ins, new AsmMemoryS("sw", tmp, fp, offset));
             } else {
-                PhyReg tfp = t(3); //tmp fp
+                PhyReg tfp = t(1); //tmp fp
                 if (isLoad) {
                     curBlock.insert_before(ins, new AsmLi(tfp, new Imm(offset)));
                     curBlock.insert_before(ins, new AsmBinaryS("add", tfp, fp, tfp));
@@ -63,8 +63,9 @@ public class RegAllocator {
 
     private void visit(AsmBinaryS it) {
         it.rs1 = allocatePhyReg(it, it.rs1, t(0), true);
-        it.rs2 = allocatePhyReg(it, it.rs2, t(1), true);
-        it.rd = allocatePhyReg(it, it.rd, t(2), false);
+        it.rs2 = allocatePhyReg(it, it.rs2, a(1), true);
+        it.rd = allocatePhyReg(it, it.rd, a(2), false);
+        //we can use a1 & a2 temporarily for those call-free instructions
     }
 
     private void visit(AsmBranchS it) {
@@ -81,22 +82,34 @@ public class RegAllocator {
 
     private void visit(AsmMemoryS it) {
         if (it.op.equals("sw")) { //store rd to rs + offset
-            it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
-            it.rd = (Reg) allocatePhyReg(it, it.rd, t(1), true);
+            if (it.rs instanceof VirReg) {
+                it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
+                it.rd = (Reg) allocatePhyReg(it, it.rd, a(1), true);
+            } else { //limit the use of t-reg
+                it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), true);
+            }
         } else { //load rd from rs + offset
-            it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
-            it.rd = (Reg) allocatePhyReg(it, it.rd, t(1), false);
+            if (it.rs instanceof VirReg) {
+                it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
+                it.rd = (Reg) allocatePhyReg(it, it.rd, a(1), false);
+            } else { //limit the use of t-reg
+                it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
+            }
         }
     }
 
     private void visit(AsmMv it) {
         //move rs to rd
-        it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
-        it.rs = (Reg) allocatePhyReg(it, it.rs, t(1), true);
+        if (it.rd instanceof VirReg) {
+            it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
+            it.rs = (Reg) allocatePhyReg(it, it.rs, a(1), true);
+        } else { //limit the use of t-reg
+            it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
+        }
     }
 
     private void visit(AsmSetCmpS it) {
         it.rd = allocatePhyReg(it, it.rd, t(0), false);
-        it.rs = allocatePhyReg(it, it.rs, t(1), true);
+        it.rs = allocatePhyReg(it, it.rs, a(1), true);
     }
 }

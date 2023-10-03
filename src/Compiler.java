@@ -18,7 +18,6 @@ import Util.MxErrorListener;
 public class Compiler {
     public static final boolean online = true;
     public static final boolean runRavel = true; //only for local
-    private static boolean debug = false;
 
     public static void main(String[] args) throws Exception {
         InputStream input = System.in;
@@ -29,13 +28,12 @@ public class Compiler {
             input = new FileInputStream("test.mx");
             IROutput = new PrintStream(new FileOutputStream("test.ll"));
             AsmOutput = new PrintStream(new FileOutputStream("test.s"));
-            debug = true;
         }
 
         try {
             compile(input, IROutput, AsmOutput);
-        } catch (MxError er) {
-            System.err.println(er.getText());
+        } catch (MxError error) {
+            System.err.println(error.getText());
             throw new RuntimeException();
         }
 
@@ -63,13 +61,13 @@ public class Compiler {
 
         IRRoot rootIR = new IRRoot();
         new IRBuilder(globalScope, rootIR).visit(ASTRoot);
-        Optimizer.optimize(rootIR); //middle end
+        Optimizer.optimize(rootIR); //so-called middle end
         new IRPrinter(IROutput).print(rootIR);
 
         AsmRoot rootAsm = new AsmRoot();
         new InstSelector(rootAsm).visit(rootIR);
-        if (debug) new AsmPrinter(new PrintStream(new FileOutputStream("test.vs"))).print(rootAsm);
         new RegAllocator().visit(rootAsm);
+        Optimizer.optimize(rootAsm);
         new AsmPrinter(AsmOutput).print(rootAsm);
     }
 

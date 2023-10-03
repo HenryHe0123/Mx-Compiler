@@ -257,7 +257,7 @@ public class InstSelector implements IRVisitor {
             addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
             map.put(reg, curFunction.offset);
         }
-        for (int i = 4; i <= 6; ++i) {
+        for (int i = usedTRegsNum; i <= 6; ++i) {
             var reg = t(i);
             addInst(new AsmMemoryS("sw", reg, fp, -(curFunction.offset += 4)));
             map.put(reg, curFunction.offset);
@@ -265,7 +265,7 @@ public class InstSelector implements IRVisitor {
         //
         addInst(new AsmCall(it.funcName));
         //reload caller-saved registers
-        for (int i = 4; i <= 6; ++i) {
+        for (int i = usedTRegsNum; i <= 6; ++i) {
             var reg = t(i);
             addInst(new AsmMemoryS("lw", reg, fp, -map.get(reg)));
         }

@@ -44,8 +44,6 @@ public class GraphColoring {
     private final HashSet<Reg> simplifyWorkList = new HashSet<>();
     private final HashSet<Reg> spillWorkList = new HashSet<>();
     private final Stack<Reg> selectStack = new Stack<>();
-    private final HashSet<Reg> spilledNodes = new HashSet<>();
-    private final HashSet<Reg> coloredNodes = new HashSet<>();
 
     //assign color
     private final HashMap<Reg, Integer> color = new HashMap<>();
@@ -56,8 +54,6 @@ public class GraphColoring {
         degree.clear();
         simplifyWorkList.clear();
         spillWorkList.clear();
-        spilledNodes.clear();
-        coloredNodes.clear();
         selectStack.clear();
         color.clear();
     }
@@ -181,8 +177,6 @@ public class GraphColoring {
                 maxDegree = d;
             }
         }
-        assert m != null;
-        //System.err.println("spill " + m.getText() + " with degree " + maxDegree);
         spillWorkList.remove(m);
         simplifyWorkList.add(m);
     }
@@ -190,22 +184,17 @@ public class GraphColoring {
     private void AssignColors() {
         while (!selectStack.isEmpty()) {
             Reg n = selectStack.pop();
-            if (coloredNodes.contains(n)) continue;
+            if (color.containsKey(n)) continue;
             HashSet<Integer> okColors = new HashSet<>(colors);
             for (var w : adjList.computeIfAbsent(n, k -> new HashSet<>())) {
-                if (coloredNodes.contains(w)) {
-                    okColors.remove(color.get(w));
-                }
+                Integer i = color.get(w);
+                if (i != null) okColors.remove(i);
             }
-            if (okColors.isEmpty()) {
-                spilledNodes.add(n);
-                //System.err.println("spill " + n.getText());
-            } else {
-                coloredNodes.add(n);
+            if (!okColors.isEmpty()) {
                 int c = okColors.iterator().next();
                 color.put(n, c);
                 if (c < 11) curFunction.usedCalleeRegs.add(freeRegs.get(c));
-            }
+            } //else spill
         }
     }
 }

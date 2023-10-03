@@ -22,4 +22,5 @@
 - [x] Mem2Reg (including SSA destruction)
 - [x] Dead Code Elimination
 - [x] Constant Propagation
-- [x] Register Allocation (a naive version of graph coloring)
+- [x] Register Allocation (a simple graph coloring)
+- [x] Peephole Optimization
