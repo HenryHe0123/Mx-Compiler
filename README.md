@@ -23,4 +23,5 @@
 - [x] Dead Code Elimination
 - [x] Constant Propagation
 - [x] Register Allocation (a simple graph coloring)
+- [x] Block Merging
 - [x] Peephole Optimization

@@ -2,7 +2,7 @@ package Optimizer;
 
 import Assembly.AsmRoot;
 import IR.IRRoot;
-import Optimizer.Asm.PeepholeOptimize;
+import Optimizer.Asm.*;
 import Optimizer.IR.*;
 
 public class Optimizer {
@@ -20,6 +20,7 @@ public class Optimizer {
 
     public static void optimize(AsmRoot root) {
         if (!on) return;
+        BlockMerge.pass(root);
         PeepholeOptimize.pass(root);
     }
 }

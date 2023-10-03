@@ -58,16 +58,27 @@ public class AsmBlock {
     }
 
     public void remove(Inst i) {
-        if (i == headInst) {
-            headInst = i.next;
-            headInst.prev = null;
-        } else if (i == tailInst) {
-            tailInst = i.prev;
-            tailInst.next = null;
-        } else {
+        if (i == null) return;
+        if (i == headInst) removeFirst();
+        else if (i == tailInst) removeLast();
+        else {
             i.prev.next = i.next;
             i.next.prev = i.prev;
         } //won't change i.next/prev
+    }
+
+    public void removeLast() {
+        if (tailInst == null) return;
+        tailInst = tailInst.prev;
+        if (tailInst != null) tailInst.next = null;
+        else headInst = null;
+    }
+
+    public void removeFirst() {
+        if (headInst == null) return;
+        headInst = headInst.next;
+        if (headInst != null) headInst.prev = null;
+        else tailInst = null;
     }
 
     public void addPhiInst(Inst i, String label) {
