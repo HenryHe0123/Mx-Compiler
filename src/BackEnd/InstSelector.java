@@ -50,11 +50,8 @@ public class InstSelector implements IRVisitor {
             addInst(new AsmLi(rg, Imm.one));
             return rg;
         } else if (entity instanceof GlobalVar g) {
-            Reg rg = new VirReg();
-            //debug: when visiting globalVar for a phi inst, we should not add load to curBlock
-            curFunction.entryBlock().add_front(new AsmLa(rg, g.name));
-            //addInst(new AsmLa(rg, g.name));
-            return rg; //return address of global variable
+            //return the address of global variable
+            return curFunction.getGlobalVarVReg(g);
         }
         return zero;
     }

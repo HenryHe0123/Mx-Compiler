@@ -11,7 +11,7 @@ public class RegAllocator {
     private AsmBlock curBlock;
     private final GraphColoring graphColoring = new GraphColoring();
 
-    private Operand allocatePhyReg(Inst ins, Operand operand, PhyReg tmp, boolean isLoad) {
+    private Operand pushOnStack(Inst ins, Operand operand, PhyReg tmp, boolean isLoad) {
         if (operand instanceof VirReg v) {
             if (!curFunction.containsReg(v)) curFunction.allocate(v);
             int offset = curFunction.getVarRegOffset(v);
@@ -62,38 +62,38 @@ public class RegAllocator {
     }
 
     private void visit(AsmBinaryS it) {
-        it.rs1 = allocatePhyReg(it, it.rs1, t(0), true);
-        it.rs2 = allocatePhyReg(it, it.rs2, a(1), true);
-        it.rd = allocatePhyReg(it, it.rd, a(2), false);
+        it.rs1 = pushOnStack(it, it.rs1, t(0), true);
+        it.rs2 = pushOnStack(it, it.rs2, a(1), true);
+        it.rd = pushOnStack(it, it.rd, a(2), false);
         //we can use a1 & a2 temporarily for those call-free instructions
     }
 
     private void visit(AsmBranchS it) {
-        it.cond = allocatePhyReg(it, it.cond, t(0), true);
+        it.cond = pushOnStack(it, it.cond, t(0), true);
     }
 
     private void visit(AsmLi it) {
-        it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
+        it.rd = (Reg) pushOnStack(it, it.rd, t(0), false);
     }
 
     private void visit(AsmLa it) {
-        it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
+        it.rd = (Reg) pushOnStack(it, it.rd, t(0), false);
     }
 
     private void visit(AsmMemoryS it) {
         if (it.op.equals("sw")) { //store rd to rs + offset
             if (it.rs instanceof VirReg) {
-                it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
-                it.rd = (Reg) allocatePhyReg(it, it.rd, a(1), true);
+                it.rs = (Reg) pushOnStack(it, it.rs, t(0), true);
+                it.rd = (Reg) pushOnStack(it, it.rd, a(1), true);
             } else { //limit the use of t-reg
-                it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), true);
+                it.rd = (Reg) pushOnStack(it, it.rd, t(0), true);
             }
         } else { //load rd from rs + offset
             if (it.rs instanceof VirReg) {
-                it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
-                it.rd = (Reg) allocatePhyReg(it, it.rd, a(1), false);
+                it.rs = (Reg) pushOnStack(it, it.rs, t(0), true);
+                it.rd = (Reg) pushOnStack(it, it.rd, a(1), false);
             } else { //limit the use of t-reg
-                it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
+                it.rd = (Reg) pushOnStack(it, it.rd, t(0), false);
             }
         }
     }
@@ -101,15 +101,15 @@ public class RegAllocator {
     private void visit(AsmMv it) {
         //move rs to rd
         if (it.rd instanceof VirReg) {
-            it.rd = (Reg) allocatePhyReg(it, it.rd, t(0), false);
-            it.rs = (Reg) allocatePhyReg(it, it.rs, a(1), true);
+            it.rd = (Reg) pushOnStack(it, it.rd, t(0), false);
+            it.rs = (Reg) pushOnStack(it, it.rs, a(1), true);
         } else { //limit the use of t-reg
-            it.rs = (Reg) allocatePhyReg(it, it.rs, t(0), true);
+            it.rs = (Reg) pushOnStack(it, it.rs, t(0), true);
         }
     }
 
     private void visit(AsmSetCmpS it) {
-        it.rd = allocatePhyReg(it, it.rd, t(0), false);
-        it.rs = allocatePhyReg(it, it.rs, a(1), true);
+        it.rd = pushOnStack(it, it.rd, t(0), false);
+        it.rs = pushOnStack(it, it.rs, a(1), true);
     }
 }
