@@ -42,7 +42,7 @@ public class GraphColoring {
 
     //simplify & spill
     private final HashSet<Reg> simplifyWorkList = new HashSet<>();
-    private final HashSet<Reg> spillWorkList = new HashSet<>();
+    private HashSet<Reg> spillWorkList = new HashSet<>();
     private final Stack<Reg> selectStack = new Stack<>();
 
     //assign color
@@ -100,10 +100,10 @@ public class GraphColoring {
         Initialize();
         Build();
         MakeWorkList();
-        while (true) {
-            if (!simplifyWorkList.isEmpty()) Simplify();
-            else if (!spillWorkList.isEmpty()) SelectSpill();
-            else break;
+        while (!initial.isEmpty()) {
+            Simplify();
+            RemakeWorkList();
+            if (simplifyWorkList.isEmpty()) SelectSpill();
         }
         AssignColors();
         allocateByColor(it);
@@ -143,13 +143,22 @@ public class GraphColoring {
         }
     }
 
+    private void RemakeWorkList() {
+        var newSpillWorkList = new HashSet<Reg>();
+        for (var n : spillWorkList) {
+            if (degree.get(n) < K) simplifyWorkList.add(n);
+            else newSpillWorkList.add(n);
+        }
+        spillWorkList = newSpillWorkList;
+    }
+
     private void Simplify() {
-        Reg n = simplifyWorkList.iterator().next();
-        //System.err.println("simplify " + n.getText());
-        simplifyWorkList.remove(n);
-        //initial.remove(n);
-        selectStack.push(n);
-        for (var m : Adjacent(n)) DecrementDegree(m);
+        for (Reg n : simplifyWorkList) {
+            initial.remove(n);
+            selectStack.push(n);
+            for (var m : Adjacent(n)) DecrementDegree(m);
+        }
+        simplifyWorkList.clear();
     }
 
     //adjacent nodes except those in selectStack
@@ -168,6 +177,7 @@ public class GraphColoring {
 
     //spill the max degree node
     private void SelectSpill() {
+        if (spillWorkList.isEmpty()) return;
         Reg m = null;
         int maxDegree = -1;
         for (var reg : spillWorkList) {
