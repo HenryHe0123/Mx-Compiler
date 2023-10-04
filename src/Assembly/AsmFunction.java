@@ -95,6 +95,7 @@ public class AsmFunction {
     public HashSet<PhyReg> usedCalleeRegs = new HashSet<>();
 
     public void saveCallee() {
+        if (name.equals("main")) return;
         var entry = entryBlock();
         var map = new HashMap<PhyReg, Integer>();
         for (var reg : usedCalleeRegs) {
