@@ -32,7 +32,20 @@ public class AsmMemoryS extends Inst {
     @Override
     public void getDefUse() {
         use.add(rs);
-        if (op.equals("sw")) use.add(rd);
+        if (isStore()) use.add(rd);
         else def.add(rd);
+    }
+
+    public boolean isLoad() {
+        return op.equals("lw");
+    }
+
+    public boolean isStore() {
+        return op.equals("sw");
+    }
+
+    public boolean pairedWith(AsmMemoryS mem) {
+        if (mem == null) return false;
+        return mem.rd == rd && mem.rs == rs && mem.offset == offset && !mem.op.equals(op);
     }
 }

@@ -17,6 +17,8 @@ public class PhyReg extends Reg {
     static public final PhyReg zero = new PhyReg("zero");
     static public final PhyReg ra = new PhyReg("ra"); //return address
     static public final PhyReg sp = new PhyReg("sp"); //stack pointer
+    static public final PhyReg gp = new PhyReg("gp"); //global pointer
+    static public final PhyReg tp = new PhyReg("tp"); //thread pointer
     static public final ArrayList<PhyReg> t = tRegs(); //temporary register
     static public final ArrayList<PhyReg> s = sRegs(); //saved register
     static public final ArrayList<PhyReg> a = aRegs(); //argument register
@@ -56,13 +58,13 @@ public class PhyReg extends Reg {
     }
 
     //------------------------- Register Allocation -------------------------//
-
+    private static final boolean useOtherRegs = true; //use gp,tp for better score
     public static final int paraRegsNum = 3;
     //no less than 3, as build-in function may have 3 parameters at most
     //the other a-regs will be used for graph coloring
-    public static final int usedTRegsNum = 2;
+    public static final int usedTRegsNum = 1;
     //paraRegs can also be used as tmp reg in some cases
-    public static final int K = 26 - usedTRegsNum - paraRegsNum; //21
+    public static final int K = 26 - usedTRegsNum - paraRegsNum + (useOtherRegs ? 2 : 0); //24
     public static final ArrayList<PhyReg> freeRegs = freeRegs();
     public static final ArrayList<Integer> colors = colors();
     public static final HashSet<PhyReg> usedCallerRegs = new HashSet<>();
@@ -78,6 +80,10 @@ public class PhyReg extends Reg {
         for (int i = 1; i <= 11; ++i) regs.add(s(i));
         for (int i = usedTRegsNum; i <= 6; ++i) regs.add(t(i));
         for (int i = paraRegsNum; i <= 7; ++i) regs.add(a(i));
+        if (useOtherRegs) {
+            regs.add(gp);
+            regs.add(tp);
+        }
         return regs;
     }
 }

@@ -51,7 +51,7 @@ public class InstSelector implements IRVisitor {
             return rg;
         } else if (entity instanceof GlobalVar g) {
             //return the address of global variable
-            return curFunction.getGlobalVarVReg(g);
+            return curFunction.getGlobalVarAddress(g);
         }
         return zero;
     }

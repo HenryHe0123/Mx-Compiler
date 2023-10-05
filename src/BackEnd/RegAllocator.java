@@ -19,7 +19,7 @@ public class RegAllocator {
                 if (isLoad) curBlock.insert_before(ins, new AsmMemoryS("lw", tmp, fp, offset));
                 else curBlock.insert_after(ins, new AsmMemoryS("sw", tmp, fp, offset));
             } else {
-                PhyReg tfp = t(1); //tmp fp
+                PhyReg tfp = ra; //tmp fp (use ra temporarily)
                 if (isLoad) {
                     curBlock.insert_before(ins, new AsmLi(tfp, new Imm(offset)));
                     curBlock.insert_before(ins, new AsmBinaryS("add", tfp, fp, tfp));

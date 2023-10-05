@@ -112,11 +112,11 @@ public class AsmFunction {
     //optimize: load globalVar only once
     private final HashMap<GlobalVar, VirReg> laMap = new HashMap<>();
 
-    public VirReg getGlobalVarVReg(GlobalVar g) {
+    public VirReg getGlobalVarAddress(GlobalVar g) {
         VirReg rg = laMap.get(g);
         if (rg == null) {
             rg = new VirReg();
-            //debug: when visiting globalVar for a phi inst, we should not add load to curBlock
+            //debug: when visiting globalVar for a phi inst, we should not add la to curBlock
             entryBlock().add_front(new AsmLa(rg, g.name));
             laMap.put(g, rg);
         }

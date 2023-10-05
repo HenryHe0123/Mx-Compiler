@@ -50,27 +50,27 @@ public class PeepholeOptimizer {
                     if (inst.usedCallerRegs()) callerLw.clear();
                 }
             } else if (inst instanceof AsmMemoryS mem) { //important
-                if (mem.isCallerSave && mem.rd instanceof PhyReg reg && mem.rs == fp) { //caller-save
+                if (mem.isCallerSave && mem.rd instanceof PhyReg reg && mem.rs == fp) { //for caller-save
+                    //remove redundant sw/lw caused by continuous call
                     if (!usedCallerRegs.contains(reg)) block.remove(mem);
-                    else if (mem.op.equals("lw")) {
-                        //remove redundant sw/lw caused by continuous call
-                        if (mem.next instanceof AsmMemoryS mem2 && mem2.op.equals("sw") &&
-                                mem2.isCallerSave && mem.rd == mem2.rd) {
-                            block.remove(mem);
-                            block.remove(mem2);
-                            if (inst.prev != null) inst = inst.prev;
-                            continue;
-                        } else callerLw.push(mem);
+                    else if (mem.isLoad()) {
+                        callerLw.push(mem);
                     } else if (!callerLw.empty()) { //mem is caller-save "sw"
                         AsmMemoryS load = callerLw.pop();
-                        if (mem.rd == load.rd && mem.offset == load.offset && mem.rs == load.rs) {
+                        if (mem.rd == load.rd && mem.offset == load.offset) {
                             block.remove(load);
                             block.remove(mem);
-                        } else {
+                        } else { //not paired
                             callerLw.clear();
                         }
                     }
-                } else callerLw.clear();
+                } else { //other memory instructions
+                    if (mem.next instanceof AsmMemoryS mem2 && mem.pairedWith(mem2)) {
+                        block.remove(mem2);
+                        continue;
+                    }
+                    if (inst.usedCallerRegs()) callerLw.clear();
+                }
             }
             if (inst.usedCallerRegs()) callerLw.clear();
             inst = inst.next;
