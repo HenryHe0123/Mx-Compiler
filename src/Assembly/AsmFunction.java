@@ -109,7 +109,7 @@ public class AsmFunction {
         }
     }
 
-    //optimize: load globalVar only once
+    //load globalVar address at the entry for only once
     private final HashMap<GlobalVar, VirReg> laMap = new HashMap<>();
 
     public VirReg getGlobalVarAddress(GlobalVar g) {

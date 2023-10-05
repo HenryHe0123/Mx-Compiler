@@ -32,8 +32,16 @@ public class InstSelector implements IRVisitor {
         curBlock.push_back(ins);
     }
 
+    public final HashMap<Entity, Reg> gVarLoadedRegMap = new HashMap<>();
+
     private Reg getReg(Entity entity) {
         if (entity instanceof Register) {
+            Reg loaded = gVarLoadedRegMap.get(entity);
+            if (loaded != null) {
+                regMap.put(entity, loaded);
+                return loaded;
+            }
+
             Reg rg = regMap.get(entity);
             if (rg == null) rg = createVirReg(entity);
             return rg;
@@ -199,7 +207,20 @@ public class InstSelector implements IRVisitor {
     public void visit(IRBlock it) {
         curBlock = blockMap.get(it);
         it.instructions.forEach(ins -> ins.accept(this));
+        curBlock.pushBackDelayedSw();
         it.terminator.accept(this);
+        loadGlobalVarAfterCall();
+    }
+
+    public void loadGlobalVarAfterCall() {
+        for (Inst inst : curBlock.gVarLwInsertedAfter) {
+            for (var entry : curBlock.gVarRegMap.entrySet()) {
+                GlobalVar g = entry.getKey();
+                VirReg rg = entry.getValue();
+                var load = new AsmMemoryS("lw", rg, curFunction.getGlobalVarAddress(g), 0);
+                curBlock.insert_after(inst, load);
+            }
+        }
     }
 
     @Override
@@ -285,6 +306,7 @@ public class InstSelector implements IRVisitor {
 
     @Override
     public void visit(Call it) {
+        curBlock.pushBackDelayedSw();
         for (int i = 0; i < Integer.min(paraRegsNum, it.args.size()); ++i)
             addInst(new AsmMv(a(i), getReg(it.args.get(i))));
         int paraOffset = 0;
@@ -316,10 +338,15 @@ public class InstSelector implements IRVisitor {
             var reg = a(i);
             addInst(new AsmMemoryS("lw", reg, fp, curFunction.getVarRegOffset(reg), true));
         }
+        prepareToLoadGlobalVarForCall();
         //
         if (it.dest == null || it.dest == Void.instance) return;
         Reg rg = getReg(it.dest);
         addInst(new AsmMv(rg, a(0)));
+    }
+
+    private void prepareToLoadGlobalVarForCall() {
+        curBlock.prepareGVarLwInsertedAfter(curBlock.tailInst);
     }
 
     @Override
@@ -369,14 +396,25 @@ public class InstSelector implements IRVisitor {
         }
     }
 
+    private VirReg getGVarVReg(GlobalVar g) {
+        VirReg rg = curBlock.getGVarReg(g);
+        if (rg == null) { //initialize
+            rg = new VirReg();
+            curBlock.gVarRegMap.put(g, rg);
+            addInst(new AsmMemoryS("lw", rg, curFunction.getGlobalVarAddress(g), 0));
+        }
+        return rg;
+    }
+
     @Override
     public void visit(Load it) {
-        Reg rd = getReg(it.dest);
-        Reg rs = getReg(it.src);
-        if (it.src instanceof GlobalVar) {
-            addInst(new AsmMemoryS("lw", rd, rs, 0));
+        if (it.src instanceof GlobalVar g) {
+            var rg = getGVarVReg(g);
+            gVarLoadedRegMap.put(it.dest, rg);
             return;
         }
+        Reg rd = getReg(it.dest);
+        Reg rs = getReg(it.src);
         if (curFunction.containsReg(rs)) addInst(new AsmMv(rd, rs));
         else addInst(new AsmMemoryS("lw", rd, rs, 0));
     }
@@ -384,12 +422,14 @@ public class InstSelector implements IRVisitor {
     @Override
     public void visit(Store it) {
         Reg rs = getReg(it.src);
-        Reg rd = getReg(it.dest);
-        if (it.dest instanceof GlobalVar) {
-            //rd is the address of global variable
-            addInst(new AsmMemoryS("sw", rs, rd, 0));
+        if (it.dest instanceof GlobalVar g) { //delay store
+            Reg rd = getGVarVReg(g);
+            //rd is the loaded virReg for global variable
+            addInst(new AsmMv(rd, rs));
+            curBlock.addDelayedGVarSw(new AsmMemoryS("sw", rd, curFunction.getGlobalVarAddress(g), 0));
             return;
         }
+        Reg rd = getReg(it.dest);
         if (curFunction.containsReg(rd)) addInst(new AsmMv(rd, rs));
         else addInst(new AsmMemoryS("sw", rs, rd, 0));
     }

@@ -46,6 +46,7 @@ public class AsmMemoryS extends Inst {
 
     public boolean pairedWith(AsmMemoryS mem) {
         if (mem == null) return false;
-        return mem.rd == rd && mem.rs == rs && mem.offset == offset && !mem.op.equals(op);
+        return mem.rd == rd && mem.rs == rs && mem.offset == offset;
+        //when mem paired, no matter for lw-sw or sw-lw or same, the later one is useless
     }
 }

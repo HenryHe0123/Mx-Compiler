@@ -2,10 +2,14 @@ package Assembly;
 
 import Assembly.Instruction.*;
 import Assembly.Operand.Reg;
+import Assembly.Operand.VirReg;
+import IR.Entity.Entity;
+import IR.Entity.GlobalVar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 public class AsmBlock {
     public Inst headInst = null, tailInst = null;
@@ -141,5 +145,29 @@ public class AsmBlock {
             def.addAll(inst.def);
         }
         in.addAll(use);
+    }
+
+    //optimize: reduce the lw/sw for global variable
+
+    public final HashMap<GlobalVar, VirReg> gVarRegMap = new HashMap<>();
+    public final HashSet<AsmMemoryS> delayedGVarSw = new HashSet<>();
+
+    public VirReg getGVarReg(GlobalVar g) {
+        return gVarRegMap.get(g);
+    }
+
+    public void addDelayedGVarSw(AsmMemoryS sw) {
+        delayedGVarSw.add(sw);
+    }
+
+    public void pushBackDelayedSw() {
+        delayedGVarSw.forEach(this::push_back);
+        delayedGVarSw.clear();
+    }
+
+    public final LinkedList<Inst> gVarLwInsertedAfter = new LinkedList<>();
+
+    public void prepareGVarLwInsertedAfter(Inst i) {
+        gVarLwInsertedAfter.add(i);
     }
 }
