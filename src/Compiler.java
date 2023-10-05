@@ -72,6 +72,7 @@ public class Compiler {
     }
 
     private static void ravel() {
+        System.out.println("start running ravel...");
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("wsl",
                     "/usr/local/opt/bin/ravel", "--oj-mode");

@@ -213,9 +213,15 @@ public class InstSelector implements IRVisitor {
     }
 
     public void loadGlobalVarAfterCall() {
-        for (Inst inst : curBlock.gVarLwInsertedAfter) {
+        var gVarLoaded = curBlock.gVarLoaded;
+        var instList = curBlock.gVarLwInsertedAfter;
+        for (int i = instList.size() - 1; i >= 0; --i) {
+            var inst = instList.get(i);
+            if (i != instList.size() - 1)
+                gVarLoaded.addAll(curBlock.gVarLoadedBefore.get(i + 1));
             for (var entry : curBlock.gVarRegMap.entrySet()) {
                 GlobalVar g = entry.getKey();
+                if (!gVarLoaded.contains(g)) continue;
                 VirReg rg = entry.getValue();
                 var load = new AsmMemoryS("lw", rg, curFunction.getGlobalVarAddress(g), 0);
                 curBlock.insert_after(inst, load);
@@ -411,6 +417,7 @@ public class InstSelector implements IRVisitor {
         if (it.src instanceof GlobalVar g) {
             var rg = getGVarVReg(g);
             gVarLoadedRegMap.put(it.dest, rg);
+            curBlock.gVarLoaded.add(g);
             return;
         }
         Reg rd = getReg(it.dest);

@@ -58,13 +58,13 @@ public class PhyReg extends Reg {
     }
 
     //------------------------- Register Allocation -------------------------//
-    private static final boolean useOtherRegs = true; //use gp,tp for better score
+    private static final boolean useOtherRegs = false; //use gp, tp as tmp reg
     public static final int paraRegsNum = 3;
     //no less than 3, as build-in function may have 3 parameters at most
     //the other a-regs will be used for graph coloring
     public static final int usedTRegsNum = 1;
     //paraRegs can also be used as tmp reg in some cases
-    public static final int K = 26 - usedTRegsNum - paraRegsNum + (useOtherRegs ? 2 : 0); //24
+    public static final int K = (useOtherRegs ? 28 : 26) - usedTRegsNum - paraRegsNum; //22
     public static final ArrayList<PhyReg> freeRegs = freeRegs();
     public static final ArrayList<Integer> colors = colors();
     public static final HashSet<PhyReg> usedCallerRegs = new HashSet<>();

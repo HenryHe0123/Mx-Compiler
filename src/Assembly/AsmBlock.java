@@ -165,9 +165,13 @@ public class AsmBlock {
         delayedGVarSw.clear();
     }
 
-    public final LinkedList<Inst> gVarLwInsertedAfter = new LinkedList<>();
+    public final ArrayList<Inst> gVarLwInsertedAfter = new ArrayList<>();
+    public final ArrayList<HashSet<GlobalVar>> gVarLoadedBefore = new ArrayList<>();
+    public final HashSet<GlobalVar> gVarLoaded = new HashSet<>();
 
     public void prepareGVarLwInsertedAfter(Inst i) {
         gVarLwInsertedAfter.add(i);
+        gVarLoadedBefore.add(new HashSet<>(gVarLoaded));
+        gVarLoaded.clear();
     }
 }
