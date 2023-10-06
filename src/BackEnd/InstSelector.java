@@ -32,15 +32,16 @@ public class InstSelector implements IRVisitor {
         curBlock.push_back(ins);
     }
 
+    private Reg getGlobalVarAddress(GlobalVar g) {
+        return curBlock.getGlobalVarAddress(g);
+    }
+
     public final HashMap<Entity, Reg> gVarLoadedRegMap = new HashMap<>();
 
     private Reg getReg(Entity entity) {
         if (entity instanceof Register) {
             Reg loaded = gVarLoadedRegMap.get(entity);
-            if (loaded != null) {
-                regMap.put(entity, loaded);
-                return loaded;
-            }
+            if (loaded != null) return loaded;
 
             Reg rg = regMap.get(entity);
             if (rg == null) rg = createVirReg(entity);
@@ -59,7 +60,7 @@ public class InstSelector implements IRVisitor {
             return rg;
         } else if (entity instanceof GlobalVar g) {
             //return the address of global variable
-            return curFunction.getGlobalVarAddress(g);
+            return getGlobalVarAddress(g);
         }
         return zero;
     }
@@ -223,7 +224,7 @@ public class InstSelector implements IRVisitor {
                 GlobalVar g = entry.getKey();
                 if (!gVarLoaded.contains(g)) continue;
                 VirReg rg = entry.getValue();
-                var load = new AsmMemoryS("lw", rg, curFunction.getGlobalVarAddress(g), 0);
+                var load = new AsmMemoryS("lw", rg, getGlobalVarAddress(g), 0);
                 curBlock.insert_after(inst, load);
             }
         }
@@ -407,7 +408,7 @@ public class InstSelector implements IRVisitor {
         if (rg == null) { //initialize
             rg = new VirReg();
             curBlock.gVarRegMap.put(g, rg);
-            addInst(new AsmMemoryS("lw", rg, curFunction.getGlobalVarAddress(g), 0));
+            addInst(new AsmMemoryS("lw", rg, getGlobalVarAddress(g), 0));
         }
         return rg;
     }
@@ -433,7 +434,7 @@ public class InstSelector implements IRVisitor {
             Reg rd = getGVarVReg(g);
             //rd is the loaded virReg for global variable
             addInst(new AsmMv(rd, rs));
-            curBlock.addDelayedGVarSw(new AsmMemoryS("sw", rd, curFunction.getGlobalVarAddress(g), 0));
+            curBlock.addDelayedGVarSw(new AsmMemoryS("sw", rd, getGlobalVarAddress(g), 0));
             return;
         }
         Reg rd = getReg(it.dest);
@@ -445,13 +446,24 @@ public class InstSelector implements IRVisitor {
     public void visit(Phi it) {
         VirReg tmp = new VirReg();
         addInst(new AsmMv(getReg(it.dest), tmp));
+        String label = curBlock.label;
         for (int i = 0; i < it.values.size(); ++i) {
             Entity value = it.values.get(i);
             int val = getConstantVal(value);
             if (val != -19260817)
-                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmLi(tmp, new Imm(val)), curBlock.label);
-            else
-                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmMv(tmp, getReg(value)), curBlock.label);
+                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmLi(tmp, new Imm(val)), label);
+            else {
+                if (value instanceof GlobalVar g) {
+                    var backup = curBlock;
+                    var fromBlock = blockMap.get(it.blocks.get(i));
+                    curBlock = fromBlock; //add la to fromBlock
+                    var rg = getGlobalVarAddress(g);
+                    curBlock = backup; //restore
+                    fromBlock.addPhiInst(new AsmMv(tmp, rg), label);
+                    continue;
+                }
+                blockMap.get(it.blocks.get(i)).addPhiInst(new AsmMv(tmp, getReg(value)), label);
+            }
         }
     }
 

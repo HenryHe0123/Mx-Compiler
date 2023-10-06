@@ -3,13 +3,11 @@ package Assembly;
 import Assembly.Instruction.*;
 import Assembly.Operand.Reg;
 import Assembly.Operand.VirReg;
-import IR.Entity.Entity;
 import IR.Entity.GlobalVar;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 public class AsmBlock {
     public Inst headInst = null, tailInst = null;
@@ -148,6 +146,19 @@ public class AsmBlock {
     }
 
     //optimize: reduce the lw/sw for global variable
+
+    private final HashMap<GlobalVar, VirReg> laMap = new HashMap<>();
+
+    public VirReg getGlobalVarAddress(GlobalVar g) {
+        VirReg rg = laMap.get(g);
+        if (rg == null) {
+            rg = new VirReg();
+            //debug: when visiting globalVar for a phi inst, we should not add la to curBlock
+            add_front(new AsmLa(rg, g.name));
+            laMap.put(g, rg);
+        }
+        return rg;
+    }
 
     public final HashMap<GlobalVar, VirReg> gVarRegMap = new HashMap<>();
     public final HashSet<AsmMemoryS> delayedGVarSw = new HashSet<>();

@@ -2,7 +2,6 @@ package Assembly;
 
 import Assembly.Instruction.*;
 import Assembly.Operand.*;
-import IR.Entity.GlobalVar;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -107,20 +106,6 @@ public class AsmFunction {
         for (var reg : usedCalleeRegs) {
             retBlock.insert_before(inst, new AsmMemoryS("lw", reg, fp, -map.get(reg)));
         }
-    }
-
-    //load globalVar address at the entry for only once
-    private final HashMap<GlobalVar, VirReg> laMap = new HashMap<>();
-
-    public VirReg getGlobalVarAddress(GlobalVar g) {
-        VirReg rg = laMap.get(g);
-        if (rg == null) {
-            rg = new VirReg();
-            //debug: when visiting globalVar for a phi inst, we should not add la to curBlock
-            entryBlock().add_front(new AsmLa(rg, g.name));
-            laMap.put(g, rg);
-        }
-        return rg;
     }
 }
 
