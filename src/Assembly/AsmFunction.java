@@ -95,7 +95,15 @@ public class AsmFunction {
     public HashSet<PhyReg> usedCalleeRegs = new HashSet<>();
 
     public void saveCallee() {
-        if (name.equals("main")) return;
+        if (name.equals("main")) {
+            if (useTp && usedCalleeRegs.contains(tp)) {
+                //tp should be handled specifically, though useless for ravel
+                entryBlock().add_front(new AsmMemoryS("sw", tp, fp, -(offset += 4)));
+                var inst = retBlock.tailInst;
+                retBlock.insert_before(inst, new AsmMemoryS("lw", tp, fp, -offset));
+            }
+            return;
+        }
         var entry = entryBlock();
         var map = new HashMap<PhyReg, Integer>();
         for (var reg : usedCalleeRegs) {

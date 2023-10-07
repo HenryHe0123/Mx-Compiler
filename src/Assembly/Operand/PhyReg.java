@@ -58,13 +58,14 @@ public class PhyReg extends Reg {
     }
 
     //------------------------- Register Allocation -------------------------//
-    private static final boolean useOtherRegs = false; //use gp, tp as tmp reg
+    public static final boolean useTp = true; //use tp as callee-saved reg
     public static final int paraRegsNum = 3;
     //no less than 3, as build-in function may have 3 parameters at most
     //the other a-regs will be used for graph coloring
     public static final int usedTRegsNum = 1;
     //paraRegs can also be used as tmp reg in some cases
-    public static final int K = (useOtherRegs ? 28 : 26) - usedTRegsNum - paraRegsNum; //22
+    public static final int calleeRegsNum = useTp ? 12 : 11; //not including s0
+    public static final int K = calleeRegsNum + 15 - usedTRegsNum - paraRegsNum; //23
     public static final ArrayList<PhyReg> freeRegs = freeRegs();
     public static final ArrayList<Integer> colors = colors();
     public static final HashSet<PhyReg> usedCallerRegs = new HashSet<>();
@@ -78,12 +79,9 @@ public class PhyReg extends Reg {
     private static ArrayList<PhyReg> freeRegs() {
         var regs = new ArrayList<PhyReg>();
         for (int i = 1; i <= 11; ++i) regs.add(s(i));
+        if (useTp) regs.add(tp);
         for (int i = usedTRegsNum; i <= 6; ++i) regs.add(t(i));
         for (int i = paraRegsNum; i <= 7; ++i) regs.add(a(i));
-        if (useOtherRegs) {
-            regs.add(gp);
-            regs.add(tp);
-        }
         return regs;
     }
 }

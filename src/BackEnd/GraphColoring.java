@@ -203,7 +203,7 @@ public class GraphColoring {
             if (!okColors.isEmpty()) {
                 int c = okColors.iterator().next();
                 color.put(n, c);
-                if (c < 11) curFunction.usedCalleeRegs.add(freeRegs.get(c));
+                if (c < calleeRegsNum) curFunction.usedCalleeRegs.add(freeRegs.get(c));
                 else usedCallerRegs.add(freeRegs.get(c));
             } //else spill
         }
